@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  fullName      String
+  email         String        @unique
+  passwordHash  String
+  role          Role          @default(USER)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  summaries     Summary[]     @relation("UserSummaries")
+  ratings       Rating[]
+  comments      Comment[]
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
+  tools         Tool[]
+  helpRequests  HelpRequest[]
+  
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Course {
+  id           Int           @id @default(autoincrement())
+  courseCode   String        @unique
+  courseName   String
+  institution  String
+  semester     String
+  createdAt    DateTime      @default(now())
+  
+  summaries    Summary[]
+  forumPosts   ForumPost[]
+  helpRequests HelpRequest[]
+  
+  @@map("courses")
+}
+
+model Summary {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  filePath    String
+  uploadDate  DateTime  @default(now())
+  avgRating   Float?
+  
+  courseId    Int
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  uploadedById Int
+  uploadedBy   User     @relation("UserSummaries", fields: [uploadedById], references: [id], onDelete: Cascade)
+  
+  ratings     Rating[]
+  comments    Comment[]
+  
+  @@map("summaries")
+}
+
+model Rating {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1-5
+  date      DateTime @default(now())
+  
+  summaryId Int
+  summary   Summary  @relation(fields: [summaryId], references: [id], onDelete: Cascade)
+  
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([summaryId, userId])
+  @@map("ratings")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+  
+  summaryId Int?
+  summary   Summary? @relation(fields: [summaryId], references: [id], onDelete: Cascade)
+  
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  @@map("comments")
+}
+
+model ForumPost {
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  views      Int      @default(0)
+  isAnswered Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  courseId   Int
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  authorId   Int
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  comments   ForumComment[]
+  
+  @@map("forum_posts")
+}
+
+model ForumComment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+  
+  postId    Int
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  authorId  Int
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  @@map("forum_comments")
+}
+
+model Tool {
+  id          Int      @id @default(autoincrement())
+  title       String
+  url         String
+  description String?
+  category    String?
+  createdAt   DateTime @default(now())
+  
+  addedById   Int
+  addedBy     User     @relation(fields: [addedById], references: [id], onDelete: Cascade)
+  
+  @@map("tools")
+}
+
+model HelpRequest {
+  id        Int      @id @default(autoincrement())
+  title     String
+  details   String?
+  status    String   @default("open") // open, closed
+  createdAt DateTime @default(now())
+  
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@map("help_requests")
+}
