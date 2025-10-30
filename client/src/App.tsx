@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { BookOpen, MessageCircle, Wrench, User } from 'lucide-react';
+import { BookOpen, MessageCircle, Wrench } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Avatar, AvatarFallback } from './components/ui/avatar';
+import { useAuth } from './context/AuthContext';
 import { StatsBar } from './components/dashboard/StatsBar';
 import { WelcomeSection } from './components/dashboard/WelcomeSection';
 import { QuickActions } from './components/dashboard/QuickActions';
@@ -19,137 +20,38 @@ import { RegisterPage } from './components/auth/RegisterPage';
 import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
 import { VerifyEmailPage } from './components/auth/VerifyEmailPage';
-import { AuthDevNav } from './components/auth/AuthDevNav';
 import { NewQuestionPage } from './components/forum/NewQuestionPage';
 
-type PageType = 'dashboard' | 'summaries' | 'forum' | 'tools' | 'profile' | 'upload' | 'login' | 'register' | 'forgot-password' | 'reset-password' | 'verify-email' | 'new-question';
+// Protected Route Component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useAuth();
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState<PageType>('login');
-
-  // Helper to set page (with type safety)
-  const navigateToPage = (page: string) => {
-    setCurrentPage(page as PageType);
-  };
-
-  // Authentication Pages
-  if (currentPage === 'login') {
+  if (loading) {
     return (
-      <>
-        <LoginPage
-          onNavigateDashboard={() => setCurrentPage('dashboard')}
-          onNavigateRegister={() => setCurrentPage('register')}
-          onNavigateForgotPassword={() => setCurrentPage('forgot-password')}
-        />
-        <AuthDevNav currentPage={currentPage} onNavigate={navigateToPage} />
-      </>
-    );
-  }
-
-  if (currentPage === 'register') {
-    return (
-      <>
-        <RegisterPage
-          onNavigateLogin={() => setCurrentPage('login')}
-          onNavigateDashboard={() => setCurrentPage('dashboard')}
-        />
-        <AuthDevNav currentPage={currentPage} onNavigate={navigateToPage} />
-      </>
-    );
-  }
-
-  if (currentPage === 'forgot-password') {
-    return (
-      <>
-        <ForgotPasswordPage
-          onNavigateLogin={() => setCurrentPage('login')}
-        />
-        <AuthDevNav currentPage={currentPage} onNavigate={navigateToPage} />
-      </>
-    );
-  }
-
-  if (currentPage === 'reset-password') {
-    return (
-      <>
-        <ResetPasswordPage
-          onNavigateLogin={() => setCurrentPage('login')}
-        />
-        <AuthDevNav currentPage={currentPage} onNavigate={navigateToPage} />
-      </>
-    );
-  }
-
-  if (currentPage === 'verify-email') {
-    return (
-      <>
-        <VerifyEmailPage
-          onNavigateDashboard={() => setCurrentPage('dashboard')}
-          onNavigateLogin={() => setCurrentPage('login')}
-        />
-        <AuthDevNav currentPage={currentPage} onNavigate={navigateToPage} />
-      </>
-    );
-  }
-
-  // Main App Pages
-  if (currentPage === 'summaries') {
-    return (
-      <div dir="rtl">
-        <SummariesPage 
-          onNavigateHome={() => setCurrentPage('dashboard')} 
-          onNavigateUpload={() => setCurrentPage('upload')}
-        />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">טוען...</p>
+        </div>
       </div>
     );
   }
 
-  if (currentPage === 'upload') {
-    return (
-      <div dir="rtl">
-        <UploadPage 
-          onNavigateHome={() => setCurrentPage('dashboard')}
-          onNavigateSummaries={() => setCurrentPage('summaries')}
-        />
-      </div>
-    );
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (currentPage === 'forum') {
-    return (
-      <div dir="rtl">
-        <ForumPage 
-          onNavigateHome={() => setCurrentPage('dashboard')} 
-          onNavigateNewQuestion={() => setCurrentPage('new-question')}
-        />
-      </div>
-    );
-  }
+  return <>{children}</>;
+}
 
-  if (currentPage === 'new-question') {
-    return <NewQuestionPage />;
-  }
-
-  if (currentPage === 'tools') {
-    return (
-      <div dir="rtl">
-        <ToolsPage onNavigateHome={() => setCurrentPage('dashboard')} />
-      </div>
-    );
-  }
-
-  if (currentPage === 'profile') {
-    return (
-      <div dir="rtl">
-        <ProfilePageNew onNavigateHome={() => setCurrentPage('dashboard')} />
-      </div>
-    );
-  }
+// Dashboard Component
+function Dashboard() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setCurrentPage('login');
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -175,7 +77,7 @@ export default function App() {
           {/* Navigation Buttons */}
           <div className="flex flex-wrap gap-2 items-center">
             <Button
-              onClick={() => setCurrentPage('summaries')}
+              onClick={() => navigate('/summaries')}
               variant="outline"
               className="border-blue-600 text-blue-600 hover:bg-blue-50"
             >
@@ -183,7 +85,7 @@ export default function App() {
               סיכומים
             </Button>
             <Button
-              onClick={() => setCurrentPage('forum')}
+              onClick={() => navigate('/forum')}
               variant="outline"
               className="border-purple-600 text-purple-600 hover:bg-purple-50"
             >
@@ -191,7 +93,7 @@ export default function App() {
               פורום
             </Button>
             <Button
-              onClick={() => setCurrentPage('tools')}
+              onClick={() => navigate('/tools')}
               variant="outline"
               className="border-green-600 text-green-600 hover:bg-green-50"
             >
@@ -200,7 +102,7 @@ export default function App() {
             </Button>
             <div className="relative group">
               <button
-                onClick={() => setCurrentPage('profile')}
+                onClick={() => navigate('/profile')}
                 className="hover:opacity-80 transition-opacity"
               >
                 <Avatar className="w-10 h-10 border-2 border-gray-300 hover:border-blue-500 transition-colors">
@@ -212,7 +114,7 @@ export default function App() {
               {/* Dropdown Menu */}
               <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <button
-                  onClick={() => setCurrentPage('profile')}
+                  onClick={() => navigate('/profile')}
                   className="w-full text-right px-4 py-2 hover:bg-gray-50 rounded-t-lg"
                 >
                   הפרופיל שלי
@@ -236,19 +138,19 @@ export default function App() {
 
         {/* Quick Actions */}
         <QuickActions 
-          onNavigateUpload={() => setCurrentPage('upload')}
-          onNavigateForum={() => setCurrentPage('forum')}
-          onNavigateTools={() => setCurrentPage('tools')}
+          onNavigateUpload={() => navigate('/upload')}
+          onNavigateForum={() => navigate('/forum')}
+          onNavigateTools={() => navigate('/tools')}
         />
 
         {/* Recent Summaries */}
-        <RecentSummaries onViewAll={() => setCurrentPage('summaries')} />
+        <RecentSummaries onViewAll={() => navigate('/summaries')} />
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Latest Forum Posts - Takes 2 columns */}
           <div className="lg:col-span-2">
-            <LatestForumPosts onViewAll={() => setCurrentPage('forum')} />
+            <LatestForumPosts onViewAll={() => navigate('/forum')} />
           </div>
 
           {/* Empty space or additional content */}
@@ -256,7 +158,7 @@ export default function App() {
         </div>
 
         {/* Popular Tools */}
-        <PopularTools onViewAll={() => setCurrentPage('tools')} />
+        <PopularTools onViewAll={() => navigate('/tools')} />
 
         {/* Footer */}
         <motion.footer
@@ -269,5 +171,140 @@ export default function App() {
         </motion.footer>
       </motion.div>
     </div>
+  );
+}
+
+export default function App() {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      {/* Auth Routes */}
+      <Route 
+        path="/login" 
+        element={
+          <LoginPage
+            onNavigateDashboard={() => navigate('/dashboard')}
+            onNavigateRegister={() => navigate('/register')}
+            onNavigateForgotPassword={() => navigate('/forgot-password')}
+          />
+        } 
+      />
+      <Route 
+        path="/register" 
+        element={
+          <RegisterPage
+            onNavigateLogin={() => navigate('/login')}
+            onNavigateDashboard={() => navigate('/dashboard')}
+          />
+        } 
+      />
+      <Route 
+        path="/forgot-password" 
+        element={
+          <ForgotPasswordPage
+            onNavigateLogin={() => navigate('/login')}
+          />
+        } 
+      />
+      <Route 
+        path="/reset-password/:token" 
+        element={
+          <ResetPasswordPage
+            onNavigateLogin={() => navigate('/login')}
+          />
+        } 
+      />
+      <Route 
+        path="/verify-email" 
+        element={
+          <VerifyEmailPage
+            onNavigateDashboard={() => navigate('/dashboard')}
+            onNavigateLogin={() => navigate('/login')}
+          />
+        } 
+      />
+
+      {/* Protected Routes */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/summaries" 
+        element={
+          <ProtectedRoute>
+            <div dir="rtl">
+              <SummariesPage 
+                onNavigateHome={() => navigate('/dashboard')} 
+                onNavigateUpload={() => navigate('/upload')}
+              />
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/upload" 
+        element={
+          <ProtectedRoute>
+            <div dir="rtl">
+              <UploadPage 
+                onNavigateHome={() => navigate('/dashboard')}
+                onNavigateSummaries={() => navigate('/summaries')}
+              />
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/forum" 
+        element={
+          <ProtectedRoute>
+            <div dir="rtl">
+              <ForumPage 
+                onNavigateHome={() => navigate('/dashboard')} 
+                onNavigateNewQuestion={() => navigate('/forum/new')}
+              />
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/forum/new" 
+        element={
+          <ProtectedRoute>
+            <NewQuestionPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/tools" 
+        element={
+          <ProtectedRoute>
+            <div dir="rtl">
+              <ToolsPage onNavigateHome={() => navigate('/dashboard')} />
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <div dir="rtl">
+              <ProfilePageNew onNavigateHome={() => navigate('/dashboard')} />
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+
+      {/* Redirects */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
