@@ -15,6 +15,12 @@ StudyHub-IL is a comprehensive educational platform designed to facilitate learn
 
 ## Installation Instructions
 
+### Prerequisites
+- **Node.js** 18.x or higher
+- **npm** 9.x or higher
+- **PostgreSQL** 14.x or higher (for backend)
+- **Git**
+
 ### Frontend (Client)
 1. Navigate to the client directory: `cd client`
 2. Install dependencies: `npm install`
