@@ -1,0 +1,86 @@
+@startuml StudyHub-IL-UseCase
+!define TITLE StudyHub-IL Use Case Diagram
+skinparam packageStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam actorBackgroundColor #E8F5E9
+skinparam usecaseBackgroundColor #E3F2FD
+skinparam usecaseBorderColor #1976D2
+
+title TITLE
+
+' Define Actors
+:אורח: as Guest
+:סטודנט רשום: as Student
+:מנהל: as Moderator
+:מנהל מערכת: as Admin
+
+' System Boundary
+rectangle "StudyHub - IL" {
+  ' Authentication Use Case (included by others)
+  (הרשמה / התחברות) as Auth
+  
+  ' Main Use Cases
+  (חיפוש/עיון בסיכומים) as Browse
+  (העלאת/שיתוף סיכומים) as Upload
+  (יצירת/הצטרפות לדיון) as Discussion
+  (איתור/התאמת שותף לימוד) as FindPartner
+  (תיאום מפגש לימוד) as Schedule
+  
+  ' Optional/Extended Use Case
+  (דיווח על תוכן בלתי הולם) as Report
+  
+  ' Include relationships - uploading, discussion and scheduling must include authentication
+  Upload ..> Auth : <<include>>
+  Discussion ..> Auth : <<include>>
+  Schedule ..> Auth : <<include>>
+  FindPartner ..> Auth : <<include>>
+  
+  ' Extend relationship - reporting extends browsing (optional action when browsing)
+  Report .> Browse : <<extend>>
+}
+
+' Actor to Use Case relationships
+
+' Guest can only browse and authenticate
+Guest --> Browse
+Guest --> Auth
+
+' Registered Student can do everything except admin functions
+Student --> Browse
+Student --> Upload
+Student --> Discussion
+Student --> FindPartner
+Student --> Schedule
+Student --> Auth
+
+' Moderator can do student actions plus report management
+Moderator --> Browse
+Moderator --> Upload
+Moderator --> Discussion
+Moderator --> FindPartner
+Moderator --> Schedule
+Moderator --> Report
+Moderator --> Auth
+
+' Admin has all permissions
+Admin --> Browse
+Admin --> Upload
+Admin --> Discussion
+Admin --> FindPartner
+Admin --> Schedule
+Admin --> Report
+Admin --> Auth
+
+note right of Report
+  ניתן לדווח על תוכן
+  בלתי הולם בזמן עיון
+  בסיכומים
+end note
+
+note left of Auth
+  אימות נדרש להעלאה,
+  דיונים, תיאום מפגשים
+  ואיתור שותפים
+end note
+
+@enduml
