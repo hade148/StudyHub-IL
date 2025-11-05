@@ -53,6 +53,27 @@ If you need to regenerate the diagrams from the PlantUML source:
 - PlantUML JAR file
 - Graphviz (for rendering)
 
+### Installation
+
+#### Option 1: Local Installation (Command Line)
+```bash
+# Install Graphviz (required for rendering)
+# Ubuntu/Debian:
+sudo apt-get install graphviz
+
+# macOS:
+brew install graphviz
+
+# Download PlantUML JAR
+wget https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
+```
+
+#### Option 2: VS Code Extension
+Install the "PlantUML" extension by jebbs in VS Code for inline preview and export.
+
+#### Option 3: Online PlantUML Server
+Visit http://www.plantuml.com/plantuml/ and paste the `.puml` file contents.
+
 ### Commands
 
 ```bash
