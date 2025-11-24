@@ -48,7 +48,9 @@ export function LoginPage({ onNavigateDashboard, onNavigateRegister, onNavigateF
       // Navigate to dashboard only after successful login
       onNavigateDashboard();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'אימייל או סיסמה שגויים');
+      // Handle axios errors and other error types
+      const errorMessage = err.response?.data?.message || err.message || 'אימייל או סיסמה שגויים';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
