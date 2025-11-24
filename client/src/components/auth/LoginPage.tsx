@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
+import { useAuth } from '../../context/AuthContext';
 
 interface LoginPageProps {
   onNavigateDashboard: () => void;
@@ -20,6 +21,7 @@ interface LoginFormData {
 }
 
 export function LoginPage({ onNavigateDashboard, onNavigateRegister, onNavigateForgotPassword }: LoginPageProps) {
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,20 +42,13 @@ export function LoginPage({ onNavigateDashboard, onNavigateRegister, onNavigateF
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Mock successful login
-      console.log('Login data:', data);
+      // Use real login function from AuthContext
+      await login(data.email, data.password);
       
-      // Store token (mock)
-      localStorage.setItem('token', 'mock-token-12345');
-      localStorage.setItem('user', JSON.stringify({ email: data.email, name: 'יוסי כהן' }));
-      
-      // Navigate to dashboard
+      // Navigate to dashboard only after successful login
       onNavigateDashboard();
-    } catch (err) {
-      setError('אימייל או סיסמה שגויים');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'אימייל או סיסמה שגויים');
     } finally {
       setIsLoading(false);
     }
