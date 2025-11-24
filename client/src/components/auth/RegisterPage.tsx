@@ -7,6 +7,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { useAuth } from '../../context/AuthContext';
 
 interface RegisterPageProps {
   onNavigateLogin: () => void;
@@ -61,6 +62,8 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  const { register: registerUser } = useAuth();
+
   const {
     register,
     handleSubmit,
@@ -109,15 +112,15 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Use real register function from AuthContext
+      await registerUser(data.fullName, data.email, data.password);
 
       console.log('Registration data:', data);
       
       // Show success
       setSuccess(true);
-    } catch (err) {
-      setError('שגיאה בהרשמה, נסה שוב');
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.response?.data?.message || 'שגיאה בהרשמה, נסה שוב');
     } finally {
       setIsLoading(false);
     }
