@@ -1,9 +1,11 @@
 const express = require('express');
+const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
 const { generateToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
-const { registerValidation, loginValidation } = require('../middleware/validation');
+const { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation } = require('../middleware/validation');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -22,6 +24,11 @@ router.post('/register', registerValidation, async (req, res) => {
     const user = await prisma.user.create({
       data: { fullName, email, passwordHash, role: 'USER' },
       select: { id: true, fullName: true, email: true, role: true, createdAt: true }
+    });
+
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(email, fullName).catch(err => {
+      console.error('Failed to send welcome email:', err);
     });
 
     const token = generateToken(user.id, user.role);
@@ -67,6 +74,73 @@ router.get('/me', authenticate, async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'שגיאה בטעינת פרטי משתמש' });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', forgotPasswordValidation, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return res.json({ message: 'אם האימייל קיים במערכת, נשלח אליו קישור לאיפוס סיסמה' });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Save token to database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetToken, resetTokenExpiresAt }
+    });
+
+    // Send password reset email
+    await sendPasswordResetEmail(email, user.fullName, resetToken);
+
+    res.json({ message: 'אם האימייל קיים במערכת, נשלח אליו קישור לאיפוס סיסמה' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'שגיאה בשליחת מייל לאיפוס סיסמה' });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', resetPasswordValidation, async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    // Find user with valid token
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: token,
+        resetTokenExpiresAt: { gt: new Date() }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'קישור איפוס לא תקין או שפג תוקפו' });
+    }
+
+    // Hash new password and clear reset token
+    const passwordHash = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpiresAt: null
+      }
+    });
+
+    res.json({ message: 'הסיסמה אופסה בהצלחה' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'שגיאה באיפוס סיסמה' });
   }
 });
 
