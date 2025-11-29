@@ -30,9 +30,13 @@ StudyHub-IL is a comprehensive educational platform designed to facilitate learn
 ### Backend (Server)
 1. Navigate to the server directory: `cd server`
 2. Install dependencies: `npm install`
-3. Set up environment variables in `.env`
-4. Run database migrations: `npx prisma migrate dev`
-5. Start the server: `npm start`
+3. Set up environment variables:
+   - Copy `.env.example` to `.env`: `cp .env.example .env`
+   - Update `DATABASE_URL` with your PostgreSQL connection string
+   - Update `JWT_SECRET` with a secure secret key
+4. Generate Prisma client: `npx prisma generate`
+5. Run database migrations: `npx prisma migrate dev`
+6. Start the server: `npm start` (or `npm run dev` for development)
 
 ### With Docker
 1. Clone the repository: `git clone <repository-url>`
@@ -60,6 +64,19 @@ The database consists of the following 8 tables:
 8. Feedback
 
 ## API Endpoints Documentation
+
+### Authentication
+- **POST /api/auth/register:** Register a new user
+  - Body: `{ fullName, email, password }`
+  - Returns: `{ message, token, user }`
+- **POST /api/auth/login:** Login with email and password
+  - Body: `{ email, password }`
+  - Returns: `{ message, token, user }`
+- **GET /api/auth/me:** Get current authenticated user (requires Bearer token)
+  - Headers: `Authorization: Bearer <token>`
+  - Returns: User object with statistics
+
+### Other Endpoints
 - **GET /api/courses:** Retrieve all courses
 - **POST /api/enroll:** Enroll a user in a course
 
