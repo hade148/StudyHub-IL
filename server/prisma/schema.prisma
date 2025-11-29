@@ -8,13 +8,15 @@ datasource db {
 }
 
 model User {
-  id            Int           @id @default(autoincrement())
-  fullName      String
-  email         String        @unique
-  passwordHash  String
-  role          Role          @default(USER)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id                  Int           @id @default(autoincrement())
+  fullName            String
+  email               String        @unique
+  passwordHash        String
+  role                Role          @default(USER)
+  resetToken          String?       @unique
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
   
   summaries     Summary[]     @relation("UserSummaries")
   ratings       Rating[]
