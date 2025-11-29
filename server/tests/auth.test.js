@@ -1,4 +1,5 @@
 const request = require('supertest');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const app = require('../src/index');
 
@@ -178,7 +179,6 @@ describe('Auth API Tests', () => {
 
     beforeAll(async () => {
       // Create a reset token directly in the database for testing
-      const crypto = require('crypto');
       resetToken = crypto.randomBytes(32).toString('hex');
       const resetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -223,7 +223,6 @@ describe('Auth API Tests', () => {
 
     it('should reject expired token', async () => {
       // Create an expired token
-      const crypto = require('crypto');
       const expiredToken = crypto.randomBytes(32).toString('hex');
       const expiredDate = new Date(Date.now() - 60000); // 1 minute ago
 
@@ -243,7 +242,6 @@ describe('Auth API Tests', () => {
     });
 
     it('should reject short password', async () => {
-      const crypto = require('crypto');
       const newToken = crypto.randomBytes(32).toString('hex');
       await prisma.user.update({
         where: { email: 'test@example.com' },
