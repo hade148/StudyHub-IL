@@ -1,8 +1,11 @@
 {
   "name": "studyhub-il-server",
-  "version": "2.0.0",
+  "version": "2. 0.0",
   "description": "StudyHub-IL Backend API with Full Features",
   "main": "src/index.js",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
@@ -33,7 +36,8 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^7.0.11"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

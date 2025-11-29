@@ -46,6 +46,30 @@ const loginValidation = [
 ];
 
 /**
+ * Validation rules for forgot password
+ */
+const forgotPasswordValidation = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('אימייל הוא שדה חובה')
+    .isEmail().withMessage('אימייל לא תקין'),
+  validate
+];
+
+/**
+ * Validation rules for reset password
+ */
+const resetPasswordValidation = [
+  body('token')
+    .trim()
+    .notEmpty().withMessage('טוקן איפוס הוא שדה חובה'),
+  body('password')
+    .notEmpty().withMessage('סיסמה היא שדה חובה')
+    .isLength({ min: 6 }).withMessage('סיסמה חייבת להכיל לפחות 6 תווים'),
+  validate
+];
+
+/**
  * Validation rules for creating a course
  */
 const courseValidation = [
@@ -143,6 +167,8 @@ const toolValidation = [
 module.exports = {
   registerValidation,
   loginValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
   courseValidation,
   summaryValidation,
   ratingValidation,

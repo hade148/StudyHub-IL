@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Lock, Loader2, Check, X, AlertCircle } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import api from '../../utils/api';
 
 interface ResetPasswordPageProps {
   onNavigateLogin: () => void;
@@ -22,6 +24,7 @@ interface PasswordStrength {
 }
 
 export function ResetPasswordPage({ onNavigateLogin }: ResetPasswordPageProps) {
+  const { token } = useParams<{ token: string }>();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,21 +46,14 @@ export function ResetPasswordPage({ onNavigateLogin }: ResetPasswordPageProps) {
   // Check token validity on mount
   useEffect(() => {
     const checkToken = () => {
-      // In real app, validate token from URL params
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      
+      // Check if token is provided in URL params
       if (!token) {
         setTokenExpired(true);
       }
-      
-      // Simulate token validation
-      // const isValid = validateToken(token);
-      // if (!isValid) setTokenExpired(true);
     };
 
     checkToken();
-  }, []);
+  }, [token]);
 
   // Redirect countdown after success
   useEffect(() => {
@@ -98,14 +94,10 @@ export function ResetPasswordPage({ onNavigateLogin }: ResetPasswordPageProps) {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // In real app:
-      // const token = new URLSearchParams(window.location.search).get('token');
-      // await api.post('/auth/reset-password', { token, password: data.password });
-
-      console.log('Password reset:', data.password);
+      await api.post('/auth/reset-password', { 
+        token, 
+        password: data.password 
+      });
       
       setSuccess(true);
       setRedirectTimer(5);
@@ -114,7 +106,7 @@ export function ResetPasswordPage({ onNavigateLogin }: ResetPasswordPageProps) {
         setError('הקישור פג תוקף');
         setTokenExpired(true);
       } else {
-        setError('שגיאה באיפוס הסיסמה, נסה שוב');
+        setError(err.response?.data?.error || 'שגיאה באיפוס הסיסמה, נסה שוב');
       }
     } finally {
       setIsLoading(false);

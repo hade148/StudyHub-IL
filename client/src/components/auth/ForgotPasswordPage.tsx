@@ -5,6 +5,7 @@ import { Mail, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import api from '../../utils/api';
 
 interface ForgotPasswordPageProps {
   onNavigateLogin: () => void;
@@ -41,15 +42,12 @@ export function ForgotPasswordPage({ onNavigateLogin }: ForgotPasswordPageProps)
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      console.log('Forgot password for:', data.email);
+      await api.post('/auth/forgot-password', { email: data.email });
       
       setSuccess(true);
       setResendTimer(60); // 60 seconds cooldown
-    } catch (err) {
-      setError('שגיאה בשליחת הקישור, נסה שוב');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'שגיאה בשליחת הקישור, נסה שוב');
     } finally {
       setIsLoading(false);
     }
@@ -62,10 +60,10 @@ export function ForgotPasswordPage({ onNavigateLogin }: ForgotPasswordPageProps)
     setError('');
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await api.post('/auth/forgot-password', { email: watchEmail });
       setResendTimer(60);
-    } catch (err) {
-      setError('שגיאה בשליחה חוזרת');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'שגיאה בשליחה חוזרת');
     } finally {
       setIsLoading(false);
     }
