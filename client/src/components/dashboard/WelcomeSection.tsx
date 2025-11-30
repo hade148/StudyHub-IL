@@ -1,13 +1,19 @@
 import { motion } from 'motion/react';
 import { Calendar } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export function WelcomeSection() {
+  const { user } = useAuth();
+  
   const currentDate = new Date().toLocaleDateString('he-IL', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
+
+  // Get first name for greeting
+  const firstName = user?.fullName?.split(' ')[0] || 'משתמש';
 
   return (
     <motion.div
@@ -18,7 +24,7 @@ export function WelcomeSection() {
     >
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="mb-2">שלום, יוסי! 👋</h1>
+          <h1 className="mb-2">שלום, {firstName}! 👋</h1>
           <p className="opacity-90">ברוך הבא ל-StudyHub-IL - הפלטפורמה האקדמית שלך</p>
         </div>
         <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { BookOpen, MessageCircle, Wrench } from 'lucide-react';
 import { Button } from './components/ui/button';
@@ -11,8 +11,10 @@ import { RecentSummaries } from './components/dashboard/RecentSummaries';
 import { LatestForumPosts } from './components/dashboard/LatestForumPosts';
 import { PopularTools } from './components/dashboard/PopularTools';
 import { SummariesPage } from './components/summaries/SummariesPage';
+import { SummaryDetailPage } from './components/summaries/SummaryDetailPage';
 import { UploadPage } from './components/summaries/UploadPage';
 import { ForumPage } from './components/forum/ForumPage';
+import { ForumPostDetailPage } from './components/forum/ForumPostDetailPage';
 import { ToolsPage } from './components/tools/ToolsPage';
 import { ProfilePageNew } from './components/profile/ProfilePageNew';
 import { LoginPage } from './components/auth/LoginPage';
@@ -47,11 +49,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Dashboard Component
 function Dashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+  
+  // Get initials for avatar
+  const getInitials = () => {
+    if (!user?.fullName) return '??';
+    const names = user.fullName.split(' ');
+    if (names.length >= 2) {
+      return names[0][0] + names[1][0];
+    }
+    return names[0].slice(0, 2);
   };
 
   return (
@@ -107,7 +119,7 @@ function Dashboard() {
               >
                 <Avatar className="w-10 h-10 border-2 border-gray-300 hover:border-blue-500 transition-colors">
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    יכ
+                    {getInitials()}
                   </AvatarFallback>
                 </Avatar>
               </button>
@@ -170,6 +182,38 @@ function Dashboard() {
           <p>© 2025 StudyHub-IL. כל הזכויות שמורות.</p>
         </motion.footer>
       </motion.div>
+    </div>
+  );
+}
+
+// Wrapper component for SummaryDetailPage to get route params
+function SummaryDetailWrapper() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  return (
+    <div dir="rtl">
+      <SummaryDetailPage
+        summaryId={id || ''}
+        onNavigateHome={() => navigate('/dashboard')}
+        onNavigateSummaries={() => navigate('/summaries')}
+      />
+    </div>
+  );
+}
+
+// Wrapper component for ForumPostDetailPage to get route params
+function ForumPostDetailWrapper() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  return (
+    <div dir="rtl">
+      <ForumPostDetailPage
+        postId={id || ''}
+        onNavigateHome={() => navigate('/dashboard')}
+        onNavigateForum={() => navigate('/forum')}
+      />
     </div>
   );
 }
@@ -242,8 +286,17 @@ export default function App() {
               <SummariesPage 
                 onNavigateHome={() => navigate('/dashboard')} 
                 onNavigateUpload={() => navigate('/upload')}
+                onNavigateSummary={(id: number) => navigate(`/summaries/${id}`)}
               />
             </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/summaries/:id" 
+        element={
+          <ProtectedRoute>
+            <SummaryDetailWrapper />
           </ProtectedRoute>
         } 
       />
@@ -268,6 +321,7 @@ export default function App() {
               <ForumPage 
                 onNavigateHome={() => navigate('/dashboard')} 
                 onNavigateNewQuestion={() => navigate('/forum/new')}
+                onNavigatePost={(id: number) => navigate(`/forum/${id}`)}
               />
             </div>
           </ProtectedRoute>
@@ -278,6 +332,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <NewQuestionPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/forum/:id" 
+        element={
+          <ProtectedRoute>
+            <ForumPostDetailWrapper />
           </ProtectedRoute>
         } 
       />

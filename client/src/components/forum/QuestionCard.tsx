@@ -28,6 +28,7 @@ interface QuestionCardProps {
     };
   };
   index: number;
+  onClick?: () => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -39,7 +40,7 @@ const categoryColors: Record<string, string> = {
   'כללי': 'bg-gray-100 text-gray-700 border-gray-300',
 };
 
-export function QuestionCard({ question, index }: QuestionCardProps) {
+export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -47,6 +48,7 @@ export function QuestionCard({ question, index }: QuestionCardProps) {
       transition={{ delay: index * 0.05, duration: 0.3 }}
       whileHover={{ backgroundColor: '#F9FAFB', borderRightColor: '#3B82F6' }}
       className="bg-white border-r-4 border-r-transparent rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6 cursor-pointer"
+      onClick={onClick}
     >
       <div className="flex gap-6">
         {/* Stats Section (Right) */}

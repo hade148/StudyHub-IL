@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Camera, Upload as UploadIcon } from 'lucide-react';
+import { X, Camera, Upload as UploadIcon, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -21,16 +21,41 @@ interface EditProfileModalProps {
     website: string;
     interests: string[];
   };
-  onSave: (data: any) => void;
+  onSave: (data: any) => Promise<void>;
+  isSaving?: boolean;
 }
 
-export function EditProfileModal({ isOpen, onClose, user, onSave }: EditProfileModalProps) {
-  const [formData, setFormData] = useState(user);
+export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = false }: EditProfileModalProps) {
+  const [formData, setFormData] = useState({
+    name: user.name || '',
+    avatar: user.avatar || '',
+    bio: user.bio || '',
+    location: user.location || '',
+    institution: user.institution || '',
+    fieldOfStudy: user.fieldOfStudy || '',
+    website: user.website || '',
+    interests: user.interests || [],
+  });
   const [newInterest, setNewInterest] = useState('');
 
-  const handleSave = () => {
-    onSave(formData);
-    onClose();
+  // Reinitialize form when user data changes or modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: user.name || '',
+        avatar: user.avatar || '',
+        bio: user.bio || '',
+        location: user.location || '',
+        institution: user.institution || '',
+        fieldOfStudy: user.fieldOfStudy || '',
+        website: user.website || '',
+        interests: user.interests || [],
+      });
+    }
+  }, [isOpen, user]);
+
+  const handleSave = async () => {
+    await onSave(formData);
   };
 
   const addInterest = () => {
@@ -208,14 +233,22 @@ export function EditProfileModal({ isOpen, onClose, user, onSave }: EditProfileM
 
             {/* Footer */}
             <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={onClose} disabled={isSaving}>
                 ביטול
               </Button>
               <Button
                 onClick={handleSave}
+                disabled={isSaving}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
               >
-                שמור שינויים
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    שומר...
+                  </>
+                ) : (
+                  'שמור שינויים'
+                )}
               </Button>
             </div>
           </motion.div>
