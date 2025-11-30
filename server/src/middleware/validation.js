@@ -189,18 +189,9 @@ const profileUpdateValidation = [
     .trim()
     .isLength({ max: 100 }).withMessage('תחום לימוד יכול להכיל עד 100 תווים'),
   body('website')
-    .optional()
+    .optional({ values: 'falsy' })
     .trim()
-    .custom((value) => {
-      if (value && value.length > 0) {
-        // Simple URL validation - allow empty or valid URL
-        const urlPattern = /^https?:\/\/.+/;
-        if (!urlPattern.test(value)) {
-          throw new Error('כתובת אתר לא תקינה');
-        }
-      }
-      return true;
-    }),
+    .isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('כתובת אתר לא תקינה'),
   body('interests')
     .optional()
     .isArray().withMessage('תחומי עניין חייבים להיות רשימה')
