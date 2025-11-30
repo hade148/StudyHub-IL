@@ -18,6 +18,14 @@ model User {
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   
+  // Profile fields
+  bio                 String?
+  location            String?
+  institution         String?
+  fieldOfStudy        String?
+  website             String?
+  interests           String[]      @default([])
+  
   summaries     Summary[]     @relation("UserSummaries")
   ratings       Rating[]
   comments      Comment[]

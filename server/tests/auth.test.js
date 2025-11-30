@@ -117,6 +117,20 @@ describe('Auth API Tests', () => {
       expect(res.body).toHaveProperty('email', 'test@example.com');
     });
 
+    it('should return profile fields', async () => {
+      const res = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('bio');
+      expect(res.body).toHaveProperty('location');
+      expect(res.body).toHaveProperty('institution');
+      expect(res.body).toHaveProperty('fieldOfStudy');
+      expect(res.body).toHaveProperty('website');
+      expect(res.body).toHaveProperty('interests');
+    });
+
     it('should reject without token', async () => {
       const res = await request(app).get('/api/auth/me');
 
@@ -129,6 +143,83 @@ describe('Auth API Tests', () => {
         .set('Authorization', 'Bearer invalid-token');
 
       expect(res.statusCode).toBe(401);
+    });
+  });
+
+  describe('PUT /api/auth/profile', () => {
+    let token;
+
+    beforeAll(async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'password123'
+        });
+      token = res.body.token;
+    });
+
+    it('should update user profile', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          bio: 'סטודנט למדעי המחשב',
+          location: 'תל אביב',
+          institution: 'אוניברסיטת תל אביב',
+          fieldOfStudy: 'מדעי המחשב',
+          interests: ['Python', 'AI']
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('message');
+      expect(res.body.user).toHaveProperty('bio', 'סטודנט למדעי המחשב');
+      expect(res.body.user).toHaveProperty('location', 'תל אביב');
+      expect(res.body.user).toHaveProperty('institution', 'אוניברסיטת תל אביב');
+      expect(res.body.user).toHaveProperty('fieldOfStudy', 'מדעי המחשב');
+      expect(res.body.user.interests).toEqual(['Python', 'AI']);
+    });
+
+    it('should update fullName', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          fullName: 'Updated Name'
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.user).toHaveProperty('fullName', 'Updated Name');
+    });
+
+    it('should reject without token', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .send({ bio: 'test' });
+
+      expect(res.statusCode).toBe(401);
+    });
+
+    it('should reject bio that is too long', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          bio: 'a'.repeat(501) // More than 500 characters
+        });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('should reject too many interests', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          interests: Array(11).fill('interest') // More than 10 interests
+        });
+
+      expect(res.statusCode).toBe(400);
     });
   });
 

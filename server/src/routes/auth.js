@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
 const { generateToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
-const { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation } = require('../middleware/validation');
+const { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation, profileUpdateValidation } = require('../middleware/validation');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
 
 const router = express.Router();
@@ -67,13 +67,64 @@ router.get('/me', authenticate, async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
       select: {
-        id: true, fullName: true, email: true, role: true, createdAt: true,
+        id: true, 
+        fullName: true, 
+        email: true, 
+        role: true, 
+        createdAt: true,
+        bio: true,
+        location: true,
+        institution: true,
+        fieldOfStudy: true,
+        website: true,
+        interests: true,
         _count: { select: { summaries: true, forumPosts: true, ratings: true } }
       }
     });
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'שגיאה בטעינת פרטי משתמש' });
+  }
+});
+
+// PUT /api/auth/profile
+router.put('/profile', authenticate, profileUpdateValidation, async (req, res) => {
+  try {
+    const { fullName, bio, location, institution, fieldOfStudy, website, interests } = req.body;
+
+    // Build update data object with only provided fields
+    const updateData = {};
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (bio !== undefined) updateData.bio = bio;
+    if (location !== undefined) updateData.location = location;
+    if (institution !== undefined) updateData.institution = institution;
+    if (fieldOfStudy !== undefined) updateData.fieldOfStudy = fieldOfStudy;
+    if (website !== undefined) updateData.website = website;
+    if (interests !== undefined) updateData.interests = interests;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: updateData,
+      select: {
+        id: true, 
+        fullName: true, 
+        email: true, 
+        role: true, 
+        createdAt: true,
+        bio: true,
+        location: true,
+        institution: true,
+        fieldOfStudy: true,
+        website: true,
+        interests: true,
+        _count: { select: { summaries: true, forumPosts: true, ratings: true } }
+      }
+    });
+
+    res.json({ message: 'הפרופיל עודכן בהצלחה', user: updatedUser });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'שגיאה בעדכון הפרופיל' });
   }
 });
 
