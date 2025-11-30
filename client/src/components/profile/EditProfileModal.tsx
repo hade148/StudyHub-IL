@@ -88,13 +88,16 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
             onClick={onClose}
           />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl z-50"
-          >
+          {/* Modal Container - centers the modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none p-4">
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              dir="rtl"
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl pointer-events-auto"
+            >
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
               <h2 className="text-gray-900">ערוך פרופיל</h2>
@@ -252,6 +255,7 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
               </Button>
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
