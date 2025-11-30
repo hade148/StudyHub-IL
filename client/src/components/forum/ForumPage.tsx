@@ -352,9 +352,10 @@ const questionsData = [
 interface ForumPageProps {
   onNavigateHome: () => void;
   onNavigateNewQuestion?: () => void;
+  onNavigatePost?: (id: number) => void;
 }
 
-export function ForumPage({ onNavigateHome, onNavigateNewQuestion }: ForumPageProps) {
+export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePost }: ForumPageProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('all');
   const itemsPerPage = 10;
@@ -449,7 +450,12 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion }: ForumPagePr
                 {/* Questions List */}
                 <div className="space-y-4">
                   {currentQuestions.map((question, index) => (
-                    <QuestionCard key={question.id} question={question} index={index} />
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      index={index}
+                      onClick={() => onNavigatePost?.(question.id)}
+                    />
                   ))}
                 </div>
 
@@ -520,7 +526,12 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion }: ForumPagePr
                 <ForumFilters />
                 <div className="space-y-4">
                   {currentQuestions.map((question, index) => (
-                    <QuestionCard key={question.id} question={question} index={index} />
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      index={index}
+                      onClick={() => onNavigatePost?.(question.id)}
+                    />
                   ))}
                 </div>
               </div>
@@ -536,7 +547,12 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion }: ForumPagePr
                 <ForumFilters />
                 <div className="space-y-4">
                   {currentQuestions.map((question, index) => (
-                    <QuestionCard key={question.id} question={question} index={index} />
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      index={index}
+                      onClick={() => onNavigatePost?.(question.id)}
+                    />
                   ))}
                 </div>
               </div>

@@ -82,7 +82,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
         uploadedBy: { select: { id: true, fullName: true, email: true } },
         ratings: { include: { user: { select: { fullName: true } } } },
         comments: {
-          include: { author: { select: { fullName: true } } },
+          include: { author: { select: { id: true, fullName: true } } },
           orderBy: { createdAt: 'desc' }
         }
       }
@@ -227,7 +227,7 @@ router.post('/:id/comments', authenticate, commentValidation, async (req, res) =
         authorId: req.user.id
       },
       include: {
-        author: { select: { fullName: true } }
+        author: { select: { id: true, fullName: true } }
       }
     });
 

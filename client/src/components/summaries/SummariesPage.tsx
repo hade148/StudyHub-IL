@@ -210,9 +210,10 @@ const summariesData = [
 interface SummariesPageProps {
   onNavigateHome: () => void;
   onNavigateUpload?: () => void;
+  onNavigateSummary?: (id: number) => void;
 }
 
-export function SummariesPage({ onNavigateHome, onNavigateUpload }: SummariesPageProps) {
+export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSummary }: SummariesPageProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
@@ -273,7 +274,12 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload }: SummariesPag
         {/* Summaries Grid */}
         <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
           {currentSummaries.map((summary, index) => (
-            <SummaryCard key={summary.id} summary={summary} index={index} />
+            <SummaryCard 
+              key={summary.id} 
+              summary={summary} 
+              index={index} 
+              onClick={() => onNavigateSummary?.(summary.id)}
+            />
           ))}
         </div>
 
