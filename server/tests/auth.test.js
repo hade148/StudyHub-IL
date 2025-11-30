@@ -221,6 +221,25 @@ describe('Auth API Tests', () => {
 
       expect(res.statusCode).toBe(400);
     });
+
+    it('should accept empty string fields as optional', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          fullName: 'Test User',
+          bio: '',
+          location: '',
+          institution: '',
+          fieldOfStudy: '',
+          website: '',
+          interests: []
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('message');
+      expect(res.body.user).toHaveProperty('fullName', 'Test User');
+    });
   });
 
   describe('POST /api/auth/forgot-password', () => {

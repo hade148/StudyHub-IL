@@ -169,23 +169,23 @@ const toolValidation = [
  */
 const profileUpdateValidation = [
   body('fullName')
-    .optional()
+    .optional({ values: 'falsy' })
     .trim()
     .isLength({ min: 2 }).withMessage('שם מלא חייב להכיל לפחות 2 תווים'),
   body('bio')
-    .optional()
+    .optional({ values: 'falsy' })
     .trim()
     .isLength({ max: 500 }).withMessage('תיאור עצמי יכול להכיל עד 500 תווים'),
   body('location')
-    .optional()
+    .optional({ values: 'falsy' })
     .trim()
     .isLength({ max: 100 }).withMessage('מיקום יכול להכיל עד 100 תווים'),
   body('institution')
-    .optional()
+    .optional({ values: 'falsy' })
     .trim()
     .isLength({ max: 200 }).withMessage('מוסד לימודים יכול להכיל עד 200 תווים'),
   body('fieldOfStudy')
-    .optional()
+    .optional({ values: 'falsy' })
     .trim()
     .isLength({ max: 100 }).withMessage('תחום לימוד יכול להכיל עד 100 תווים'),
   body('website')
