@@ -294,7 +294,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                       <p className="text-sm text-gray-500">{formatDate(comment.createdAt)}</p>
                     </div>
                   </div>
-                  <p className="text-gray-700 pr-13">{comment.text}</p>
+                  <p className="text-gray-700 pr-12">{comment.text}</p>
                 </motion.div>
               ))
             )}
