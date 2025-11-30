@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { BookOpen, MessageCircle, Wrench } from 'lucide-react';
 import { Button } from './components/ui/button';
@@ -11,8 +11,10 @@ import { RecentSummaries } from './components/dashboard/RecentSummaries';
 import { LatestForumPosts } from './components/dashboard/LatestForumPosts';
 import { PopularTools } from './components/dashboard/PopularTools';
 import { SummariesPage } from './components/summaries/SummariesPage';
+import { SummaryDetailPage } from './components/summaries/SummaryDetailPage';
 import { UploadPage } from './components/summaries/UploadPage';
 import { ForumPage } from './components/forum/ForumPage';
+import { ForumPostDetailPage } from './components/forum/ForumPostDetailPage';
 import { ToolsPage } from './components/tools/ToolsPage';
 import { ProfilePageNew } from './components/profile/ProfilePageNew';
 import { LoginPage } from './components/auth/LoginPage';
@@ -184,6 +186,38 @@ function Dashboard() {
   );
 }
 
+// Wrapper component for SummaryDetailPage to get route params
+function SummaryDetailWrapper() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  return (
+    <div dir="rtl">
+      <SummaryDetailPage
+        summaryId={id || ''}
+        onNavigateHome={() => navigate('/dashboard')}
+        onNavigateSummaries={() => navigate('/summaries')}
+      />
+    </div>
+  );
+}
+
+// Wrapper component for ForumPostDetailPage to get route params
+function ForumPostDetailWrapper() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  return (
+    <div dir="rtl">
+      <ForumPostDetailPage
+        postId={id || ''}
+        onNavigateHome={() => navigate('/dashboard')}
+        onNavigateForum={() => navigate('/forum')}
+      />
+    </div>
+  );
+}
+
 export default function App() {
   const navigate = useNavigate();
 
@@ -252,8 +286,17 @@ export default function App() {
               <SummariesPage 
                 onNavigateHome={() => navigate('/dashboard')} 
                 onNavigateUpload={() => navigate('/upload')}
+                onNavigateSummary={(id: number) => navigate(`/summaries/${id}`)}
               />
             </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/summaries/:id" 
+        element={
+          <ProtectedRoute>
+            <SummaryDetailWrapper />
           </ProtectedRoute>
         } 
       />
@@ -278,6 +321,7 @@ export default function App() {
               <ForumPage 
                 onNavigateHome={() => navigate('/dashboard')} 
                 onNavigateNewQuestion={() => navigate('/forum/new')}
+                onNavigatePost={(id: number) => navigate(`/forum/${id}`)}
               />
             </div>
           </ProtectedRoute>
@@ -288,6 +332,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <NewQuestionPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/forum/:id" 
+        element={
+          <ProtectedRoute>
+            <ForumPostDetailWrapper />
           </ProtectedRoute>
         } 
       />

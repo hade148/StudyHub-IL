@@ -24,9 +24,10 @@ interface SummaryCardProps {
     isFavorite: boolean;
   };
   index: number;
+  onClick?: () => void;
 }
 
-export function SummaryCard({ summary, index }: SummaryCardProps) {
+export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
   const [isFavorite, setIsFavorite] = useState(summary.isFavorite);
 
   return (
@@ -35,7 +36,8 @@ export function SummaryCard({ summary, index }: SummaryCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       whileHover={{ y: -8, scale: 1.02 }}
-      className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+      className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group cursor-pointer"
+      onClick={onClick}
     >
       {/* Thumbnail Section */}
       <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 p-8 flex items-center justify-center h-48">
@@ -43,7 +45,7 @@ export function SummaryCard({ summary, index }: SummaryCardProps) {
         
         {/* Favorite Button */}
         <button
-          onClick={() => setIsFavorite(!isFavorite)}
+          onClick={(e) => { e.stopPropagation(); setIsFavorite(!isFavorite); }}
           className="absolute top-3 left-3 bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform"
         >
           <Heart
