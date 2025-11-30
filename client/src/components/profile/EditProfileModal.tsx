@@ -69,6 +69,13 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
     }
   };
 
+  const handleInterestKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addInterest();
+    }
+  };
+
   const removeInterest = (interest: string) => {
     setFormData({
       ...formData,
@@ -213,12 +220,7 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
                   <Input
                     value={newInterest}
                     onChange={(e) => setNewInterest(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addInterest();
-                      }
-                    }}
+                    onKeyDown={handleInterestKeyDown}
                     placeholder="הוסף תחום עניין..."
                     className="text-right flex-1"
                   />

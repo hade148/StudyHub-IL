@@ -296,6 +296,12 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
     setIsEditModalOpen(true);
   };
 
+  const extractErrorMessage = (error: any): string => {
+    return error.response?.data?.error || 
+           error.response?.data?.details?.[0]?.msg || 
+           'שגיאה בעדכון הפרופיל. נסה שוב.';
+  };
+
   const handleSaveProfile = async (data: any) => {
     try {
       setIsSaving(true);
@@ -312,8 +318,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
       setIsEditModalOpen(false);
     } catch (error: any) {
       console.error('Failed to update profile:', error);
-      const errorMessage = error.response?.data?.error || error.response?.data?.details?.[0]?.msg || 'שגיאה בעדכון הפרופיל. נסה שוב.';
-      setSaveError(errorMessage);
+      setSaveError(extractErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
