@@ -115,7 +115,7 @@ router.post('/:id/comments', authenticate, commentValidation, async (req, res) =
         authorId: req.user.id
       },
       include: {
-        author: { select: { fullName: true } }
+        author: { select: { id: true, fullName: true } }
       }
     });
 
