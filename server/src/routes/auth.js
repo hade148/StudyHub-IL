@@ -92,15 +92,37 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
   try {
     const { fullName, bio, location, institution, fieldOfStudy, website, interests } = req.body;
 
+    // Helper to convert empty strings to null for optional fields
+    const emptyToNull = (value) => (value === '' ? null : value);
+
     // Build update data object with only provided fields
+    // Convert empty strings to null for optional fields to keep database clean
     const updateData = {};
-    if (fullName !== undefined) updateData.fullName = fullName;
-    if (bio !== undefined) updateData.bio = bio;
-    if (location !== undefined) updateData.location = location;
-    if (institution !== undefined) updateData.institution = institution;
-    if (fieldOfStudy !== undefined) updateData.fieldOfStudy = fieldOfStudy;
-    if (website !== undefined) updateData.website = website;
-    if (interests !== undefined) updateData.interests = interests;
+    // fullName is required in the schema, so we only update it if a non-empty value is provided
+    // This prevents accidentally clearing the user's name
+    if (fullName !== undefined && fullName !== '') {
+      updateData.fullName = fullName.trim();
+    }
+    if (bio !== undefined) {
+      updateData.bio = emptyToNull(bio);
+    }
+    if (location !== undefined) {
+      updateData.location = emptyToNull(location);
+    }
+    if (institution !== undefined) {
+      updateData.institution = emptyToNull(institution);
+    }
+    if (fieldOfStudy !== undefined) {
+      updateData.fieldOfStudy = emptyToNull(fieldOfStudy);
+    }
+    if (website !== undefined) {
+      updateData.website = emptyToNull(website);
+    }
+    // interests should be validated as an array by the validation middleware
+    // This is defensive coding to ensure we always store a valid array
+    if (interests !== undefined) {
+      updateData.interests = Array.isArray(interests) ? interests : [];
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
@@ -124,6 +146,10 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
     res.json({ message: 'הפרופיל עודכן בהצלחה', user: updatedUser });
   } catch (error) {
     console.error('Profile update error:', error);
+    // Provide more specific error message for common Prisma errors
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'משתמש לא נמצא' });
+    }
     res.status(500).json({ error: 'שגיאה בעדכון הפרופיל' });
   }
 });

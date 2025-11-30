@@ -180,6 +180,18 @@ describe('Auth API Tests', () => {
       expect(res.body.user.interests).toEqual(['Python', 'AI']);
     });
 
+    it('should accept website URLs without protocol', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          website: 'www.example.com'
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.user).toHaveProperty('website', 'www.example.com');
+    });
+
     it('should update fullName', async () => {
       const res = await request(app)
         .put('/api/auth/profile')
