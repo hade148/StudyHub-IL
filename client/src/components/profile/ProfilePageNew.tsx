@@ -15,25 +15,14 @@ import { AchievementsTab } from './AchievementsTab';
 import { StatisticsTab } from './StatisticsTab';
 import { EditProfileModal } from './EditProfileModal';
 import { AchievementShowcase } from './AchievementShowcase';
+import { useAuth } from '../../context/AuthContext';
 
-// Comprehensive user data
-const userData = {
-  id: 'hade148',
-  username: 'hade148',
-  name: 'יוסי כהן',
-  email: 'yossi@example.com',
+// Static data that doesn't come from user profile (stats, activity, summaries, etc.)
+const staticUserData = {
   avatar: '',
   coverPhoto: 'https://images.unsplash.com/photo-1668681919287-7367677cdc4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmFkaWVudCUyMGFic3RyYWN0JTIwYmFja2dyb3VuZHxlbnwxfHx8fDE3NjE2ODI2MDd8MA&ixlib=rb-4.1.0&q=80&w=1080',
-  role: 'student',
-  bio: 'סטודנט שנה ג\' למדעי המחשב באוניברסיטה העברית. מתמחה באלגוריתמים ובינה מלאכותית.',
-  location: 'ירושלים, ישראל',
-  institution: 'האוניברסיטה העברית',
-  fieldOfStudy: 'מדעי המחשב',
-  website: 'https://yossi.dev',
-  linkedin: 'https://linkedin.com/in/yossi',
-  interests: ['Python', 'אלגוריתמים', 'AI', 'מבני נתונים', 'למידת מכונה'],
-  joinDate: '2023-10-15',
-  lastActive: '2025-10-29T18:30:00Z',
+  linkedin: '',
+  lastActive: new Date().toISOString(),
   isOnline: true,
 
   stats: {
@@ -259,20 +248,71 @@ interface ProfilePageNewProps {
 }
 
 export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
+  const { user, updateProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [favoritesTab, setFavoritesTab] = useState('summaries');
   const [forumTab, setForumTab] = useState('questions');
   const [sortBy, setSortBy] = useState('recent');
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Merge real user data from auth context with static data
+  const userData = {
+    id: user?.id || '',
+    username: user?.email?.split('@')[0] || '',
+    name: user?.fullName || '',
+    email: user?.email || '',
+    avatar: staticUserData.avatar,
+    coverPhoto: staticUserData.coverPhoto,
+    role: user?.role?.toLowerCase() === 'admin' ? 'admin' : 'student',
+    bio: user?.bio || '',
+    location: user?.location || '',
+    institution: user?.institution || '',
+    fieldOfStudy: user?.fieldOfStudy || '',
+    website: user?.website || '',
+    linkedin: staticUserData.linkedin,
+    interests: user?.interests || [],
+    joinDate: user?.createdAt || new Date().toISOString(),
+    lastActive: staticUserData.lastActive,
+    isOnline: staticUserData.isOnline,
+    stats: {
+      ...staticUserData.stats,
+      uploads: user?._count?.summaries || 0,
+      forumPosts: user?._count?.forumPosts || 0,
+    },
+    recentActivity: staticUserData.recentActivity,
+    mySummaries: staticUserData.mySummaries,
+    favorites: staticUserData.favorites,
+    forumQuestions: staticUserData.forumQuestions,
+    forumAnswers: staticUserData.forumAnswers,
+    topSummaries: staticUserData.topSummaries,
+    earnedAchievements: staticUserData.earnedAchievements,
+  };
 
   const handleEditProfile = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveProfile = (data: any) => {
-    console.log('Profile updated:', data);
-    // Here you would normally save to backend
+  const handleSaveProfile = async (data: any) => {
+    try {
+      setIsSaving(true);
+      await updateProfile({
+        fullName: data.name,
+        bio: data.bio,
+        location: data.location,
+        institution: data.institution,
+        fieldOfStudy: data.fieldOfStudy,
+        website: data.website,
+        interests: data.interests,
+      });
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      // You could add error handling UI here
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -688,6 +728,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
         onClose={() => setIsEditModalOpen(false)}
         user={userData}
         onSave={handleSaveProfile}
+        isSaving={isSaving}
       />
     </div>
   );

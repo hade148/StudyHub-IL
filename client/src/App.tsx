@@ -47,11 +47,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Dashboard Component
 function Dashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+  
+  // Get initials for avatar
+  const getInitials = () => {
+    if (!user?.fullName) return '??';
+    const names = user.fullName.split(' ');
+    if (names.length >= 2) {
+      return names[0][0] + names[1][0];
+    }
+    return names[0].slice(0, 2);
   };
 
   return (
@@ -107,7 +117,7 @@ function Dashboard() {
               >
                 <Avatar className="w-10 h-10 border-2 border-gray-300 hover:border-blue-500 transition-colors">
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                    יכ
+                    {getInitials()}
                   </AvatarFallback>
                 </Avatar>
               </button>

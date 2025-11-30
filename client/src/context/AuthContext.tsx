@@ -6,6 +6,28 @@ interface User {
   fullName: string;
   email: string;
   role?: string;
+  bio?: string;
+  location?: string;
+  institution?: string;
+  fieldOfStudy?: string;
+  website?: string;
+  interests?: string[];
+  createdAt?: string;
+  _count?: {
+    summaries: number;
+    forumPosts: number;
+    ratings: number;
+  };
+}
+
+interface ProfileUpdateData {
+  fullName?: string;
+  bio?: string;
+  location?: string;
+  institution?: string;
+  fieldOfStudy?: string;
+  website?: string;
+  interests?: string[];
 }
 
 interface AuthContextType {
@@ -13,6 +35,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   register: (fullName: string, email: string, password: string) => Promise<User>;
   logout: () => void;
+  updateProfile: (data: ProfileUpdateData) => Promise<User>;
   loading: boolean;
   isAuthenticated: boolean;
 }
@@ -29,9 +52,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
-      // Verify token is still valid
+      // Verify token is still valid and get fresh user data
       api.get('/auth/me')
-        .then(res => setUser(res.data))
+        .then(res => {
+          setUser(res.data);
+          localStorage.setItem('user', JSON.stringify(res.data));
+        })
         .catch(() => {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -67,8 +93,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const updateProfile = async (data: ProfileUpdateData): Promise<User> => {
+    const res = await api.put('/auth/profile', data);
+    const updatedUser = res.data.user;
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, loading, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
