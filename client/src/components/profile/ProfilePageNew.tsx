@@ -256,6 +256,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Merge real user data from auth context with static data
   const userData = {
@@ -291,12 +292,14 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
   };
 
   const handleEditProfile = () => {
+    setSaveError(null);
     setIsEditModalOpen(true);
   };
 
   const handleSaveProfile = async (data: any) => {
     try {
       setIsSaving(true);
+      setSaveError(null);
       await updateProfile({
         fullName: data.name,
         bio: data.bio,
@@ -307,9 +310,10 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
         interests: data.interests,
       });
       setIsEditModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update profile:', error);
-      // You could add error handling UI here
+      const errorMessage = error.response?.data?.error || error.response?.data?.details?.[0]?.msg || 'שגיאה בעדכון הפרופיל. נסה שוב.';
+      setSaveError(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -725,10 +729,14 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
       {/* Edit Profile Modal */}
       <EditProfileModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSaveError(null);
+        }}
         user={userData}
         onSave={handleSaveProfile}
         isSaving={isSaving}
+        error={saveError}
       />
     </div>
   );

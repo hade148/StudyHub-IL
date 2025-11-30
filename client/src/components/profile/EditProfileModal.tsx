@@ -23,9 +23,10 @@ interface EditProfileModalProps {
   };
   onSave: (data: any) => Promise<void>;
   isSaving?: boolean;
+  error?: string | null;
 }
 
-export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = false }: EditProfileModalProps) {
+export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = false, error = null }: EditProfileModalProps) {
   const [formData, setFormData] = useState({
     name: user.name || '',
     avatar: user.avatar || '',
@@ -212,7 +213,12 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
                   <Input
                     value={newInterest}
                     onChange={(e) => setNewInterest(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addInterest()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addInterest();
+                      }
+                    }}
                     placeholder="הוסף תחום עניין..."
                     className="text-right flex-1"
                   />
@@ -235,24 +241,32 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-              <Button variant="outline" onClick={onClose} disabled={isSaving}>
-                ביטול
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                    שומר...
-                  </>
-                ) : (
-                  'שמור שינויים'
-                )}
-              </Button>
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex flex-col gap-3">
+              {error && (
+                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={onClose} disabled={isSaving} type="button">
+                  ביטול
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      שומר...
+                    </>
+                  ) : (
+                    'שמור שינויים'
+                  )}
+                </Button>
+              </div>
             </div>
           </motion.div>
           </div>
