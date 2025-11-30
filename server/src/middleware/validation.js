@@ -191,7 +191,7 @@ const profileUpdateValidation = [
   body('website')
     .optional({ values: 'falsy' })
     .trim()
-    .isURL({ require_protocol: true, protocols: ['http', 'https'] }).withMessage('כתובת אתר לא תקינה'),
+    .isURL({ require_protocol: false }).withMessage('כתובת אתר לא תקינה'),
   body('interests')
     .optional()
     .isArray().withMessage('תחומי עניין חייבים להיות רשימה')
