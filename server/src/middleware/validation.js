@@ -164,6 +164,55 @@ const toolValidation = [
   validate
 ];
 
+/**
+ * Validation rules for updating user profile
+ */
+const profileUpdateValidation = [
+  body('fullName')
+    .optional()
+    .trim()
+    .isLength({ min: 2 }).withMessage('שם מלא חייב להכיל לפחות 2 תווים'),
+  body('bio')
+    .optional()
+    .trim()
+    .isLength({ max: 500 }).withMessage('תיאור עצמי יכול להכיל עד 500 תווים'),
+  body('location')
+    .optional()
+    .trim()
+    .isLength({ max: 100 }).withMessage('מיקום יכול להכיל עד 100 תווים'),
+  body('institution')
+    .optional()
+    .trim()
+    .isLength({ max: 200 }).withMessage('מוסד לימודים יכול להכיל עד 200 תווים'),
+  body('fieldOfStudy')
+    .optional()
+    .trim()
+    .isLength({ max: 100 }).withMessage('תחום לימוד יכול להכיל עד 100 תווים'),
+  body('website')
+    .optional()
+    .trim()
+    .custom((value) => {
+      if (value && value.length > 0) {
+        // Simple URL validation - allow empty or valid URL
+        const urlPattern = /^https?:\/\/.+/;
+        if (!urlPattern.test(value)) {
+          throw new Error('כתובת אתר לא תקינה');
+        }
+      }
+      return true;
+    }),
+  body('interests')
+    .optional()
+    .isArray().withMessage('תחומי עניין חייבים להיות רשימה')
+    .custom((value) => {
+      if (value && value.length > 10) {
+        throw new Error('ניתן להוסיף עד 10 תחומי עניין');
+      }
+      return true;
+    }),
+  validate
+];
+
 module.exports = {
   registerValidation,
   loginValidation,
@@ -175,5 +224,6 @@ module.exports = {
   forumPostValidation,
   commentValidation,
   toolValidation,
+  profileUpdateValidation,
   validate
 };
