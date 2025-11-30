@@ -188,6 +188,8 @@ const profileUpdateValidation = [
     .optional({ values: 'falsy' })
     .trim()
     .isLength({ max: 100 }).withMessage('תחום לימוד יכול להכיל עד 100 תווים'),
+  // Allow URLs without protocol (e.g., "example.com") for better user experience
+  // The isURL validator still validates the format to prevent invalid/malicious input
   body('website')
     .optional({ values: 'falsy' })
     .trim()

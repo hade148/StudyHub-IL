@@ -98,6 +98,8 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
     // Build update data object with only provided fields
     // Convert empty strings to null for optional fields to keep database clean
     const updateData = {};
+    // fullName is required in the schema, so we only update it if a non-empty value is provided
+    // This prevents accidentally clearing the user's name
     if (fullName !== undefined && fullName !== '') {
       updateData.fullName = fullName.trim();
     }
@@ -116,6 +118,8 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
     if (website !== undefined) {
       updateData.website = emptyToNull(website);
     }
+    // interests should be validated as an array by the validation middleware
+    // This is defensive coding to ensure we always store a valid array
     if (interests !== undefined) {
       updateData.interests = Array.isArray(interests) ? interests : [];
     }
