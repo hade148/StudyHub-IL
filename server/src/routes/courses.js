@@ -6,10 +6,22 @@ const { courseValidation } = require('../middleware/validation');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// GET /api/courses - Get all courses
+// GET /api/courses - Get all courses with optional search
 router.get('/', async (req, res) => {
   try {
+    const { search } = req.query;
+
+    const where = {};
+    if (search) {
+      where.OR = [
+        { courseName: { contains: search, mode: 'insensitive' } },
+        { courseCode: { contains: search, mode: 'insensitive' } },
+        { institution: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
     const courses = await prisma.course.findMany({
+      where,
       include: {
         _count: {
           select: { summaries: true, forumPosts: true }
