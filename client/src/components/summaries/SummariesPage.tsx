@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronRight, Upload, Home } from 'lucide-react';
 import { Button } from '../ui/button';
 import { SummaryCard } from './SummaryCard';
@@ -216,10 +216,98 @@ interface SummariesPageProps {
 export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSummary }: SummariesPageProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [courseFilter, setCourseFilter] = useState('all');
+  const [fileTypeFilter, setFileTypeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const itemsPerPage = 9;
-  const totalPages = Math.ceil(summariesData.length / itemsPerPage);
 
-  const currentSummaries = summariesData.slice(
+  // Generate course options from the data
+  const courseOptions = useMemo(() => {
+    const uniqueCourses = new Map<string, string>();
+    summariesData.forEach((summary) => {
+      if (!uniqueCourses.has(summary.course)) {
+        uniqueCourses.set(summary.course, `${summary.course} - ${summary.courseFullName}`);
+      }
+    });
+    return Array.from(uniqueCourses.entries()).map(([value, label]) => ({
+      value: value.toLowerCase(),
+      label,
+    }));
+  }, []);
+
+  // Filter and sort summaries
+  const filteredAndSortedSummaries = useMemo(() => {
+    let result = [...summariesData];
+
+    // Filter by search query (course name)
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      result = result.filter(
+        (summary) =>
+          summary.course.toLowerCase().includes(query) ||
+          summary.courseFullName.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by course
+    if (courseFilter !== 'all') {
+      result = result.filter(
+        (summary) => summary.course.toLowerCase() === courseFilter
+      );
+    }
+
+    // Filter by file type
+    if (fileTypeFilter !== 'all') {
+      result = result.filter(
+        (summary) => summary.fileType.toLowerCase() === fileTypeFilter
+      );
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'rating':
+        result.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'downloads':
+        result.sort((a, b) => b.downloads - a.downloads);
+        break;
+      case 'views':
+        result.sort((a, b) => b.views - a.views);
+        break;
+      case 'newest':
+      default:
+        // Keep original order (assumed to be newest first)
+        break;
+    }
+
+    return result;
+  }, [searchQuery, courseFilter, fileTypeFilter, sortBy]);
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleCourseFilterChange = (course: string) => {
+    setCourseFilter(course);
+    setCurrentPage(1);
+  };
+
+  const handleFileTypeFilterChange = (fileType: string) => {
+    setFileTypeFilter(fileType);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(filteredAndSortedSummaries.length / itemsPerPage);
+
+  const currentSummaries = filteredAndSortedSummaries.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -268,7 +356,16 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
         <SearchAndFilters
           viewMode={viewMode}
           setViewMode={setViewMode}
-          resultsCount={summariesData.length}
+          resultsCount={filteredAndSortedSummaries.length}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          courseFilter={courseFilter}
+          onCourseFilterChange={handleCourseFilterChange}
+          fileTypeFilter={fileTypeFilter}
+          onFileTypeFilterChange={handleFileTypeFilterChange}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
+          courseOptions={courseOptions}
         />
 
         {/* Summaries Grid */}
@@ -286,7 +383,11 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
         {/* Pagination */}
         <div className="flex flex-col items-center gap-4 pt-8">
           <div className="text-gray-600">
-            מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, summariesData.length)} מתוך {summariesData.length} תוצאות
+            {filteredAndSortedSummaries.length > 0 ? (
+              <>מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredAndSortedSummaries.length)} מתוך {filteredAndSortedSummaries.length} תוצאות</>
+            ) : (
+              <>לא נמצאו תוצאות</>
+            )}
           </div>
           
           <Pagination>
