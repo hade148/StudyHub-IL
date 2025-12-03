@@ -9,13 +9,40 @@ import {
   SelectValue,
 } from '../ui/select';
 
+interface CourseOption {
+  value: string;
+  label: string;
+}
+
 interface SearchAndFiltersProps {
   viewMode: 'grid' | 'list';
   setViewMode: (mode: 'grid' | 'list') => void;
   resultsCount: number;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  courseFilter: string;
+  onCourseFilterChange: (course: string) => void;
+  fileTypeFilter: string;
+  onFileTypeFilterChange: (fileType: string) => void;
+  sortBy: string;
+  onSortChange: (sort: string) => void;
+  courseOptions: CourseOption[];
 }
 
-export function SearchAndFilters({ viewMode, setViewMode, resultsCount }: SearchAndFiltersProps) {
+export function SearchAndFilters({ 
+  viewMode, 
+  setViewMode, 
+  resultsCount,
+  searchQuery,
+  onSearchChange,
+  courseFilter,
+  onCourseFilterChange,
+  fileTypeFilter,
+  onFileTypeFilterChange,
+  sortBy,
+  onSortChange,
+  courseOptions,
+}: SearchAndFiltersProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
       {/* Search Bar */}
@@ -23,8 +50,10 @@ export function SearchAndFilters({ viewMode, setViewMode, resultsCount }: Search
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <Input
           type="text"
-          placeholder="חפש סיכומים..."
+          placeholder="חפש לפי שם קורס..."
           className="pr-10 border-gray-300"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
 
@@ -32,21 +61,22 @@ export function SearchAndFilters({ viewMode, setViewMode, resultsCount }: Search
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
           {/* Course Filter */}
-          <Select defaultValue="all">
+          <Select value={courseFilter} onValueChange={onCourseFilterChange}>
             <SelectTrigger className="w-full sm:w-[180px] border-gray-300">
               <SelectValue placeholder="כל הקורסים" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל הקורסים</SelectItem>
-              <SelectItem value="cs101">CS101 - מבוא למדעי המחשב</SelectItem>
-              <SelectItem value="cs202">CS202 - אלגוריתמים</SelectItem>
-              <SelectItem value="math101">MATH101 - חשבון</SelectItem>
-              <SelectItem value="phys101">PHYS101 - פיזיקה</SelectItem>
+              {courseOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
           {/* File Type Filter */}
-          <Select defaultValue="all">
+          <Select value={fileTypeFilter} onValueChange={onFileTypeFilterChange}>
             <SelectTrigger className="w-full sm:w-[150px] border-gray-300">
               <SelectValue placeholder="כל הסוגים" />
             </SelectTrigger>
@@ -59,7 +89,7 @@ export function SearchAndFilters({ viewMode, setViewMode, resultsCount }: Search
           </Select>
 
           {/* Sort By */}
-          <Select defaultValue="newest">
+          <Select value={sortBy} onValueChange={onSortChange}>
             <SelectTrigger className="w-full sm:w-[150px] border-gray-300">
               <SelectValue placeholder="מיון לפי" />
             </SelectTrigger>
