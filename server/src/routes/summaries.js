@@ -46,7 +46,9 @@ router.get('/', optionalAuth, async (req, res) => {
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { description: { contains: search, mode: 'insensitive' } },
+        { course: { courseName: { contains: search, mode: 'insensitive' } } },
+        { course: { courseCode: { contains: search, mode: 'insensitive' } } }
       ];
     }
 
