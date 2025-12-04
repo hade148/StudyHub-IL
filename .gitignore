@@ -34,3 +34,4 @@ server/prisma/migrations/
 # Testing
 coverage/
 .nyc_output/
+.env
