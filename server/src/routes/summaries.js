@@ -98,7 +98,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
       include: {
         course: true,
         uploadedBy: { select: { id: true, fullName: true, email: true } },
-        ratings: { include: { user: { select: { fullName: true } } } },
+        ratings: { 
+          select: { 
+            id: true, 
+            rating: true, 
+            userId: true, 
+            user: { select: { fullName: true } } 
+          } 
+        },
         comments: {
           include: { author: { select: { id: true, fullName: true } } },
           orderBy: { createdAt: 'desc' }
