@@ -42,20 +42,30 @@ router.get('/', optionalAuth, async (req, res) => {
     const { courseId, search, sortBy = 'recent', institution } = req.query;
 
     const where = {};
-    if (courseId) where.courseId = parseInt(courseId);
+    const andConditions = [];
+    
+    if (courseId) {
+      andConditions.push({ courseId: parseInt(courseId) });
+    }
     
     // Filter by institution
     if (institution) {
-      where.course = { institution };
+      andConditions.push({ course: { institution } });
     }
     
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { course: { courseName: { contains: search, mode: 'insensitive' } } },
-        { course: { courseCode: { contains: search, mode: 'insensitive' } } }
-      ];
+      andConditions.push({
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { course: { courseName: { contains: search, mode: 'insensitive' } } },
+          { course: { courseCode: { contains: search, mode: 'insensitive' } } }
+        ]
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     let orderBy = { uploadDate: 'desc' };

@@ -29,18 +29,25 @@ router.get('/', async (req, res) => {
     const { search, institution } = req.query;
 
     const where = {};
+    const andConditions = [];
     
     // Filter by institution
     if (institution) {
-      where.institution = institution;
+      andConditions.push({ institution });
     }
     
     if (search) {
-      where.OR = [
-        { courseName: { contains: search, mode: 'insensitive' } },
-        { courseCode: { contains: search, mode: 'insensitive' } },
-        { institution: { contains: search, mode: 'insensitive' } }
-      ];
+      andConditions.push({
+        OR: [
+          { courseName: { contains: search, mode: 'insensitive' } },
+          { courseCode: { contains: search, mode: 'insensitive' } },
+          { institution: { contains: search, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const courses = await prisma.course.findMany({
