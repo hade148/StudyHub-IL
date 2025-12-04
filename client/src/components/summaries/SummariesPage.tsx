@@ -44,6 +44,7 @@ interface SummaryCardData {
   courseFullName: string;
   institution: string;
   rating: number;
+  ratingsCount: number;
   views: number;
   downloads: number;
   comments: number;
@@ -88,6 +89,7 @@ const transformSummary = (apiSummary: APISummary): SummaryCardData => ({
   courseFullName: apiSummary.course.courseName,
   institution: apiSummary.course.institution,
   rating: apiSummary.avgRating ?? 0,
+  ratingsCount: apiSummary._count.ratings,
   views: 0, // Not tracked in current DB
   downloads: 0, // Not tracked in current DB
   comments: apiSummary._count.comments,
@@ -231,6 +233,17 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
     setCurrentPage(1);
   };
 
+  // Handle rating change from SummaryCard
+  const handleRatingChange = (id: number, _newRating: number, newAvgRating: number) => {
+    setSummariesData(prev => 
+      prev.map(summary => 
+        summary.id === id 
+          ? { ...summary, rating: newAvgRating }
+          : summary
+      )
+    );
+  };
+
   const totalPages = Math.ceil(filteredAndSortedSummaries.length / itemsPerPage);
 
   const currentSummaries = filteredAndSortedSummaries.slice(
@@ -333,6 +346,7 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
                 summary={summary} 
                 index={index} 
                 onClick={() => onNavigateSummary?.(summary.id)}
+                onRatingChange={handleRatingChange}
               />
             ))}
           </div>
