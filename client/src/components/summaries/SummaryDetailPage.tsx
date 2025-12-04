@@ -38,6 +38,7 @@ interface Summary {
   ratings: Array<{
     id: number;
     rating: number;
+    userId?: number;
     user: { fullName: string };
   }>;
 }
@@ -49,12 +50,22 @@ interface SummaryDetailPageProps {
 }
 
 export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummaries }: SummaryDetailPageProps) {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+
+  // Helper to safely get user ID as number
+  const getUserId = (): number | null => {
+    if (!user?.id) return null;
+    const id = Number(user.id);
+    return isNaN(id) ? null : id;
+  };
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
@@ -85,6 +96,17 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         const response = await api.get(`/summaries/${summaryId}`);
         setSummary(response.data);
         setError(null);
+        
+        // Check if user already rated this summary
+        const userId = getUserId();
+        if (userId !== null && response.data.ratings) {
+          const existingRating = response.data.ratings.find(
+            (r: { userId?: number }) => r.userId === userId
+          );
+          if (existingRating) {
+            setUserRating(existingRating.rating);
+          }
+        }
       } catch (err) {
         console.error('Error fetching summary:', err);
         setError('שגיאה בטעינת הסיכום');
@@ -94,7 +116,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
     };
 
     fetchSummary();
-  }, [summaryId]);
+  }, [summaryId, user]);
 
   // Handle adding a comment
   const handleAddComment = async () => {
@@ -119,6 +141,62 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
       alert('שגיאה בהוספת תגובה');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Handle rating a summary
+  const handleRating = async (rating: number) => {
+    if (!isAuthenticated) {
+      alert('יש להתחבר כדי לדרג סיכום');
+      return;
+    }
+
+    try {
+      setRatingSubmitting(true);
+      const response = await api.post(`/summaries/${summaryId}/rate`, { rating });
+      
+      // Update local state with new rating
+      setUserRating(rating);
+      
+      // Update the summary's average rating and ratings count
+      const userId = getUserId();
+      if (summary && userId !== null) {
+        const existingRatingIndex = summary.ratings.findIndex(
+          r => r.userId === userId
+        );
+        
+        let updatedRatings;
+        if (existingRatingIndex >= 0) {
+          // Update existing rating
+          updatedRatings = [...summary.ratings];
+          updatedRatings[existingRatingIndex] = {
+            ...updatedRatings[existingRatingIndex],
+            rating: rating
+          };
+        } else {
+          // Add new rating
+          updatedRatings = [
+            ...summary.ratings,
+            {
+              id: response.data.rating.id,
+              rating: rating,
+              userId: userId,
+              user: { fullName: user?.fullName || '' }
+            }
+          ];
+        }
+        
+        setSummary({
+          ...summary,
+          avgRating: response.data.avgRating,
+          ratings: updatedRatings
+        });
+      }
+    } catch (err) {
+      console.error('Error rating summary:', err);
+      alert('שגיאה בדירוג הסיכום');
+    } finally {
+      setRatingSubmitting(false);
     }
   };
 
@@ -219,6 +297,61 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
             <div className="flex items-center gap-1">
               <MessageCircle className="w-4 h-4" />
               <span>{summary.comments.length} תגובות</span>
+            </div>
+          </div>
+
+          {/* Rating Section */}
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  דרג את הסיכום
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {isAuthenticated 
+                    ? (userRating > 0 ? 'תודה על הדירוג! ניתן לשנות בכל עת' : 'לחץ על הכוכבים כדי לדרג')
+                    : 'יש להתחבר כדי לדרג'}
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {/* Star Rating Input */}
+                <div className="flex items-center gap-1" role="group" aria-label="דירוג">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => handleRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      disabled={!isAuthenticated || ratingSubmitting}
+                      className={`p-1 transition-all duration-150 ${
+                        isAuthenticated 
+                          ? 'cursor-pointer hover:scale-110' 
+                          : 'cursor-not-allowed opacity-50'
+                      }`}
+                      aria-label={`דירוג ${star} כוכבים`}
+                    >
+                      <Star
+                        className={`w-8 h-8 transition-colors ${
+                          star <= (hoverRating || userRating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Current Rating Display */}
+                {summary.avgRating && (
+                  <div className="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded-lg mr-4">
+                    <span className="text-sm text-gray-600">ממוצע:</span>
+                    <span className="font-bold text-yellow-700">{summary.avgRating.toFixed(1)}</span>
+                    <span className="text-sm text-gray-500">({summary.ratings.length} דירוגים)</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
