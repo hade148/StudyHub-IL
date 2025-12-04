@@ -6,10 +6,52 @@ const { courseValidation } = require('../middleware/validation');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// GET /api/courses - Get all courses
-router.get('/', async (req, res) => {
+// GET /api/courses/institutions - Get list of unique institutions
+router.get('/institutions', async (req, res) => {
   try {
     const courses = await prisma.course.findMany({
+      select: { institution: true },
+      distinct: ['institution'],
+      orderBy: { institution: 'asc' }
+    });
+    
+    const institutions = courses.map(c => c.institution).filter(Boolean);
+    res.json(institutions);
+  } catch (error) {
+    console.error('Get institutions error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת מוסדות לימודים' });
+  }
+});
+
+// GET /api/courses - Get all courses with optional search and institution filter
+router.get('/', async (req, res) => {
+  try {
+    const { search, institution } = req.query;
+
+    const where = {};
+    const andConditions = [];
+    
+    // Filter by institution
+    if (institution) {
+      andConditions.push({ institution });
+    }
+    
+    if (search) {
+      andConditions.push({
+        OR: [
+          { courseName: { contains: search, mode: 'insensitive' } },
+          { courseCode: { contains: search, mode: 'insensitive' } },
+          { institution: { contains: search, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
+    }
+
+    const courses = await prisma.course.findMany({
+      where,
       include: {
         _count: {
           select: { summaries: true, forumPosts: true }

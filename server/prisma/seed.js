@@ -53,7 +53,7 @@ async function main() {
       create: {
         courseCode: 'CS202',
         courseName: 'מבני נתונים',
-        institution: 'אוניברסיטה עברית',
+        institution: 'הטכניון',
         semester: 'סמסטר ב 2024',
       },
     }),
@@ -63,7 +63,27 @@ async function main() {
       create: {
         courseCode: 'CS301',
         courseName: 'אלגוריתמים',
-        institution: 'אוניברסיטה עברית',
+        institution: 'אוניברסיטת תל אביב',
+        semester: 'סמסטר א 2024',
+      },
+    }),
+    prisma.course.upsert({
+      where: { courseCode: 'MATH101' },
+      update: {},
+      create: {
+        courseCode: 'MATH101',
+        courseName: 'חשבון אינפיניטסימלי 1',
+        institution: 'אוניברסיטת בן גוריון',
+        semester: 'סמסטר א 2024',
+      },
+    }),
+    prisma.course.upsert({
+      where: { courseCode: 'PHYS101' },
+      update: {},
+      create: {
+        courseCode: 'PHYS101',
+        courseName: 'פיזיקה 1',
+        institution: 'אוניברסיטת בר אילן',
         semester: 'סמסטר א 2024',
       },
     }),

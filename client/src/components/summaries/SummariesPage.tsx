@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronRight, Upload, Home } from 'lucide-react';
 import { Button } from '../ui/button';
 import { SummaryCard } from './SummaryCard';
@@ -20,6 +20,7 @@ const summariesData = [
     title: 'מבוא למדעי המחשב - פרקים 1-5',
     course: 'CS101',
     courseFullName: 'מבוא למדעי המחשב',
+    institution: 'אוניברסיטה עברית',
     rating: 4.8,
     views: 234,
     downloads: 89,
@@ -39,6 +40,7 @@ const summariesData = [
     title: 'אלגוריתמים ומבני נתונים - מיון',
     course: 'CS202',
     courseFullName: 'אלגוריתמים ומבני נתונים',
+    institution: 'הטכניון',
     rating: 4.9,
     views: 456,
     downloads: 167,
@@ -58,6 +60,7 @@ const summariesData = [
     title: 'חשבון אינפיניטסימלי - נגזרות',
     course: 'MATH101',
     courseFullName: 'חשבון אינפיניטסימלי 1',
+    institution: 'אוניברסיטת תל אביב',
     rating: 4.7,
     views: 189,
     downloads: 72,
@@ -77,6 +80,7 @@ const summariesData = [
     title: 'פיזיקה קוונטית - עקרונות יסוד',
     course: 'PHYS201',
     courseFullName: 'פיזיקה קוונטית',
+    institution: 'אוניברסיטה עברית',
     rating: 4.6,
     views: 312,
     downloads: 95,
@@ -96,6 +100,7 @@ const summariesData = [
     title: 'מבני נתונים - עצים בינאריים',
     course: 'CS202',
     courseFullName: 'אלגוריתמים ומבני נתונים',
+    institution: 'הטכניון',
     rating: 4.8,
     views: 401,
     downloads: 156,
@@ -115,6 +120,7 @@ const summariesData = [
     title: 'אינטגרלים - טכניקות אינטגרציה',
     course: 'MATH102',
     courseFullName: 'חשבון אינפיניטסימלי 2',
+    institution: 'אוניברסיטת תל אביב',
     rating: 4.5,
     views: 267,
     downloads: 88,
@@ -134,6 +140,7 @@ const summariesData = [
     title: 'בסיסי נתונים - SQL ו-NoSQL',
     course: 'CS301',
     courseFullName: 'מערכות בסיסי נתונים',
+    institution: 'אוניברסיטת בן גוריון',
     rating: 4.9,
     views: 523,
     downloads: 201,
@@ -153,6 +160,7 @@ const summariesData = [
     title: 'אלגברה לינארית - מטריצות',
     course: 'MATH201',
     courseFullName: 'אלגברה לינארית',
+    institution: 'אוניברסיטת בר אילן',
     rating: 4.7,
     views: 345,
     downloads: 134,
@@ -172,6 +180,7 @@ const summariesData = [
     title: 'רשתות מחשבים - פרוטוקולים',
     course: 'CS303',
     courseFullName: 'רשתות מחשבים',
+    institution: 'אוניברסיטת חיפה',
     rating: 4.6,
     views: 278,
     downloads: 97,
@@ -191,6 +200,7 @@ const summariesData = [
     title: 'תכנות מונחה עצמים - Java',
     course: 'CS102',
     courseFullName: 'תכנות מונחה עצמים',
+    institution: 'הטכניון',
     rating: 4.8,
     views: 412,
     downloads: 178,
@@ -216,10 +226,129 @@ interface SummariesPageProps {
 export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSummary }: SummariesPageProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [courseFilter, setCourseFilter] = useState('all');
+  const [fileTypeFilter, setFileTypeFilter] = useState('all');
+  const [institutionFilter, setInstitutionFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const itemsPerPage = 9;
-  const totalPages = Math.ceil(summariesData.length / itemsPerPage);
 
-  const currentSummaries = summariesData.slice(
+  // Generate course options from the data
+  const courseOptions = useMemo(() => {
+    const uniqueCourses = new Map<string, string>();
+    summariesData.forEach((summary) => {
+      if (!uniqueCourses.has(summary.course)) {
+        uniqueCourses.set(summary.course, `${summary.course} - ${summary.courseFullName}`);
+      }
+    });
+    return Array.from(uniqueCourses.entries()).map(([value, label]) => ({
+      value: value.toLowerCase(),
+      label,
+    }));
+  }, []);
+
+  // Generate institution options from the data
+  const institutionOptions = useMemo(() => {
+    const uniqueInstitutions = new Set<string>();
+    summariesData.forEach((summary) => {
+      if (summary.institution) {
+        uniqueInstitutions.add(summary.institution);
+      }
+    });
+    return Array.from(uniqueInstitutions).sort().map((institution) => ({
+      value: institution,
+      label: institution,
+    }));
+  }, []);
+
+  // Filter and sort summaries
+  const filteredAndSortedSummaries = useMemo(() => {
+    let result = [...summariesData];
+
+    // Filter by search query (contains in several fields)
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      result = result.filter((summary) => {
+        const inCourse = summary.course.toLowerCase().includes(query);
+        const inCourseFull = summary.courseFullName.toLowerCase().includes(query);
+        const inTitle = summary.title.toLowerCase().includes(query);
+        const inDescription = (summary.description || '').toLowerCase().includes(query);
+        const inUploader = (summary.uploader || '').toLowerCase().includes(query);
+        const inTags = (summary.tags || []).join(' ').toLowerCase().includes(query);
+        return inCourse || inCourseFull || inTitle || inDescription || inUploader || inTags;
+      });
+    }
+
+    // Filter by course
+    if (courseFilter !== 'all') {
+      result = result.filter(
+        (summary) => summary.course.toLowerCase() === courseFilter
+      );
+    }
+
+    // Filter by file type
+    if (fileTypeFilter !== 'all') {
+      result = result.filter(
+        (summary) => summary.fileType.toLowerCase() === fileTypeFilter
+      );
+    }
+
+    // Filter by institution
+    if (institutionFilter !== 'all') {
+      result = result.filter(
+        (summary) => summary.institution === institutionFilter
+      );
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'rating':
+        result.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'downloads':
+        result.sort((a, b) => b.downloads - a.downloads);
+        break;
+      case 'views':
+        result.sort((a, b) => b.views - a.views);
+        break;
+      case 'newest':
+      default:
+        // Keep original order (assumed to be newest first)
+        break;
+    }
+
+    return result;
+  }, [searchQuery, courseFilter, fileTypeFilter, institutionFilter, sortBy]);
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleCourseFilterChange = (course: string) => {
+    setCourseFilter(course);
+    setCurrentPage(1);
+  };
+
+  const handleFileTypeFilterChange = (fileType: string) => {
+    setFileTypeFilter(fileType);
+    setCurrentPage(1);
+  };
+
+  const handleInstitutionFilterChange = (institution: string) => {
+    setInstitutionFilter(institution);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(filteredAndSortedSummaries.length / itemsPerPage);
+
+  const currentSummaries = filteredAndSortedSummaries.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -268,7 +397,19 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
         <SearchAndFilters
           viewMode={viewMode}
           setViewMode={setViewMode}
-          resultsCount={summariesData.length}
+          resultsCount={filteredAndSortedSummaries.length}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          courseFilter={courseFilter}
+          onCourseFilterChange={handleCourseFilterChange}
+          fileTypeFilter={fileTypeFilter}
+          onFileTypeFilterChange={handleFileTypeFilterChange}
+          institutionFilter={institutionFilter}
+          onInstitutionFilterChange={handleInstitutionFilterChange}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
+          courseOptions={courseOptions}
+          institutionOptions={institutionOptions}
         />
 
         {/* Summaries Grid */}
@@ -286,7 +427,11 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
         {/* Pagination */}
         <div className="flex flex-col items-center gap-4 pt-8">
           <div className="text-gray-600">
-            מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, summariesData.length)} מתוך {summariesData.length} תוצאות
+            {filteredAndSortedSummaries.length > 0 ? (
+              <>מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredAndSortedSummaries.length)} מתוך {filteredAndSortedSummaries.length} תוצאות</>
+            ) : (
+              <>לא נמצאו תוצאות</>
+            )}
           </div>
           
           <Pagination>
