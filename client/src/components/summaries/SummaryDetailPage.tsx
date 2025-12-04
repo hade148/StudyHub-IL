@@ -60,6 +60,13 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
+  // Helper to safely get user ID as number
+  const getUserId = (): number | null => {
+    if (!user?.id) return null;
+    const id = Number(user.id);
+    return isNaN(id) ? null : id;
+  };
+
   // Helper to get initials from name
   const getInitials = (name: string) => {
     const names = name.split(' ');
@@ -91,9 +98,10 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         setError(null);
         
         // Check if user already rated this summary
-        if (user && response.data.ratings) {
+        const userId = getUserId();
+        if (userId !== null && response.data.ratings) {
           const existingRating = response.data.ratings.find(
-            (r: { userId?: number }) => r.userId === parseInt(user.id)
+            (r: { userId?: number }) => r.userId === userId
           );
           if (existingRating) {
             setUserRating(existingRating.rating);
@@ -151,9 +159,10 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
       setUserRating(rating);
       
       // Update the summary's average rating and ratings count
-      if (summary && user) {
+      const userId = getUserId();
+      if (summary && userId !== null) {
         const existingRatingIndex = summary.ratings.findIndex(
-          r => r.userId === parseInt(user.id)
+          r => r.userId === userId
         );
         
         let updatedRatings;
@@ -171,8 +180,8 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
             {
               id: response.data.rating.id,
               rating: rating,
-              userId: parseInt(user.id),
-              user: { fullName: user.fullName }
+              userId: userId,
+              user: { fullName: user?.fullName || '' }
             }
           ];
         }
