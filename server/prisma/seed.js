@@ -122,6 +122,66 @@ async function main() {
   ]);
   console.log('✅ Created summaries:', summaries.length);
 
+  // Create sample ratings for summaries
+  const ratings = [];
+  
+  // Add ratings for first summary (avg will be 4.5)
+  ratings.push(
+    await prisma.rating.create({
+      data: {
+        rating: 5,
+        summaryId: summaries[0].id,
+        userId: admin.id,
+      },
+    }),
+    await prisma.rating.create({
+      data: {
+        rating: 4,
+        summaryId: summaries[0].id,
+        userId: student.id,
+      },
+    })
+  );
+  
+  // Add rating for second summary (avg will be 5)
+  ratings.push(
+    await prisma.rating.create({
+      data: {
+        rating: 5,
+        summaryId: summaries[1].id,
+        userId: admin.id,
+      },
+    })
+  );
+  
+  // Add rating for third summary (avg will be 4)
+  ratings.push(
+    await prisma.rating.create({
+      data: {
+        rating: 4,
+        summaryId: summaries[2].id,
+        userId: admin.id,
+      },
+    })
+  );
+  
+  console.log('✅ Created ratings:', ratings.length);
+
+  // Update avgRating for summaries
+  await prisma.summary.update({
+    where: { id: summaries[0].id },
+    data: { avgRating: 4.5 },
+  });
+  await prisma.summary.update({
+    where: { id: summaries[1].id },
+    data: { avgRating: 5 },
+  });
+  await prisma.summary.update({
+    where: { id: summaries[2].id },
+    data: { avgRating: 4 },
+  });
+  console.log('✅ Updated average ratings');
+
   // Create Forum Posts
   const forumPosts = await Promise.all([
     prisma.forumPost.create({
