@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { Eye, Download, MessageCircle, Heart, FileText, Building2, Star } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
@@ -42,19 +42,32 @@ export function SummaryCard({ summary, index, onClick, onRatingChange }: Summary
   const [ratingsCount, setRatingsCount] = useState(summary.ratingsCount || 0);
   const [isRating, setIsRating] = useState(false);
   const [showRatingSection, setShowRatingSection] = useState(false);
+  // Track if user has rated in current session to prevent double increment
+  const hasRatedInSession = useRef(false);
+
+  // Sync state with props when summary changes
+  useEffect(() => {
+    setUserRating(summary.userRating || 0);
+    setAvgRating(summary.rating);
+    setRatingsCount(summary.ratingsCount || 0);
+    hasRatedInSession.current = false;
+  }, [summary.id, summary.userRating, summary.rating, summary.ratingsCount]);
 
   const handleRating = async (rating: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isAuthenticated || isRating) return;
 
+    const previousUserRating = userRating;
+    
     try {
       setIsRating(true);
       const response = await api.post(`/summaries/${summary.id}/rate`, { rating });
       setUserRating(rating);
       setAvgRating(response.data.avgRating);
-      // Update ratings count (increment if this is a new rating)
-      if (!summary.userRating) {
+      // Only increment ratings count if this is a new rating (user hadn't rated before)
+      if (previousUserRating === 0 && !hasRatedInSession.current) {
         setRatingsCount(prev => prev + 1);
+        hasRatedInSession.current = true;
       }
       onRatingChange?.(summary.id, rating, response.data.avgRating);
     } catch (error) {
