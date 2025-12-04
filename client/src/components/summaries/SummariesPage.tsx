@@ -201,7 +201,7 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       );
     }
 
-    // Sort (client-side for downloads and views; rating and newest handled by API)
+    // Sort (client-side for downloads and views only; rating and newest are handled by API)
     switch (sortBy) {
       case 'downloads':
         result.sort((a, b) => b.downloads - a.downloads);
@@ -209,12 +209,8 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       case 'views':
         result.sort((a, b) => b.views - a.views);
         break;
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
+      // 'rating' and 'newest' are handled by the API, no client-side sorting needed
       default:
-        // Keep original order from API (newest first by default)
         break;
     }
 
