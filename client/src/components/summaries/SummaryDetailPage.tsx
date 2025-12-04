@@ -18,6 +18,13 @@ interface Comment {
   };
 }
 
+interface Rating {
+  id: number;
+  rating: number;
+  userId: number;
+  user: { fullName: string };
+}
+
 interface Summary {
   id: number;
   title: string;
@@ -35,11 +42,7 @@ interface Summary {
     fullName: string;
   };
   comments: Comment[];
-  ratings: Array<{
-    id: number;
-    rating: number;
-    user: { fullName: string };
-  }>;
+  ratings: Rating[];
 }
 
 interface SummaryDetailPageProps {
@@ -49,12 +52,16 @@ interface SummaryDetailPageProps {
 }
 
 export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummaries }: SummaryDetailPageProps) {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
@@ -84,6 +91,20 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         setLoading(true);
         const response = await api.get(`/summaries/${summaryId}`);
         setSummary(response.data);
+        
+        // Find and set user's existing rating if they are logged in
+        if (user && response.data.ratings) {
+          const userId = Number(user.id);
+          if (!isNaN(userId)) {
+            const existingRating = response.data.ratings.find(
+              (r: Rating) => r.userId === userId
+            );
+            if (existingRating) {
+              setUserRating(existingRating.rating);
+            }
+          }
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching summary:', err);
@@ -94,7 +115,36 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
     };
 
     fetchSummary();
-  }, [summaryId]);
+  }, [summaryId, user]);
+
+  // Handle rating submission
+  const handleRating = async (rating: number) => {
+    if (!isAuthenticated) {
+      setRatingError('יש להתחבר כדי לדרג סיכומים');
+      return;
+    }
+
+    try {
+      setRatingSubmitting(true);
+      setRatingError(null);
+      const response = await api.post(`/summaries/${summaryId}/rate`, { rating });
+      
+      setUserRating(rating);
+      
+      // Update summary with new average rating
+      if (summary) {
+        setSummary({
+          ...summary,
+          avgRating: response.data.avgRating
+        });
+      }
+    } catch (err) {
+      console.error('Error submitting rating:', err);
+      setRatingError('שגיאה בשמירת הדירוג');
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
 
   // Handle adding a comment
   const handleAddComment = async () => {
@@ -219,6 +269,62 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
             <div className="flex items-center gap-1">
               <MessageCircle className="w-4 h-4" />
               <span>{summary.comments.length} תגובות</span>
+            </div>
+          </div>
+
+          {/* Rating Section */}
+          <div className="border-t border-gray-100 pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  דרג את הסיכום
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {summary.ratings.length > 0 
+                    ? `${summary.ratings.length} דירוגים • ממוצע ${summary.avgRating?.toFixed(1) || 0}` 
+                    : 'היה הראשון לדרג!'}
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => handleRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      disabled={ratingSubmitting}
+                      className={`p-1 transition-all duration-200 ${
+                        ratingSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-110'
+                      }`}
+                      title={isAuthenticated ? `דרג ${star} כוכבים` : 'יש להתחבר כדי לדרג'}
+                    >
+                      <Star
+                        className={`w-8 h-8 transition-colors ${
+                          star <= (hoverRating || userRating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {userRating > 0 && (
+                  <span className="text-sm text-green-600 font-medium">
+                    ✓ דירגת {userRating} כוכבים
+                  </span>
+                )}
+                {ratingSubmitting && (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                )}
+                {ratingError && (
+                  <span className="text-sm text-red-600 font-medium">
+                    {ratingError}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

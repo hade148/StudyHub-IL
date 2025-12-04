@@ -1,9 +1,10 @@
 import { motion } from 'motion/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ChevronRight, Upload, Home } from 'lucide-react';
 import { Button } from '../ui/button';
 import { SummaryCard } from './SummaryCard';
 import { SearchAndFilters } from './SearchAndFilters';
+import api from '../../utils/api';
 import {
   Pagination,
   PaginationContent,
@@ -14,208 +15,91 @@ import {
   PaginationPrevious,
 } from '../ui/pagination';
 
-const summariesData = [
-  {
-    id: 1,
-    title: 'מבוא למדעי המחשב - פרקים 1-5',
-    course: 'CS101',
-    courseFullName: 'מבוא למדעי המחשב',
-    institution: 'אוניברסיטה עברית',
-    rating: 4.8,
-    views: 234,
-    downloads: 89,
-    comments: 12,
-    fileType: 'PDF',
-    fileSize: '2.4 MB',
-    pages: 45,
-    description: 'סיכום מקיף של הפרקים הראשונים בקורס מבוא למדעי המחשב, כולל דוגמאות קוד ותרגילים מפורטים',
-    uploader: 'יוסי כהן',
-    uploadDate: 'לפני 3 ימים',
-    tags: ['אלגוריתמים', 'תכנות', 'C++'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 2,
-    title: 'אלגוריתמים ומבני נתונים - מיון',
-    course: 'CS202',
-    courseFullName: 'אלגוריתמים ומבני נתונים',
-    institution: 'הטכניון',
-    rating: 4.9,
-    views: 456,
-    downloads: 167,
-    comments: 24,
-    fileType: 'PDF',
-    fileSize: '3.1 MB',
-    pages: 67,
-    description: 'סיכום מפורט של אלגוריתמי מיון: בועות, מהיר, מיזוג ועוד. כולל ניתוח זמן ריצה ודוגמאות',
-    uploader: 'שרה לוי',
-    uploadDate: 'לפני שבוע',
-    tags: ['מיון', 'מורכבות', 'Big O'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-  {
-    id: 3,
-    title: 'חשבון אינפיניטסימלי - נגזרות',
-    course: 'MATH101',
-    courseFullName: 'חשבון אינפיניטסימלי 1',
-    institution: 'אוניברסיטת תל אביב',
-    rating: 4.7,
-    views: 189,
-    downloads: 72,
-    comments: 8,
-    fileType: 'DOCX',
-    fileSize: '1.8 MB',
-    pages: 32,
-    description: 'סיכום של כללי גזירה, נגזרות של פונקציות מורכבות ושימושים בנגזרות לפתרון בעיות',
-    uploader: 'מיכל רוזן',
-    uploadDate: 'לפני יומיים',
-    tags: ['נגזרות', 'חשבון', 'מתמטיקה'],
-    thumbnail: 'placeholder-doc.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 4,
-    title: 'פיזיקה קוונטית - עקרונות יסוד',
-    course: 'PHYS201',
-    courseFullName: 'פיזיקה קוונטית',
-    institution: 'אוניברסיטה עברית',
-    rating: 4.6,
-    views: 312,
-    downloads: 95,
-    comments: 18,
-    fileType: 'PDF',
-    fileSize: '4.2 MB',
-    pages: 78,
-    description: 'סיכום מקיף של עקרונות הפיזיקה הקוונטית, כולל משוואת שרדינגר ועקרון אי הוודאות',
-    uploader: 'דן שמיר',
-    uploadDate: 'לפני 5 ימים',
-    tags: ['קוונטים', 'פיזיקה', 'משוואות'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-  {
-    id: 5,
-    title: 'מבני נתונים - עצים בינאריים',
-    course: 'CS202',
-    courseFullName: 'אלגוריתמים ומבני נתונים',
-    institution: 'הטכניון',
-    rating: 4.8,
-    views: 401,
-    downloads: 156,
-    comments: 21,
-    fileType: 'PDF',
-    fileSize: '2.9 MB',
-    pages: 52,
-    description: 'סיכום מפורט על עצים בינאריים, עצי חיפוש, AVL ועצים אדומים-שחורים',
-    uploader: 'רונית כהן',
-    uploadDate: 'לפני שבוע',
-    tags: ['עצים', 'מבני נתונים', 'רקורסיה'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 6,
-    title: 'אינטגרלים - טכניקות אינטגרציה',
-    course: 'MATH102',
-    courseFullName: 'חשבון אינפיניטסימלי 2',
-    institution: 'אוניברסיטת תל אביב',
-    rating: 4.5,
-    views: 267,
-    downloads: 88,
-    comments: 14,
-    fileType: 'PDF',
-    fileSize: '3.3 MB',
-    pages: 61,
-    description: 'סיכום טכניקות אינטגרציה: החלפת משתנים, אינטגרציה בחלקים, שברים חלקיים ועוד',
-    uploader: 'עמית גולן',
-    uploadDate: 'לפני 4 ימים',
-    tags: ['אינטגרלים', 'חשבון', 'מתמטיקה'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 7,
-    title: 'בסיסי נתונים - SQL ו-NoSQL',
-    course: 'CS301',
-    courseFullName: 'מערכות בסיסי נתונים',
-    institution: 'אוניברסיטת בן גוריון',
-    rating: 4.9,
-    views: 523,
-    downloads: 201,
-    comments: 32,
-    fileType: 'PDF',
-    fileSize: '5.1 MB',
-    pages: 89,
-    description: 'סיכום מקיף של SQL, עיצוב בסיסי נתונים, נורמליזציה והשוואה עם NoSQL',
-    uploader: 'אלון ברק',
-    uploadDate: 'לפני 3 ימים',
-    tags: ['SQL', 'בסיסי נתונים', 'MongoDB'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-  {
-    id: 8,
-    title: 'אלגברה לינארית - מטריצות',
-    course: 'MATH201',
-    courseFullName: 'אלגברה לינארית',
-    institution: 'אוניברסיטת בר אילן',
-    rating: 4.7,
-    views: 345,
-    downloads: 134,
-    comments: 19,
-    fileType: 'DOCX',
-    fileSize: '2.1 MB',
-    pages: 43,
-    description: 'סיכום פעולות על מטריצות, דטרמיננטות, מטריצות הופכיות וערכים עצמיים',
-    uploader: 'נועה מזרחי',
-    uploadDate: 'לפני 6 ימים',
-    tags: ['מטריצות', 'אלגברה', 'ערכים עצמיים'],
-    thumbnail: 'placeholder-doc.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 9,
-    title: 'רשתות מחשבים - פרוטוקולים',
-    course: 'CS303',
-    courseFullName: 'רשתות מחשבים',
-    institution: 'אוניברסיטת חיפה',
-    rating: 4.6,
-    views: 278,
-    downloads: 97,
-    comments: 15,
-    fileType: 'PDF',
-    fileSize: '3.7 MB',
-    pages: 72,
-    description: 'סיכום פרוטוקולי רשת: TCP/IP, HTTP, DNS, והמודל OSI',
-    uploader: 'יובל דהן',
-    uploadDate: 'לפני שבוע',
-    tags: ['רשתות', 'TCP/IP', 'פרוטוקולים'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 10,
-    title: 'תכנות מונחה עצמים - Java',
-    course: 'CS102',
-    courseFullName: 'תכנות מונחה עצמים',
-    institution: 'הטכניון',
-    rating: 4.8,
-    views: 412,
-    downloads: 178,
-    comments: 26,
-    fileType: 'PDF',
-    fileSize: '4.5 MB',
-    pages: 84,
-    description: 'סיכום עקרונות OOP ב-Java: ירושה, פולימורפיזם, אנקפסולציה וממשקים',
-    uploader: 'תמר אשכנזי',
-    uploadDate: 'לפני יומיים',
-    tags: ['Java', 'OOP', 'ירושה'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-];
+interface APISummary {
+  id: number;
+  title: string;
+  description: string | null;
+  filePath: string;
+  uploadDate: string;
+  avgRating: number | null;
+  course: {
+    courseCode: string;
+    courseName: string;
+    institution: string;
+  };
+  uploadedBy: {
+    id: number;
+    fullName: string;
+  };
+  _count: {
+    ratings: number;
+    comments: number;
+  };
+}
+
+interface SummaryCardData {
+  id: number;
+  title: string;
+  course: string;
+  courseFullName: string;
+  institution: string;
+  rating: number;
+  views: number;
+  downloads: number;
+  comments: number;
+  fileType: string;
+  fileSize: string;
+  pages: number;
+  description: string;
+  uploader: string;
+  uploadDate: string;
+  tags: string[];
+  isFavorite: boolean;
+}
+
+// Helper function to format date for display
+const formatRelativeDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return 'היום';
+  if (diffDays === 1) return 'אתמול';
+  if (diffDays < 7) return `לפני ${diffDays} ימים`;
+  if (diffDays < 14) return 'לפני שבוע';
+  if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
+  return date.toLocaleDateString('he-IL');
+};
+
+// Helper function to extract file extension safely
+const getFileExtension = (filePath: string): string => {
+  if (!filePath) return 'PDF';
+  const lastDotIndex = filePath.lastIndexOf('.');
+  if (lastDotIndex === -1 || lastDotIndex === filePath.length - 1) return 'PDF';
+  return filePath.substring(lastDotIndex + 1).toUpperCase();
+};
+
+// Transform API data to card format
+const transformSummary = (apiSummary: APISummary): SummaryCardData => ({
+  id: apiSummary.id,
+  title: apiSummary.title,
+  course: apiSummary.course.courseCode,
+  courseFullName: apiSummary.course.courseName,
+  institution: apiSummary.course.institution,
+  rating: apiSummary.avgRating ?? 0,
+  views: 0, // Not tracked in current DB
+  downloads: 0, // Not tracked in current DB
+  comments: apiSummary._count.comments,
+  fileType: getFileExtension(apiSummary.filePath),
+  fileSize: '', // Not tracked in current DB
+  pages: 0, // Not tracked in current DB
+  description: apiSummary.description || '',
+  uploader: apiSummary.uploadedBy.fullName,
+  uploadDate: formatRelativeDate(apiSummary.uploadDate),
+  tags: [], // Not tracked in current DB
+  isFavorite: false, // Not tracked in current implementation
+});
 
 interface SummariesPageProps {
   onNavigateHome: () => void;
@@ -231,7 +115,46 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
   const [fileTypeFilter, setFileTypeFilter] = useState('all');
   const [institutionFilter, setInstitutionFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const [summariesData, setSummariesData] = useState<SummaryCardData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 9;
+
+  // Fetch summaries from API
+  useEffect(() => {
+    const fetchSummaries = async () => {
+      try {
+        setLoading(true);
+        const params: Record<string, string> = {};
+        
+        if (searchQuery.trim()) {
+          params.search = searchQuery.trim();
+        }
+        if (institutionFilter !== 'all') {
+          params.institution = institutionFilter;
+        }
+        if (sortBy === 'rating') {
+          params.sortBy = 'rating';
+        } else if (sortBy === 'title') {
+          params.sortBy = 'title';
+        } else {
+          params.sortBy = 'recent';
+        }
+
+        const response = await api.get('/summaries', { params });
+        const transformedData = response.data.map(transformSummary);
+        setSummariesData(transformedData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching summaries:', err);
+        setError('שגיאה בטעינת הסיכומים');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummaries();
+  }, [searchQuery, institutionFilter, sortBy]);
 
   // Generate course options from the data
   const courseOptions = useMemo(() => {
@@ -245,7 +168,7 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       value: value.toLowerCase(),
       label,
     }));
-  }, []);
+  }, [summariesData]);
 
   // Generate institution options from the data
   const institutionOptions = useMemo(() => {
@@ -259,25 +182,11 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       value: institution,
       label: institution,
     }));
-  }, []);
+  }, [summariesData]);
 
-  // Filter and sort summaries
+  // Filter summaries locally for course and file type (API handles search, institution, sortBy)
   const filteredAndSortedSummaries = useMemo(() => {
     let result = [...summariesData];
-
-    // Filter by search query (contains in several fields)
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
-      result = result.filter((summary) => {
-        const inCourse = summary.course.toLowerCase().includes(query);
-        const inCourseFull = summary.courseFullName.toLowerCase().includes(query);
-        const inTitle = summary.title.toLowerCase().includes(query);
-        const inDescription = (summary.description || '').toLowerCase().includes(query);
-        const inUploader = (summary.uploader || '').toLowerCase().includes(query);
-        const inTags = (summary.tags || []).join(' ').toLowerCase().includes(query);
-        return inCourse || inCourseFull || inTitle || inDescription || inUploader || inTags;
-      });
-    }
 
     // Filter by course
     if (courseFilter !== 'all') {
@@ -293,32 +202,8 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       );
     }
 
-    // Filter by institution
-    if (institutionFilter !== 'all') {
-      result = result.filter(
-        (summary) => summary.institution === institutionFilter
-      );
-    }
-
-    // Sort
-    switch (sortBy) {
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'downloads':
-        result.sort((a, b) => b.downloads - a.downloads);
-        break;
-      case 'views':
-        result.sort((a, b) => b.views - a.views);
-        break;
-      case 'newest':
-      default:
-        // Keep original order (assumed to be newest first)
-        break;
-    }
-
     return result;
-  }, [searchQuery, courseFilter, fileTypeFilter, institutionFilter, sortBy]);
+  }, [summariesData, courseFilter, fileTypeFilter]);
 
   // Reset to page 1 when filters change
   const handleSearchChange = (query: string) => {
@@ -413,16 +298,45 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
         />
 
         {/* Summaries Grid */}
-        <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
-          {currentSummaries.map((summary, index) => (
-            <SummaryCard 
-              key={summary.id} 
-              summary={summary} 
-              index={index} 
-              onClick={() => onNavigateSummary?.(summary.id)}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">טוען סיכומים...</p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <p className="text-red-600">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="mt-4"
+              >
+                נסה שוב
+              </Button>
+            </div>
+          </div>
+        ) : currentSummaries.length === 0 ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center text-gray-500">
+              <span className="text-6xl">📚</span>
+              <p className="mt-4 text-lg">לא נמצאו סיכומים</p>
+              <p className="text-sm">נסה לשנות את הפילטרים או העלה סיכום חדש</p>
+            </div>
+          </div>
+        ) : (
+          <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
+            {currentSummaries.map((summary, index) => (
+              <SummaryCard 
+                key={summary.id} 
+                summary={summary} 
+                index={index} 
+                onClick={() => onNavigateSummary?.(summary.id)}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="flex flex-col items-center gap-4 pt-8">
