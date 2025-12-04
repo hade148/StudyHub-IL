@@ -200,42 +200,97 @@ router.post('/:id/rate', authenticate, ratingValidation, async (req, res) => {
   try {
     const { id } = req.params;
     const { rating } = req.body;
+    const summaryId = parseInt(id);
+
+    // Check if summary exists
+    const summary = await prisma.summary.findUnique({
+      where: { id: summaryId }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
 
     // Upsert rating
     const newRating = await prisma.rating.upsert({
       where: {
         summaryId_userId: {
-          summaryId: parseInt(id),
+          summaryId: summaryId,
           userId: req.user.id
         }
       },
-      update: { rating },
+      update: { rating, date: new Date() },
       create: {
         rating,
-        summaryId: parseInt(id),
+        summaryId: summaryId,
         userId: req.user.id
       }
     });
 
-    // Update average rating
+    // Calculate and update average rating
     const ratings = await prisma.rating.findMany({
-      where: { summaryId: parseInt(id) }
+      where: { summaryId: summaryId }
     });
     const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+    const totalRatings = ratings.length;
 
     await prisma.summary.update({
-      where: { id: parseInt(id) },
+      where: { id: summaryId },
       data: { avgRating }
     });
 
     res.json({
       message: 'דירוג נשמר בהצלחה',
       rating: newRating,
-      avgRating
+      avgRating,
+      totalRatings
     });
   } catch (error) {
     console.error('Rate summary error:', error);
     res.status(500).json({ error: 'שגיאה בדירוג סיכום' });
+  }
+});
+
+// GET /api/summaries/:id/ratings - Get all ratings for a summary
+router.get('/:id/ratings', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const summaryId = parseInt(id);
+
+    // Check if summary exists
+    const summary = await prisma.summary.findUnique({
+      where: { id: summaryId },
+      select: { id: true, avgRating: true }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
+
+    // Get all ratings for this summary
+    const ratings = await prisma.rating.findMany({
+      where: { summaryId: summaryId },
+      include: {
+        user: { select: { id: true, fullName: true } }
+      },
+      orderBy: { date: 'desc' }
+    });
+
+    res.json({
+      summaryId: summaryId,
+      avgRating: summary.avgRating,
+      totalRatings: ratings.length,
+      ratings: ratings.map(r => ({
+        id: r.id,
+        rating: r.rating,
+        date: r.date,
+        userId: r.userId,
+        user: r.user
+      }))
+    });
+  } catch (error) {
+    console.error('Get ratings error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
   }
 });
 

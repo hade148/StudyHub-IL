@@ -82,8 +82,10 @@ describe('Rating API Tests', () => {
       expect(res.body).toHaveProperty('message');
       expect(res.body).toHaveProperty('rating');
       expect(res.body).toHaveProperty('avgRating');
+      expect(res.body).toHaveProperty('totalRatings');
       expect(res.body.rating.rating).toBe(5);
       expect(res.body.avgRating).toBe(5);
+      expect(res.body.totalRatings).toBe(1);
     });
 
     it('should update existing rating', async () => {
@@ -138,6 +140,16 @@ describe('Rating API Tests', () => {
 
       expect(res.statusCode).toBe(400);
     });
+
+    it('should return 404 for non-existent summary', async () => {
+      const res = await request(app)
+        .post('/api/summaries/99999/rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ rating: 5 });
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body).toHaveProperty('error');
+    });
   });
 
   describe('GET /api/summaries/:id', () => {
@@ -167,6 +179,38 @@ describe('Rating API Tests', () => {
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('avgRating');
       expect(typeof res.body.avgRating).toBe('number');
+    });
+  });
+
+  describe('GET /api/summaries/:id/ratings', () => {
+    it('should return all ratings for a summary', async () => {
+      // First, add a rating
+      await request(app)
+        .post(`/api/summaries/${summaryId}/rate`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ rating: 4 });
+
+      // Get ratings
+      const res = await request(app)
+        .get(`/api/summaries/${summaryId}/ratings`);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('summaryId', summaryId);
+      expect(res.body).toHaveProperty('avgRating');
+      expect(res.body).toHaveProperty('totalRatings');
+      expect(res.body).toHaveProperty('ratings');
+      expect(Array.isArray(res.body.ratings)).toBe(true);
+      expect(res.body.ratings.length).toBeGreaterThan(0);
+      expect(res.body.ratings[0]).toHaveProperty('rating');
+      expect(res.body.ratings[0]).toHaveProperty('user');
+    });
+
+    it('should return 404 for non-existent summary', async () => {
+      const res = await request(app)
+        .get('/api/summaries/99999/ratings');
+
+      expect(res.statusCode).toBe(404);
+      expect(res.body).toHaveProperty('error');
     });
   });
 });
