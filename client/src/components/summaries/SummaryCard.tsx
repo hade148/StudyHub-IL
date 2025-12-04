@@ -1,8 +1,10 @@
 import { motion } from 'motion/react';
-import { Eye, Download, MessageCircle, Heart, FileText, Building2 } from 'lucide-react';
+import { Eye, Download, MessageCircle, Heart, FileText, Building2, Star } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 interface SummaryCardProps {
   summary: {
@@ -12,6 +14,7 @@ interface SummaryCardProps {
     courseFullName: string;
     institution: string;
     rating: number;
+    ratingsCount?: number;
     views: number;
     downloads: number;
     comments: number;
@@ -23,13 +26,48 @@ interface SummaryCardProps {
     uploadDate: string;
     tags: string[];
     isFavorite: boolean;
+    userRating?: number;
   };
   index: number;
   onClick?: () => void;
+  onRatingChange?: (id: number, newRating: number, newAvgRating: number) => void;
 }
 
-export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
+export function SummaryCard({ summary, index, onClick, onRatingChange }: SummaryCardProps) {
+  const { isAuthenticated } = useAuth();
   const [isFavorite, setIsFavorite] = useState(summary.isFavorite);
+  const [userRating, setUserRating] = useState(summary.userRating || 0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [avgRating, setAvgRating] = useState(summary.rating);
+  const [ratingsCount, setRatingsCount] = useState(summary.ratingsCount || 0);
+  const [isRating, setIsRating] = useState(false);
+  const [showRatingSection, setShowRatingSection] = useState(false);
+
+  const handleRating = async (rating: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated || isRating) return;
+
+    try {
+      setIsRating(true);
+      const response = await api.post(`/summaries/${summary.id}/rate`, { rating });
+      setUserRating(rating);
+      setAvgRating(response.data.avgRating);
+      // Update ratings count (increment if this is a new rating)
+      if (!summary.userRating) {
+        setRatingsCount(prev => prev + 1);
+      }
+      onRatingChange?.(summary.id, rating, response.data.avgRating);
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+    } finally {
+      setIsRating(false);
+    }
+  };
+
+  const toggleRatingSection = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowRatingSection(!showRatingSection);
+  };
 
   return (
     <motion.div
@@ -66,11 +104,15 @@ export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
           {summary.course}
         </Badge>
 
-        {/* Rating Badge */}
-        <Badge className="absolute top-3 left-14 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 flex items-center gap-1">
-          <span>⭐</span>
-          {summary.rating}
-        </Badge>
+        {/* Rating Badge - Clickable */}
+        <button
+          onClick={toggleRatingSection}
+          className="absolute top-3 left-14 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors rounded-md px-2 py-1 text-sm font-medium flex items-center gap-1"
+        >
+          <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+          {avgRating > 0 ? avgRating.toFixed(1) : '0'}
+          {ratingsCount > 0 && <span className="text-xs">({ratingsCount})</span>}
+        </button>
       </div>
 
       {/* Content Section */}
@@ -117,6 +159,57 @@ export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
             <span>{summary.comments}</span>
           </div>
         </div>
+
+        {/* Rating Section */}
+        {showRatingSection && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">דרג את הסיכום:</span>
+                {userRating > 0 && (
+                  <span className="text-xs text-green-600">✓ דירגת {userRating} כוכבים</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 justify-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={(e) => handleRating(star, e)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    disabled={isRating || !isAuthenticated}
+                    className={`p-1 transition-all duration-200 ${
+                      isRating || !isAuthenticated ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-110'
+                    }`}
+                    title={isAuthenticated ? `דרג ${star} כוכבים` : 'יש להתחבר כדי לדרג'}
+                  >
+                    <Star
+                      className={`w-6 h-6 transition-colors ${
+                        star <= (hoverRating || userRating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              {!isAuthenticated && (
+                <p className="text-xs text-gray-500 text-center">יש להתחבר כדי לדרג</p>
+              )}
+              {isRating && (
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2">
