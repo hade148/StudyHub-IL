@@ -1,4 +1,4 @@
-import { Search, Grid3x3, List } from 'lucide-react';
+import { Search, Grid3x3, List, Building2 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import {
@@ -14,6 +14,11 @@ interface CourseOption {
   label: string;
 }
 
+interface InstitutionOption {
+  value: string;
+  label: string;
+}
+
 interface SearchAndFiltersProps {
   viewMode: 'grid' | 'list';
   setViewMode: (mode: 'grid' | 'list') => void;
@@ -24,9 +29,12 @@ interface SearchAndFiltersProps {
   onCourseFilterChange: (course: string) => void;
   fileTypeFilter: string;
   onFileTypeFilterChange: (fileType: string) => void;
+  institutionFilter: string;
+  onInstitutionFilterChange: (institution: string) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
   courseOptions: CourseOption[];
+  institutionOptions: InstitutionOption[];
 }
 
 export function SearchAndFilters({ 
@@ -39,9 +47,12 @@ export function SearchAndFilters({
   onCourseFilterChange,
   fileTypeFilter,
   onFileTypeFilterChange,
+  institutionFilter,
+  onInstitutionFilterChange,
   sortBy,
   onSortChange,
   courseOptions,
+  institutionOptions,
 }: SearchAndFiltersProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
@@ -59,7 +70,25 @@ export function SearchAndFilters({
 
       {/* Filters Row */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-        <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
+        <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full flex-wrap">
+          {/* Institution Filter */}
+          <Select value={institutionFilter} onValueChange={onInstitutionFilterChange}>
+            <SelectTrigger className="w-full sm:w-[200px] border-gray-300">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-gray-500" />
+                <SelectValue placeholder="כל המוסדות" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל המוסדות</SelectItem>
+              {institutionOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {/* Course Filter */}
           <Select value={courseFilter} onValueChange={onCourseFilterChange}>
             <SelectTrigger className="w-full sm:w-[180px] border-gray-300">
