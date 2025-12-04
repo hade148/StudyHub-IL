@@ -275,7 +275,7 @@ async function main() {
       data: {
         title: 'שאלה לגבי רקורסיה',
         content: 'מישהו יכול להסביר רקורסיה בצורה פשוטה?',
-        courseId: courses[0].id,
+        courseId: courses[0].id,  // CS101 - מבוא למדעי המחשב
         authorId: student.id,
       },
     }),
@@ -283,7 +283,7 @@ async function main() {
       data: {
         title: 'איך מממשים Linked List?',
         content: 'אני מתקשה להבין את המימוש של רשימה מקושרת',
-        courseId: courses[1].id,
+        courseId: courses[3].id,  // CS202 - מבני נתונים
         authorId: student.id,
       },
     }),
