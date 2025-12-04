@@ -72,6 +72,14 @@ const formatRelativeDate = (dateString: string): string => {
   return date.toLocaleDateString('he-IL');
 };
 
+// Helper function to extract file extension safely
+const getFileExtension = (filePath: string): string => {
+  if (!filePath) return 'PDF';
+  const lastDotIndex = filePath.lastIndexOf('.');
+  if (lastDotIndex === -1 || lastDotIndex === filePath.length - 1) return 'PDF';
+  return filePath.substring(lastDotIndex + 1).toUpperCase();
+};
+
 // Transform API data to card format
 const transformSummary = (apiSummary: APISummary): SummaryCardData => ({
   id: apiSummary.id,
@@ -83,7 +91,7 @@ const transformSummary = (apiSummary: APISummary): SummaryCardData => ({
   views: 0, // Not tracked in current DB
   downloads: 0, // Not tracked in current DB
   comments: apiSummary._count.comments,
-  fileType: apiSummary.filePath.split('.').pop()?.toUpperCase() || 'PDF',
+  fileType: getFileExtension(apiSummary.filePath),
   fileSize: '', // Not tracked in current DB
   pages: 0, // Not tracked in current DB
   description: apiSummary.description || '',

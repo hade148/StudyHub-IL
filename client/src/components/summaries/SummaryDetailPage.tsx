@@ -61,6 +61,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
   const [userRating, setUserRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
@@ -93,11 +94,14 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         
         // Find and set user's existing rating if they are logged in
         if (user && response.data.ratings) {
-          const existingRating = response.data.ratings.find(
-            (r: Rating) => r.userId === parseInt(user.id)
-          );
-          if (existingRating) {
-            setUserRating(existingRating.rating);
+          const userId = Number(user.id);
+          if (!isNaN(userId)) {
+            const existingRating = response.data.ratings.find(
+              (r: Rating) => r.userId === userId
+            );
+            if (existingRating) {
+              setUserRating(existingRating.rating);
+            }
           }
         }
         
@@ -116,12 +120,13 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
   // Handle rating submission
   const handleRating = async (rating: number) => {
     if (!isAuthenticated) {
-      alert('יש להתחבר כדי לדרג סיכומים');
+      setRatingError('יש להתחבר כדי לדרג סיכומים');
       return;
     }
 
     try {
       setRatingSubmitting(true);
+      setRatingError(null);
       const response = await api.post(`/summaries/${summaryId}/rate`, { rating });
       
       setUserRating(rating);
@@ -135,7 +140,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
       }
     } catch (err) {
       console.error('Error submitting rating:', err);
-      alert('שגיאה בשמירת הדירוג');
+      setRatingError('שגיאה בשמירת הדירוג');
     } finally {
       setRatingSubmitting(false);
     }
@@ -313,6 +318,11 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                 )}
                 {ratingSubmitting && (
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                )}
+                {ratingError && (
+                  <span className="text-sm text-red-600 font-medium">
+                    {ratingError}
+                  </span>
                 )}
               </div>
             </div>
