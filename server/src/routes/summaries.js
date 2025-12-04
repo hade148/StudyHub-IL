@@ -39,10 +39,16 @@ const upload = multer({
 // GET /api/summaries - Get all summaries with filters
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { courseId, search, sortBy = 'recent' } = req.query;
+    const { courseId, search, sortBy = 'recent', institution } = req.query;
 
     const where = {};
     if (courseId) where.courseId = parseInt(courseId);
+    
+    // Filter by institution
+    if (institution) {
+      where.course = { institution };
+    }
+    
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -60,7 +66,7 @@ router.get('/', optionalAuth, async (req, res) => {
       where,
       orderBy,
       include: {
-        course: { select: { courseCode: true, courseName: true } },
+        course: { select: { courseCode: true, courseName: true, institution: true } },
         uploadedBy: { select: { id: true, fullName: true } },
         _count: { select: { ratings: true, comments: true } }
       }
