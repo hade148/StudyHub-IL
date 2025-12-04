@@ -240,14 +240,18 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
   const filteredAndSortedSummaries = useMemo(() => {
     let result = [...summariesData];
 
-    // Filter by search query (course name)
+    // Filter by search query (contains in several fields)
     if (searchQuery.trim()) {
       const query = searchQuery.trim().toLowerCase();
-      result = result.filter(
-        (summary) =>
-          summary.course.toLowerCase().includes(query) ||
-          summary.courseFullName.toLowerCase().includes(query)
-      );
+      result = result.filter((summary) => {
+        const inCourse = summary.course.toLowerCase().includes(query);
+        const inCourseFull = summary.courseFullName.toLowerCase().includes(query);
+        const inTitle = summary.title.toLowerCase().includes(query);
+        const inDescription = (summary.description || '').toLowerCase().includes(query);
+        const inUploader = (summary.uploader || '').toLowerCase().includes(query);
+        const inTags = (summary.tags || []).join(' ').toLowerCase().includes(query);
+        return inCourse || inCourseFull || inTitle || inDescription || inUploader || inTags;
+      });
     }
 
     // Filter by course
