@@ -211,42 +211,47 @@ router.post('/:id/rate', authenticate, ratingValidation, async (req, res) => {
       return res.status(404).json({ error: 'סיכום לא נמצא' });
     }
 
-    // Upsert rating
-    const newRating = await prisma.rating.upsert({
-      where: {
-        summaryId_userId: {
+    // Use transaction to ensure consistency between rating upsert and average update
+    const result = await prisma.$transaction(async (tx) => {
+      // Upsert rating
+      const newRating = await tx.rating.upsert({
+        where: {
+          summaryId_userId: {
+            summaryId: summaryId,
+            userId: req.user.id
+          }
+        },
+        update: { rating },
+        create: {
+          rating,
           summaryId: summaryId,
           userId: req.user.id
         }
-      },
-      update: { rating, date: new Date() },
-      create: {
-        rating,
-        date: new Date(),
-        summaryId: summaryId,
-        userId: req.user.id
-      }
-    });
+      });
 
-    // Calculate and update average rating using aggregate
-    const aggregation = await prisma.rating.aggregate({
-      where: { summaryId: summaryId },
-      _avg: { rating: true },
-      _count: { rating: true }
-    });
-    const avgRating = aggregation._avg.rating || 0;
-    const totalRatings = aggregation._count.rating;
+      // Calculate average rating using aggregate
+      const aggregation = await tx.rating.aggregate({
+        where: { summaryId: summaryId },
+        _avg: { rating: true },
+        _count: { rating: true }
+      });
+      const avgRating = aggregation._avg.rating || 0;
+      const totalRatings = aggregation._count.rating;
 
-    await prisma.summary.update({
-      where: { id: summaryId },
-      data: { avgRating }
+      // Update summary with new average
+      await tx.summary.update({
+        where: { id: summaryId },
+        data: { avgRating }
+      });
+
+      return { newRating, avgRating, totalRatings };
     });
 
     res.json({
       message: 'דירוג נשמר בהצלחה',
-      rating: newRating,
-      avgRating,
-      totalRatings
+      rating: result.newRating,
+      avgRating: result.avgRating,
+      totalRatings: result.totalRatings
     });
   } catch (error) {
     console.error('Rate summary error:', error);
