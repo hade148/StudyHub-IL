@@ -41,7 +41,7 @@ describe('Institution Filter API Tests', () => {
       data: {
         courseCode: 'INST101',
         courseName: 'Test Course Hebrew University',
-        institution: 'אוניברסיטה עברית',
+        institution: 'האוניברסיטה העברית',
         semester: 'Fall 2024'
       }
     });
@@ -98,7 +98,7 @@ describe('Institution Filter API Tests', () => {
 
       expect(res.statusCode).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body).toContain('אוניברסיטה עברית');
+      expect(res.body).toContain('האוניברסיטה העברית');
       expect(res.body).toContain('הטכניון');
     });
 
@@ -119,14 +119,14 @@ describe('Institution Filter API Tests', () => {
     it('should filter courses by institution', async () => {
       const res = await request(app)
         .get('/api/courses')
-        .query({ institution: 'אוניברסיטה עברית' });
+        .query({ institution: 'האוניברסיטה העברית' });
 
       expect(res.statusCode).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
       
       // All returned courses should be from the Hebrew University
       res.body.forEach(course => {
-        expect(course.institution).toBe('אוניברסיטה עברית');
+        expect(course.institution).toBe('האוניברסיטה העברית');
       });
     });
 
@@ -171,14 +171,14 @@ describe('Institution Filter API Tests', () => {
     it('should filter summaries by institution', async () => {
       const res = await request(app)
         .get('/api/summaries')
-        .query({ institution: 'אוניברסיטה עברית' });
+        .query({ institution: 'האוניברסיטה העברית' });
 
       expect(res.statusCode).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
       
       // All returned summaries should be from courses at Hebrew University
       res.body.forEach(summary => {
-        expect(summary.course.institution).toBe('אוניברסיטה עברית');
+        expect(summary.course.institution).toBe('האוניברסיטה העברית');
       });
     });
 
@@ -223,7 +223,7 @@ describe('Institution Filter API Tests', () => {
       const res = await request(app)
         .get('/api/summaries')
         .query({ 
-          institution: 'אוניברסיטה עברית',
+          institution: 'האוניברסיטה העברית',
           search: 'InstitutionTest'
         });
 
@@ -232,7 +232,7 @@ describe('Institution Filter API Tests', () => {
       expect(res.body.length).toBeGreaterThan(0);
       
       res.body.forEach(summary => {
-        expect(summary.course.institution).toBe('אוניברסיטה עברית');
+        expect(summary.course.institution).toBe('האוניברסיטה העברית');
         expect(summary.title).toContain('InstitutionTest');
       });
     });
