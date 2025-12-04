@@ -222,17 +222,20 @@ router.post('/:id/rate', authenticate, ratingValidation, async (req, res) => {
       update: { rating, date: new Date() },
       create: {
         rating,
+        date: new Date(),
         summaryId: summaryId,
         userId: req.user.id
       }
     });
 
-    // Calculate and update average rating
-    const ratings = await prisma.rating.findMany({
-      where: { summaryId: summaryId }
+    // Calculate and update average rating using aggregate
+    const aggregation = await prisma.rating.aggregate({
+      where: { summaryId: summaryId },
+      _avg: { rating: true },
+      _count: { rating: true }
     });
-    const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
-    const totalRatings = ratings.length;
+    const avgRating = aggregation._avg.rating || 0;
+    const totalRatings = aggregation._count.rating;
 
     await prisma.summary.update({
       where: { id: summaryId },
