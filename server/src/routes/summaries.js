@@ -10,7 +10,11 @@ const { uploadFileToDrive, deleteFileFromDrive, isDriveConfigured } = require('.
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Multer configuration for temporary file storage before uploading to Drive
+// Multer configuration for temporary file storage before uploading to Drive.
+// Files are stored in uploads/temp temporarily and then:
+// - Moved to uploads/ if Google Drive is not configured
+// - Deleted after successful upload to Google Drive
+// - Deleted on upload error
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '../../uploads/temp');
@@ -127,7 +131,8 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
         
         driveFileId = driveResult.fileId;
         driveViewLink = driveResult.webViewLink;
-        filePath = driveResult.webViewLink; // Use Drive link as primary file path
+        // When using Google Drive, filePath stores the web view URL for accessing the file
+        filePath = driveResult.webViewLink;
 
         // Delete temp file after successful upload to Drive
         if (fs.existsSync(tempFilePath)) {
@@ -135,7 +140,11 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
         }
         tempFilePath = null;
       } catch (driveError) {
-        console.error('Google Drive upload failed, keeping local file:', driveError.message);
+        // Log the full error for debugging, including original error details
+        console.error('Google Drive upload failed:', {
+          message: driveError.message,
+          stack: driveError.stack
+        });
         // Keep local file if Drive upload fails
         const permanentDir = path.join(__dirname, '../../uploads');
         if (!fs.existsSync(permanentDir)) {

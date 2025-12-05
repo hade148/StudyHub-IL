@@ -49,7 +49,11 @@ const uploadFileToDrive = async ({ filePath, fileName, mimeType }) => {
   const drive = getDriveClient();
   
   if (!drive) {
-    throw new Error('Google Drive not configured. Please set GOOGLE_DRIVE_CLIENT_EMAIL and GOOGLE_DRIVE_PRIVATE_KEY environment variables.');
+    throw new Error(
+      'Google Drive not configured. Please set GOOGLE_DRIVE_CLIENT_EMAIL and GOOGLE_DRIVE_PRIVATE_KEY environment variables. ' +
+      'Optionally set GOOGLE_DRIVE_FOLDER_ID to specify a target folder. ' +
+      'See .env.example for configuration details.'
+    );
   }
 
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
@@ -86,8 +90,11 @@ const uploadFileToDrive = async ({ filePath, fileName, mimeType }) => {
       webContentLink: response.data.webContentLink
     };
   } catch (error) {
-    console.error('Error uploading to Google Drive:', error);
-    throw new Error('Failed to upload file to Google Drive');
+    // Preserve original error context for debugging
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    const driveError = new Error(`Failed to upload file to Google Drive: ${errorMessage}`);
+    driveError.originalError = error;
+    throw driveError;
   }
 };
 
