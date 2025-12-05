@@ -79,13 +79,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🗄️  Database: Connected`);
-  console.log(`✨ Version: 2.0.0 - Full Features`);
-});
+// Start server only if not in test mode (supertest handles server in tests)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🗄️  Database: Connected`);
+    console.log(`✨ Version: 2.0.0 - Full Features`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
