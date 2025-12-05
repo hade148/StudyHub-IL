@@ -5,14 +5,15 @@ const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
+const { uploadFileToDrive, deleteFileFromDrive, isDriveConfigured } = require('../utils/googleDrive');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Multer configuration for file uploads
+// Multer configuration for temporary file storage before uploading to Drive
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../uploads');
+    const uploadDir = path.join(__dirname, '../../uploads/temp');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -101,6 +102,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
 // POST /api/summaries - Upload new summary
 router.post('/', authenticate, upload.single('file'), summaryValidation, async (req, res) => {
+  let tempFilePath = null;
+  
   try {
     const { title, description, courseId } = req.body;
 
@@ -108,11 +111,59 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
       return res.status(400).json({ error: 'יש להעלות קובץ PDF' });
     }
 
+    tempFilePath = req.file.path;
+    let driveFileId = null;
+    let driveViewLink = null;
+    let filePath = `uploads/${req.file.filename}`;
+
+    // Upload to Google Drive if configured
+    if (isDriveConfigured()) {
+      try {
+        const driveResult = await uploadFileToDrive({
+          filePath: tempFilePath,
+          fileName: `${title}_${Date.now()}.pdf`,
+          mimeType: 'application/pdf'
+        });
+        
+        driveFileId = driveResult.fileId;
+        driveViewLink = driveResult.webViewLink;
+        filePath = driveResult.webViewLink; // Use Drive link as primary file path
+
+        // Delete temp file after successful upload to Drive
+        if (fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+        }
+        tempFilePath = null;
+      } catch (driveError) {
+        console.error('Google Drive upload failed, keeping local file:', driveError.message);
+        // Keep local file if Drive upload fails
+        const permanentDir = path.join(__dirname, '../../uploads');
+        if (!fs.existsSync(permanentDir)) {
+          fs.mkdirSync(permanentDir, { recursive: true });
+        }
+        const permanentPath = path.join(permanentDir, req.file.filename);
+        fs.renameSync(tempFilePath, permanentPath);
+        tempFilePath = null;
+        filePath = `uploads/${req.file.filename}`;
+      }
+    } else {
+      // No Drive configured, move to permanent storage
+      const permanentDir = path.join(__dirname, '../../uploads');
+      if (!fs.existsSync(permanentDir)) {
+        fs.mkdirSync(permanentDir, { recursive: true });
+      }
+      const permanentPath = path.join(permanentDir, req.file.filename);
+      fs.renameSync(tempFilePath, permanentPath);
+      tempFilePath = null;
+    }
+
     const summary = await prisma.summary.create({
       data: {
         title,
         description,
-        filePath: `uploads/${req.file.filename}`,
+        filePath,
+        driveFileId,
+        driveViewLink,
         courseId: parseInt(courseId),
         uploadedById: req.user.id
       },
@@ -128,9 +179,9 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
     });
   } catch (error) {
     console.error('Upload summary error:', error);
-    // Delete uploaded file on error
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
+    // Delete temp file on error
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
     }
     res.status(500).json({ error: 'שגיאה בהעלאת סיכום' });
   }
@@ -153,10 +204,17 @@ router.delete('/:id', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'אין לך הרשאה למחוק סיכום זה' });
     }
 
-    // Delete file
-    const filePath = path.join(__dirname, '../../', summary.filePath);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Delete file from Google Drive if it exists there
+    if (summary.driveFileId) {
+      await deleteFileFromDrive(summary.driveFileId);
+    }
+
+    // Delete local file if it exists
+    if (summary.filePath && !summary.filePath.startsWith('http')) {
+      const filePath = path.join(__dirname, '../../', summary.filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     }
 
     await prisma.summary.delete({

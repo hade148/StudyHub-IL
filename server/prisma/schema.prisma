@@ -58,12 +58,14 @@ model Course {
 }
 
 model Summary {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String?
-  filePath    String
-  uploadDate  DateTime  @default(now())
-  avgRating   Float?
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  filePath     String
+  driveFileId  String?
+  driveViewLink String?
+  uploadDate   DateTime  @default(now())
+  avgRating    Float?
   
   courseId    Int
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
