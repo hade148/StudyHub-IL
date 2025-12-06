@@ -237,11 +237,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
       }
 
       // Upload to backend
-      const response = await api.post('/summaries', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/summaries', formData);
 
       console.log('Upload successful:', response.data);
       setShowSuccess(true);
@@ -757,7 +753,9 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         <div className="flex-1">
                           <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
                           <p className="text-gray-600">
-                            {watchCourseId && courses.find((c) => c.id === parseInt(watchCourseId))?.courseName || 'שם הקורס'}
+                            {watchCourseId 
+                              ? courses.find((c) => c.id.toString() === watchCourseId)?.courseName || 'שם הקורס'
+                              : 'שם הקורס'}
                           </p>
                         </div>
                         <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
