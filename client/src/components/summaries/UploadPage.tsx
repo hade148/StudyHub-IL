@@ -236,7 +236,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
         formData.append('description', data.description);
       }
 
-      // Upload to backend
+      // Upload to backend (axios automatically sets correct Content-Type for FormData)
       const response = await api.post('/summaries', formData);
 
       console.log('Upload successful:', response.data);
