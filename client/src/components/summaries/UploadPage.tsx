@@ -241,9 +241,18 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
       console.log('Upload successful:', response.data);
       setShowSuccess(true);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Upload failed:', error);
-      const message = error.response?.data?.error || 'שגיאה בהעלאת הסיכום. אנא נסה שוב.';
+      let message = 'שגיאה בהעלאת הסיכום. אנא נסה שוב.';
+      
+      // Type-safe error handling for axios errors
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const axiosError = error as { response?: { data?: { error?: string } } };
+        if (axiosError.response?.data?.error) {
+          message = axiosError.response.data.error;
+        }
+      }
+      
       setErrorMessage(message);
       setShowError(true);
     } finally {
