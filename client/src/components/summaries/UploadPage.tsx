@@ -527,7 +527,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         >
                           <option value="">בחר קורס מהרשימה</option>
                           {courses.map((course) => (
-                            <option key={course.id} value={course.id}>
+                            <option key={course.id} value={course.id.toString()}>
                               {course.courseName} ({course.courseCode})
                             </option>
                           ))}
@@ -757,7 +757,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         <div className="flex-1">
                           <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
                           <p className="text-gray-600">
-                            {courses.find((c) => c.id === parseInt(watchCourseId))?.courseName || 'שם הקורס'}
+                            {watchCourseId && courses.find((c) => c.id === parseInt(watchCourseId))?.courseName || 'שם הקורס'}
                           </p>
                         </div>
                         <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
