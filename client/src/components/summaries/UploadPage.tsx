@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import {
@@ -21,6 +21,7 @@ import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
+import api from '../../utils/api';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -30,7 +31,7 @@ interface UploadPageProps {
 interface FormData {
   file: File | null;
   title: string;
-  course: string;
+  courseId: string;
   description: string;
   language: string;
   category: string;
@@ -38,20 +39,13 @@ interface FormData {
   terms: boolean;
 }
 
-const courses = [
-  'מבוא למדעי המחשב',
-  'אלגברה לינארית',
-  'חשבון אינפיניטסימלי 1',
-  'חשבון אינפיניטסימלי 2',
-  'מבני נתונים',
-  'אלגוריתמים',
-  'מערכות הפעלה',
-  'רשתות מחשבים',
-  'פיזיקה 1',
-  'פיזיקה 2',
-  'ביולוגיה כללית',
-  'כימיה אורגנית',
-];
+interface Course {
+  id: number;
+  courseCode: string;
+  courseName: string;
+  institution: string;
+  semester: string;
+}
 
 const categories = [
   { id: 'math', label: 'מתמטיקה', icon: '📘' },
@@ -79,6 +73,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -93,15 +92,33 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
       language: 'hebrew',
       category: '',
       terms: false,
+      courseId: '',
     },
   });
 
   const watchTitle = watch('title', '');
   const watchDescription = watch('description', '');
-  const watchCourse = watch('course', '');
+  const watchCourseId = watch('courseId', '');
   const watchCategory = watch('category', '');
   const watchLanguage = watch('language', 'hebrew');
   const watchTerms = watch('terms', false);
+
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await api.get('/courses');
+        setCourses(response.data);
+      } catch (error) {
+        console.error('Failed to fetch courses:', error);
+        setErrorMessage('שגיאה בטעינת רשימת הקורסים');
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   // Handle file drop
   const handleDrop = (e: React.DragEvent) => {
@@ -132,16 +149,15 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
   const validateAndSetFile = (file: File) => {
     const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = ['pdf', 'docx', 'ppt', 'pptx'];
-    const fileExtension = file.name.split('.').pop()?.toLowerCase();
-
+    const allowedTypes = ['application/pdf'];
+    
     if (file.size > maxSize) {
       alert('הקובץ גדול מדי. גודל מקסימלי: 10MB');
       return;
     }
 
-    if (!fileExtension || !allowedTypes.includes(fileExtension)) {
-      alert('סוג קובץ לא נתמך. אנא העלה PDF, DOCX או PPT');
+    if (!allowedTypes.includes(file.type)) {
+      alert('סוג קובץ לא נתמך. אנא העלה קובץ PDF בלבד');
       return;
     }
 
@@ -186,7 +202,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     if (currentStep === 1) {
       isValid = !!uploadedFile;
     } else if (currentStep === 2) {
-      isValid = await trigger(['title', 'course']);
+      isValid = await trigger(['title', 'courseId']);
     } else if (currentStep === 3) {
       isValid = !!watchCategory && tags.length > 0;
     }
@@ -200,9 +216,48 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     setCurrentStep(currentStep - 1);
   };
 
-  const onSubmit = (data: FormData) => {
-    console.log('Form submitted:', data);
-    setShowSuccess(true);
+  const onSubmit = async (data: FormData) => {
+    if (!uploadedFile) {
+      setErrorMessage('יש להעלות קובץ');
+      setShowError(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+      formData.append('title', data.title);
+      formData.append('courseId', data.courseId);
+      if (data.description) {
+        formData.append('description', data.description);
+      }
+
+      // Upload to backend (axios automatically sets correct Content-Type for FormData)
+      const response = await api.post('/summaries', formData);
+
+      console.log('Upload successful:', response.data);
+      setShowSuccess(true);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      let message = 'שגיאה בהעלאת הסיכום. אנא נסה שוב.';
+      
+      // Type-safe error handling for axios errors
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const axiosError = error as { response?: { data?: { error?: string } } };
+        if (axiosError.response?.data?.error) {
+          message = axiosError.response.data.error;
+        }
+      }
+      
+      setErrorMessage(message);
+      setShowError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -214,8 +269,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const getFileIcon = (filename: string) => {
     const ext = filename.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return '📕';
-    if (ext === 'docx') return '📘';
-    if (ext === 'ppt' || ext === 'pptx') return '📊';
     return '📄';
   };
 
@@ -355,13 +408,13 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         >
                           <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                           <p className="text-gray-900 mb-2">גרור קובץ לכאן או לחץ לבחירה</p>
-                          <p className="text-sm text-gray-500">PDF, DOCX, PPT - עד 10MB</p>
+                          <p className="text-sm text-gray-500">PDF בלבד - עד 10MB</p>
                         </div>
 
                         <input
                           ref={fileInputRef}
                           type="file"
-                          accept=".pdf,.docx,.ppt,.pptx"
+                          accept="application/pdf,.pdf"
                           onChange={handleFileSelect}
                           className="hidden"
                         />
@@ -464,27 +517,31 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
                     {/* Course Selection */}
                     <div>
-                      <Label htmlFor="course" className="mb-2 flex items-center gap-2">
+                      <Label htmlFor="courseId" className="mb-2 flex items-center gap-2">
                         בחר קורס <span className="text-red-500">*</span>
                       </Label>
-                      <select
-                        id="course"
-                        {...register('course', { required: 'יש לבחור קורס' })}
-                        className={`w-full rounded-md border ${
-                          errors.course ? 'border-red-500' : 'border-gray-300'
-                        } px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      >
-                        <option value="">בחר קורס מהרשימה</option>
-                        {courses.map((course) => (
-                          <option key={course} value={course}>
-                            {course}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.course && (
+                      {loadingCourses ? (
+                        <p className="text-sm text-gray-500">טוען קורסים...</p>
+                      ) : (
+                        <select
+                          id="courseId"
+                          {...register('courseId', { required: 'יש לבחור קורס' })}
+                          className={`w-full rounded-md border ${
+                            errors.courseId ? 'border-red-500' : 'border-gray-300'
+                          } px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        >
+                          <option value="">בחר קורס מהרשימה</option>
+                          {courses.map((course) => (
+                            <option key={course.id} value={course.id.toString()}>
+                              {course.courseName} ({course.courseCode})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {errors.courseId && (
                         <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
-                          {errors.course.message}
+                          {errors.courseId.message}
                         </p>
                       )}
                     </div>
@@ -704,7 +761,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
-                          <p className="text-gray-600">{watchCourse || 'שם הקורס'}</p>
+                          <p className="text-gray-600">
+                            {watchCourseId 
+                              ? courses.find((c) => c.id.toString() === watchCourseId)?.courseName || 'שם הקורס'
+                              : 'שם הקורס'}
+                          </p>
                         </div>
                         <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
                       </div>
@@ -776,11 +837,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                       </Button>
                       <Button
                         type="submit"
-                        disabled={!watchTerms}
+                        disabled={!watchTerms || isSubmitting}
                         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                       >
-                        פרסם סיכום
-                        <Check className="w-4 h-4 mr-2" />
+                        {isSubmitting ? 'מעלה...' : 'פרסם סיכום'}
+                        {!isSubmitting && <Check className="w-4 h-4 mr-2" />}
                       </Button>
                     </div>
                   </motion.div>
@@ -848,7 +909,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
                   <BookOpen className="w-4 h-4 ml-2" />
-                  צפה בסיכום
+                  צפה בסיכומים
                 </Button>
                 <Button
                   onClick={() => {
@@ -857,7 +918,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                     setUploadedFile(null);
                     setTags([]);
                     setValue('title', '');
-                    setValue('course', '');
+                    setValue('courseId', '');
                     setValue('description', '');
                     setValue('category', '');
                     setValue('terms', false);
@@ -869,6 +930,56 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                   העלה סיכום נוסף
                 </Button>
                 <Button onClick={onNavigateHome} variant="ghost" className="w-full">
+                  <Home className="w-4 h-4 ml-2" />
+                  חזור לדף הבית
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Modal */}
+      <AnimatePresence>
+        {showError && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowError(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Error Animation */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.2, 1] }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center"
+              >
+                <X className="w-12 h-12 text-white" />
+              </motion.div>
+
+              <h3 className="text-gray-900 mb-2">שגיאה בהעלאת הסיכום</h3>
+              <p className="text-gray-600 mb-6">
+                {errorMessage || 'אירעה שגיאה בהעלאת הסיכום. אנא נסה שוב.'}
+              </p>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={() => setShowError(false)}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                >
+                  נסה שוב
+                </Button>
+                <Button onClick={onNavigateHome} variant="outline" className="w-full">
                   <Home className="w-4 h-4 ml-2" />
                   חזור לדף הבית
                 </Button>
