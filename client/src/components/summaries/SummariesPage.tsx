@@ -267,50 +267,49 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
   const itemsPerPage = 9;
 
   // Fetch summaries from API
-  useEffect(() => {
-    const fetchSummaries = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await api.get<ApiSummary[]>('/summaries');
+  const fetchSummaries = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get<ApiSummary[]>('/summaries');
+      
+      // Transform API data to UI format
+      const transformed = response.data.map((summary) => {
+        const fileExt = summary.filePath.split('.').pop()?.toUpperCase() || 'PDF';
+        const isUrl = summary.filePath.startsWith('http://') || summary.filePath.startsWith('https://');
         
-        // Transform API data to UI format
-        const transformed = response.data.map((summary) => {
-          const fileExt = summary.filePath.split('.').pop()?.toUpperCase() || 'PDF';
-          const isUrl = summary.filePath.startsWith('http://') || summary.filePath.startsWith('https://');
-          
-          return {
-            id: summary.id,
-            title: summary.title,
-            course: summary.course.courseCode,
-            courseFullName: summary.course.courseName,
-            rating: summary.avgRating || 0,
-            views: 0, // Not tracked yet
-            downloads: 0, // Not tracked yet
-            comments: summary._count.comments,
-            fileType: isUrl ? 'PDF' : fileExt,
-            fileSize: 'N/A', // Not stored in DB
-            pages: 0, // Not stored in DB
-            description: summary.description || 'אין תיאור',
-            uploader: summary.uploadedBy.fullName,
-            uploadDate: formatDate(summary.uploadDate),
-            tags: [], // Not stored yet
-            thumbnail: fileExt === 'DOCX' ? 'placeholder-doc.jpg' : 'placeholder-pdf.jpg',
-            isFavorite: false, // TODO: Add favorites functionality
-          };
-        });
-        
-        setSummaries(transformed);
-      } catch (err) {
-        console.error('Failed to fetch summaries:', err);
-        setError('שגיאה בטעינת הסיכומים');
-        // Fallback to hardcoded data on error
-        setSummaries(summariesData);
-      } finally {
-        setLoading(false);
-      }
-    };
+        return {
+          id: summary.id,
+          title: summary.title,
+          course: summary.course.courseCode,
+          courseFullName: summary.course.courseName,
+          rating: summary.avgRating || 0,
+          views: 0, // View tracking not yet implemented
+          downloads: 0, // Download tracking not yet implemented
+          comments: summary._count.comments,
+          fileType: isUrl ? 'PDF' : fileExt,
+          fileSize: 'N/A', // File size not stored in database
+          pages: 0, // Page count not stored in database
+          description: summary.description || 'אין תיאור',
+          uploader: summary.uploadedBy.fullName,
+          uploadDate: formatDate(summary.uploadDate),
+          tags: [], // Tag system not yet implemented
+          thumbnail: fileExt === 'DOCX' ? 'placeholder-doc.jpg' : 'placeholder-pdf.jpg',
+          isFavorite: false, // Favorites feature not yet implemented
+        };
+      });
+      
+      setSummaries(transformed);
+    } catch (err) {
+      console.error('Failed to fetch summaries:', err);
+      setError('שגיאה בטעינת הסיכומים. אנא טען מחדש את הדף.');
+      setSummaries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSummaries();
   }, []);
 
@@ -386,10 +385,22 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
           </Button>
         </div>
 
-        {/* Error message */}
+        {/* Error message with retry */}
         {error && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
-            {error}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-800">
+                <span>❌</span>
+                <span>{error}</span>
+              </div>
+              <Button 
+                onClick={fetchSummaries}
+                variant="outline"
+                className="border-red-300 text-red-700 hover:bg-red-100"
+              >
+                נסה שוב
+              </Button>
+            </div>
           </div>
         )}
 
