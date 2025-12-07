@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
-import { useState, useMemo } from 'react';
-import { ChevronRight, Upload, Home } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { ChevronRight, Upload, Home, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { SummaryCard } from './SummaryCard';
 import { SearchAndFilters } from './SearchAndFilters';
@@ -13,209 +13,31 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '../ui/pagination';
+import api from '../../utils/api';
 
-const summariesData = [
-  {
-    id: 1,
-    title: 'מבוא למדעי המחשב - פרקים 1-5',
-    course: 'CS101',
-    courseFullName: 'מבוא למדעי המחשב',
-    institution: 'אוניברסיטה עברית',
-    rating: 4.8,
-    views: 234,
-    downloads: 89,
-    comments: 12,
-    fileType: 'PDF',
-    fileSize: '2.4 MB',
-    pages: 45,
-    description: 'סיכום מקיף של הפרקים הראשונים בקורס מבוא למדעי המחשב, כולל דוגמאות קוד ותרגילים מפורטים',
-    uploader: 'יוסי כהן',
-    uploadDate: 'לפני 3 ימים',
-    tags: ['אלגוריתמים', 'תכנות', 'C++'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 2,
-    title: 'אלגוריתמים ומבני נתונים - מיון',
-    course: 'CS202',
-    courseFullName: 'אלגוריתמים ומבני נתונים',
-    institution: 'הטכניון',
-    rating: 4.9,
-    views: 456,
-    downloads: 167,
-    comments: 24,
-    fileType: 'PDF',
-    fileSize: '3.1 MB',
-    pages: 67,
-    description: 'סיכום מפורט של אלגוריתמי מיון: בועות, מהיר, מיזוג ועוד. כולל ניתוח זמן ריצה ודוגמאות',
-    uploader: 'שרה לוי',
-    uploadDate: 'לפני שבוע',
-    tags: ['מיון', 'מורכבות', 'Big O'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-  {
-    id: 3,
-    title: 'חשבון אינפיניטסימלי - נגזרות',
-    course: 'MATH101',
-    courseFullName: 'חשבון אינפיניטסימלי 1',
-    institution: 'אוניברסיטת תל אביב',
-    rating: 4.7,
-    views: 189,
-    downloads: 72,
-    comments: 8,
-    fileType: 'DOCX',
-    fileSize: '1.8 MB',
-    pages: 32,
-    description: 'סיכום של כללי גזירה, נגזרות של פונקציות מורכבות ושימושים בנגזרות לפתרון בעיות',
-    uploader: 'מיכל רוזן',
-    uploadDate: 'לפני יומיים',
-    tags: ['נגזרות', 'חשבון', 'מתמטיקה'],
-    thumbnail: 'placeholder-doc.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 4,
-    title: 'פיזיקה קוונטית - עקרונות יסוד',
-    course: 'PHYS201',
-    courseFullName: 'פיזיקה קוונטית',
-    institution: 'אוניברסיטה עברית',
-    rating: 4.6,
-    views: 312,
-    downloads: 95,
-    comments: 18,
-    fileType: 'PDF',
-    fileSize: '4.2 MB',
-    pages: 78,
-    description: 'סיכום מקיף של עקרונות הפיזיקה הקוונטית, כולל משוואת שרדינגר ועקרון אי הוודאות',
-    uploader: 'דן שמיר',
-    uploadDate: 'לפני 5 ימים',
-    tags: ['קוונטים', 'פיזיקה', 'משוואות'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-  {
-    id: 5,
-    title: 'מבני נתונים - עצים בינאריים',
-    course: 'CS202',
-    courseFullName: 'אלגוריתמים ומבני נתונים',
-    institution: 'הטכניון',
-    rating: 4.8,
-    views: 401,
-    downloads: 156,
-    comments: 21,
-    fileType: 'PDF',
-    fileSize: '2.9 MB',
-    pages: 52,
-    description: 'סיכום מפורט על עצים בינאריים, עצי חיפוש, AVL ועצים אדומים-שחורים',
-    uploader: 'רונית כהן',
-    uploadDate: 'לפני שבוע',
-    tags: ['עצים', 'מבני נתונים', 'רקורסיה'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 6,
-    title: 'אינטגרלים - טכניקות אינטגרציה',
-    course: 'MATH102',
-    courseFullName: 'חשבון אינפיניטסימלי 2',
-    institution: 'אוניברסיטת תל אביב',
-    rating: 4.5,
-    views: 267,
-    downloads: 88,
-    comments: 14,
-    fileType: 'PDF',
-    fileSize: '3.3 MB',
-    pages: 61,
-    description: 'סיכום טכניקות אינטגרציה: החלפת משתנים, אינטגרציה בחלקים, שברים חלקיים ועוד',
-    uploader: 'עמית גולן',
-    uploadDate: 'לפני 4 ימים',
-    tags: ['אינטגרלים', 'חשבון', 'מתמטיקה'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 7,
-    title: 'בסיסי נתונים - SQL ו-NoSQL',
-    course: 'CS301',
-    courseFullName: 'מערכות בסיסי נתונים',
-    institution: 'אוניברסיטת בן גוריון',
-    rating: 4.9,
-    views: 523,
-    downloads: 201,
-    comments: 32,
-    fileType: 'PDF',
-    fileSize: '5.1 MB',
-    pages: 89,
-    description: 'סיכום מקיף של SQL, עיצוב בסיסי נתונים, נורמליזציה והשוואה עם NoSQL',
-    uploader: 'אלון ברק',
-    uploadDate: 'לפני 3 ימים',
-    tags: ['SQL', 'בסיסי נתונים', 'MongoDB'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-  {
-    id: 8,
-    title: 'אלגברה לינארית - מטריצות',
-    course: 'MATH201',
-    courseFullName: 'אלגברה לינארית',
-    institution: 'אוניברסיטת בר אילן',
-    rating: 4.7,
-    views: 345,
-    downloads: 134,
-    comments: 19,
-    fileType: 'DOCX',
-    fileSize: '2.1 MB',
-    pages: 43,
-    description: 'סיכום פעולות על מטריצות, דטרמיננטות, מטריצות הופכיות וערכים עצמיים',
-    uploader: 'נועה מזרחי',
-    uploadDate: 'לפני 6 ימים',
-    tags: ['מטריצות', 'אלגברה', 'ערכים עצמיים'],
-    thumbnail: 'placeholder-doc.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 9,
-    title: 'רשתות מחשבים - פרוטוקולים',
-    course: 'CS303',
-    courseFullName: 'רשתות מחשבים',
-    institution: 'אוניברסיטת חיפה',
-    rating: 4.6,
-    views: 278,
-    downloads: 97,
-    comments: 15,
-    fileType: 'PDF',
-    fileSize: '3.7 MB',
-    pages: 72,
-    description: 'סיכום פרוטוקולי רשת: TCP/IP, HTTP, DNS, והמודל OSI',
-    uploader: 'יובל דהן',
-    uploadDate: 'לפני שבוע',
-    tags: ['רשתות', 'TCP/IP', 'פרוטוקולים'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: false,
-  },
-  {
-    id: 10,
-    title: 'תכנות מונחה עצמים - Java',
-    course: 'CS102',
-    courseFullName: 'תכנות מונחה עצמים',
-    institution: 'הטכניון',
-    rating: 4.8,
-    views: 412,
-    downloads: 178,
-    comments: 26,
-    fileType: 'PDF',
-    fileSize: '4.5 MB',
-    pages: 84,
-    description: 'סיכום עקרונות OOP ב-Java: ירושה, פולימורפיזם, אנקפסולציה וממשקים',
-    uploader: 'תמר אשכנזי',
-    uploadDate: 'לפני יומיים',
-    tags: ['Java', 'OOP', 'ירושה'],
-    thumbnail: 'placeholder-pdf.jpg',
-    isFavorite: true,
-  },
-];
+interface ApiSummary {
+  id: number;
+  title: string;
+  description: string | null;
+  filePath: string;
+  uploadDate: string;
+  avgRating: number | null;
+  courseId: number;
+  uploadedById: number;
+  course: {
+    courseCode: string;
+    courseName: string;
+    institution: string;
+  };
+  uploadedBy: {
+    id: number;
+    fullName: string;
+  };
+  _count: {
+    ratings: number;
+    comments: number;
+  };
+}
 
 interface SummariesPageProps {
   onNavigateHome: () => void;
@@ -231,12 +53,76 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
   const [fileTypeFilter, setFileTypeFilter] = useState('all');
   const [institutionFilter, setInstitutionFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const [summaries, setSummaries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 9;
+
+  // Fetch summaries from API
+  useEffect(() => {
+    const fetchSummaries = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get('/summaries');
+        
+        // Transform API data to match the format expected by SummaryCard
+        const transformedSummaries = response.data.map((summary: ApiSummary) => {
+          // Get file extension from filePath
+          const fileExtension = summary.filePath.split('.').pop()?.toUpperCase() || 'PDF';
+          
+          return {
+            id: summary.id,
+            title: summary.title,
+            course: summary.course.courseCode,
+            courseFullName: summary.course.courseName,
+            institution: summary.course.institution,
+            rating: summary.avgRating || 0,
+            views: 0, // Not tracked in current schema
+            downloads: 0, // Not tracked in current schema
+            comments: summary._count.comments,
+            fileType: fileExtension,
+            fileSize: '', // Not available without fetching file
+            pages: 0, // Not available
+            description: summary.description || '',
+            uploader: summary.uploadedBy.fullName,
+            uploadDate: formatUploadDate(summary.uploadDate),
+            tags: [], // Not in current schema
+            thumbnail: `placeholder-${fileExtension.toLowerCase()}.jpg`,
+            isFavorite: false, // Would need user-specific data
+          };
+        });
+        
+        setSummaries(transformedSummaries);
+      } catch (err) {
+        console.error('Error fetching summaries:', err);
+        setError('שגיאה בטעינת סיכומים');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummaries();
+  }, []);
+
+  // Format upload date to relative time
+  const formatUploadDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'היום';
+    if (diffDays === 1) return 'אתמול';
+    if (diffDays < 7) return `לפני ${diffDays} ימים`;
+    if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
+    return date.toLocaleDateString('he-IL');
+  };
 
   // Generate course options from the data
   const courseOptions = useMemo(() => {
     const uniqueCourses = new Map<string, string>();
-    summariesData.forEach((summary) => {
+    summaries.forEach((summary) => {
       if (!uniqueCourses.has(summary.course)) {
         uniqueCourses.set(summary.course, `${summary.course} - ${summary.courseFullName}`);
       }
@@ -245,12 +131,12 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       value: value.toLowerCase(),
       label,
     }));
-  }, []);
+  }, [summaries]);
 
   // Generate institution options from the data
   const institutionOptions = useMemo(() => {
     const uniqueInstitutions = new Set<string>();
-    summariesData.forEach((summary) => {
+    summaries.forEach((summary) => {
       if (summary.institution) {
         uniqueInstitutions.add(summary.institution);
       }
@@ -259,11 +145,11 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       value: institution,
       label: institution,
     }));
-  }, []);
+  }, [summaries]);
 
   // Filter and sort summaries
   const filteredAndSortedSummaries = useMemo(() => {
-    let result = [...summariesData];
+    let result = [...summaries];
 
     // Filter by search query (contains in several fields)
     if (searchQuery.trim()) {
@@ -318,7 +204,7 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
     }
 
     return result;
-  }, [searchQuery, courseFilter, fileTypeFilter, institutionFilter, sortBy]);
+  }, [summaries, searchQuery, courseFilter, fileTypeFilter, institutionFilter, sortBy]);
 
   // Reset to page 1 when filters change
   const handleSearchChange = (query: string) => {
@@ -393,83 +279,108 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
           </Button>
         </div>
 
-        {/* Search and Filters */}
-        <SearchAndFilters
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          resultsCount={filteredAndSortedSummaries.length}
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          courseFilter={courseFilter}
-          onCourseFilterChange={handleCourseFilterChange}
-          fileTypeFilter={fileTypeFilter}
-          onFileTypeFilterChange={handleFileTypeFilterChange}
-          institutionFilter={institutionFilter}
-          onInstitutionFilterChange={handleInstitutionFilterChange}
-          sortBy={sortBy}
-          onSortChange={handleSortChange}
-          courseOptions={courseOptions}
-          institutionOptions={institutionOptions}
-        />
-
-        {/* Summaries Grid */}
-        <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
-          {currentSummaries.map((summary, index) => (
-            <SummaryCard 
-              key={summary.id} 
-              summary={summary} 
-              index={index} 
-              onClick={() => onNavigateSummary?.(summary.id)}
-            />
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div className="flex flex-col items-center gap-4 pt-8">
-          <div className="text-gray-600">
-            {filteredAndSortedSummaries.length > 0 ? (
-              <>מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredAndSortedSummaries.length)} מתוך {filteredAndSortedSummaries.length} תוצאות</>
-            ) : (
-              <>לא נמצאו תוצאות</>
-            )}
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <span className="mr-3 text-gray-600">טוען סיכומים...</span>
           </div>
-          
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              
-              {totalPages > 5 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-              
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center">
+            {error}
+          </div>
+        )}
+
+        {/* Content */}
+        {!loading && !error && (
+          <>
+            {/* Search and Filters */}
+            <SearchAndFilters
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              resultsCount={filteredAndSortedSummaries.length}
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              courseFilter={courseFilter}
+              onCourseFilterChange={handleCourseFilterChange}
+              fileTypeFilter={fileTypeFilter}
+              onFileTypeFilterChange={handleFileTypeFilterChange}
+              institutionFilter={institutionFilter}
+              onInstitutionFilterChange={handleInstitutionFilterChange}
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
+              courseOptions={courseOptions}
+              institutionOptions={institutionOptions}
+            />
+
+            {/* Summaries Grid */}
+            {filteredAndSortedSummaries.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-gray-600 text-lg">לא נמצאו סיכומים</p>
+                <p className="text-gray-500 mt-2">נסה לשנות את הפילטרים או להעלות סיכום חדש</p>
+              </div>
+            ) : (
+              <>
+                <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
+                  {currentSummaries.map((summary, index) => (
+                    <SummaryCard 
+                      key={summary.id} 
+                      summary={summary} 
+                      index={index} 
+                      onClick={() => onNavigateSummary?.(summary.id)}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex flex-col items-center gap-4 pt-8">
+                  <div className="text-gray-600">
+                    מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredAndSortedSummaries.length)} מתוך {filteredAndSortedSummaries.length} תוצאות
+                  </div>
+                  
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      
+                      {totalPages > 5 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              </>
+            )}
+          </>
+        )}
       </motion.div>
     </div>
   );
