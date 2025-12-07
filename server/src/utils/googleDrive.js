@@ -185,13 +185,14 @@ const verifyDriveCredentials = async () => {
     // Check HTTP status codes first, then fall back to error message patterns
     let message = 'Google Drive credential verification failed';
     const statusCode = error.response?.status || error.code;
+    const isNetworkError = error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT' || 
+                          (typeof error.message === 'string' && error.message.includes('getaddrinfo'));
     
     if (statusCode === 401 || (typeof error.message === 'string' && error.message.includes('authentication'))) {
       message = 'Google Drive authentication failed - check credentials';
     } else if (statusCode === 403 || (typeof error.message === 'string' && error.message.includes('permission'))) {
       message = 'Google Drive permission denied - check service account access';
-    } else if (error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT' || 
-               (typeof error.message === 'string' && error.message.includes('getaddrinfo'))) {
+    } else if (isNetworkError) {
       message = 'Google Drive not reachable - check network connection';
     } else if (error.message) {
       message = `${message}: ${error.message}`;

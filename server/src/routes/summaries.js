@@ -207,7 +207,7 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
         // Log detailed error information for debugging
         console.error('Google Drive upload failed:', {
           message: driveError.message,
-          errorType: driveError.name || 'Error',
+          errorType: driveError.name || 'GoogleDriveError',
           timestamp: new Date().toISOString()
         });
         
