@@ -111,9 +111,14 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateToSu
       try {
         const response = await api.get('/courses');
         setCourses(response.data);
+        if (response.data.length === 0) {
+          setErrorMessage('אין קורסים זמינים במערכת. אנא פנה למנהל.');
+          setShowError(true);
+        }
       } catch (error) {
         console.error('Failed to fetch courses:', error);
-        setErrorMessage('שגיאה בטעינת רשימת הקורסים');
+        setErrorMessage('שגיאה בטעינת רשימת הקורסים. אנא טען מחדש את הדף.');
+        setShowError(true);
       } finally {
         setLoadingCourses(false);
       }
@@ -228,6 +233,12 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateToSu
       return;
     }
 
+    if (!data.courseId || data.courseId === '') {
+      setErrorMessage('יש לבחור קורס');
+      setShowError(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage('');
 
@@ -253,9 +264,17 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateToSu
       
       // Type-safe error handling for axios errors
       if (typeof error === 'object' && error !== null && 'response' in error) {
-        const axiosError = error as { response?: { data?: { error?: string } } };
+        const axiosError = error as { response?: { data?: { error?: string; details?: any[] } } };
         if (axiosError.response?.data?.error) {
           message = axiosError.response.data.error;
+          
+          // If there are validation details, show them
+          if (axiosError.response.data.details && Array.isArray(axiosError.response.data.details)) {
+            const validationErrors = axiosError.response.data.details
+              .map((detail: any) => detail.msg || detail.message)
+              .join(', ');
+            message = `${message}: ${validationErrors}`;
+          }
         }
       }
       
