@@ -35,8 +35,12 @@ StudyHub-IL is a comprehensive educational platform designed to facilitate learn
    - Update `DATABASE_URL` with your PostgreSQL connection string
    - Update `JWT_SECRET` with a secure secret key
 4. Generate Prisma client: `npx prisma generate`
-5. Run database migrations: `npx prisma migrate dev`
+5. Run database migrations: 
+   - Development: `npx prisma migrate dev`
+   - Production: `npx prisma migrate deploy`
 6. Start the server: `npm start` (or `npm run dev` for development)
+
+**Note:** If you encounter login errors about missing columns, see [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md) for migration instructions.
 
 ### With Docker
 1. Clone the repository: `git clone <repository-url>`
