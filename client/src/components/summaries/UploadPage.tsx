@@ -26,6 +26,7 @@ import api from '../../utils/api';
 interface UploadPageProps {
   onNavigateHome: () => void;
   onNavigateSummaries: () => void;
+  onNavigateToSummary?: (summaryId: number) => void;
 }
 
 interface FormData {
@@ -66,7 +67,7 @@ const popularTags = [
   'סמסטר א',
 ];
 
-export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPageProps) {
+export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateToSummary }: UploadPageProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -76,6 +77,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedSummaryId, setUploadedSummaryId] = useState<number | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -149,7 +151,10 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
   const validateAndSetFile = (file: File) => {
     const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = ['application/pdf'];
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // DOCX
+    ];
     
     if (file.size > maxSize) {
       alert('הקובץ גדול מדי. גודל מקסימלי: 10MB');
@@ -157,7 +162,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     }
 
     if (!allowedTypes.includes(file.type)) {
-      alert('סוג קובץ לא נתמך. אנא העלה קובץ PDF בלבד');
+      alert('סוג קובץ לא נתמך. אנא העלה קובץ PDF או DOCX בלבד');
       return;
     }
 
@@ -240,6 +245,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
       const response = await api.post('/summaries', formData);
 
       console.log('Upload successful:', response.data);
+      setUploadedSummaryId(response.data.summary.id);
       setShowSuccess(true);
     } catch (error) {
       console.error('Upload failed:', error);
@@ -269,6 +275,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const getFileIcon = (filename: string) => {
     const ext = filename.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return '📕';
+    if (ext === 'docx') return '📘';
     return '📄';
   };
 
@@ -408,13 +415,13 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         >
                           <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                           <p className="text-gray-900 mb-2">גרור קובץ לכאן או לחץ לבחירה</p>
-                          <p className="text-sm text-gray-500">PDF בלבד - עד 10MB</p>
+                          <p className="text-sm text-gray-500">PDF או DOCX - עד 10MB</p>
                         </div>
 
                         <input
                           ref={fileInputRef}
                           type="file"
-                          accept="application/pdf,.pdf"
+                          accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
                           onChange={handleFileSelect}
                           className="hidden"
                         />
@@ -904,12 +911,21 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
               </p>
 
               <div className="space-y-3">
+                {uploadedSummaryId && onNavigateToSummary && (
+                  <Button
+                    onClick={() => onNavigateToSummary(uploadedSummaryId)}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                  >
+                    <FileText className="w-4 h-4 ml-2" />
+                    צפה בסיכום שהעלית
+                  </Button>
+                )}
                 <Button
                   onClick={onNavigateSummaries}
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
                   <BookOpen className="w-4 h-4 ml-2" />
-                  צפה בסיכומים
+                  צפה בכל הסיכומים
                 </Button>
                 <Button
                   onClick={() => {

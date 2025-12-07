@@ -6,6 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
 const { uploadFileToDrive, deleteFileFromDrive, isDriveConfigured } = require('../utils/googleDrive');
+const { sanitizeFilename } = require('../utils/fileUtils');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -33,10 +34,14 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // DOCX
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('רק קבצי PDF מותרים'));
+      cb(new Error('רק קבצי PDF ו-DOCX מותרים'));
     }
   }
 });
@@ -104,6 +109,61 @@ router.get('/:id', optionalAuth, async (req, res) => {
   }
 });
 
+// GET /api/summaries/:id/download - Download summary file
+router.get('/:id/download', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const summary = await prisma.summary.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
+
+    // If file is on Google Drive, redirect to the Drive link
+    if (summary.filePath.startsWith('http://') || summary.filePath.startsWith('https://')) {
+      return res.redirect(summary.filePath);
+    }
+
+    // For local files, serve the file
+    const filePath = path.join(__dirname, '../../', summary.filePath);
+    
+    // Validate that the resolved path is within the expected directory
+    const uploadsDir = path.resolve(__dirname, '../../uploads');
+    const resolvedPath = path.resolve(filePath);
+    
+    if (!resolvedPath.startsWith(uploadsDir)) {
+      console.error('Path traversal attempt detected:', summary.filePath);
+      return res.status(403).json({ error: 'גישה לקובץ נדחתה' });
+    }
+    
+    if (!fs.existsSync(resolvedPath)) {
+      return res.status(404).json({ error: 'קובץ לא נמצא' });
+    }
+
+    // Set appropriate headers
+    const ext = path.extname(resolvedPath).toLowerCase();
+    const mimeType = ext === '.docx' 
+      ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : 'application/pdf';
+    
+    // Sanitize filename using utility function
+    const safeTitle = sanitizeFilename(summary.title);
+    const filename = `${safeTitle}${ext}`;
+    
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    
+    // Stream the file
+    const fileStream = fs.createReadStream(resolvedPath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error('Download file error:', error);
+    res.status(500).json({ error: 'שגיאה בהורדת קובץ' });
+  }
+});
+
 // POST /api/summaries - Upload new summary
 router.post('/', authenticate, upload.single('file'), summaryValidation, async (req, res) => {
   let tempFilePath = null;
@@ -112,7 +172,7 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
     const { title, description, courseId } = req.body;
 
     if (!req.file) {
-      return res.status(400).json({ error: 'יש להעלות קובץ PDF' });
+      return res.status(400).json({ error: 'יש להעלות קובץ PDF או DOCX' });
     }
 
     tempFilePath = req.file.path;
@@ -123,10 +183,14 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
     // Upload to Google Drive if configured
     if (isDriveConfigured()) {
       try {
+        // Determine file extension and mime type
+        const fileExt = path.extname(req.file.originalname);
+        const mimeType = req.file.mimetype;
+        
         const driveResult = await uploadFileToDrive({
           filePath: tempFilePath,
-          fileName: `${title}_${Date.now()}.pdf`,
-          mimeType: 'application/pdf'
+          fileName: `${title}_${Date.now()}${fileExt}`,
+          mimeType: mimeType
         });
         
         driveFileId = driveResult.fileId;
