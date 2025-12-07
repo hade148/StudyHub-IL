@@ -110,13 +110,15 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         let filename = summary.title;
         
         if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+          // Use non-greedy match to correctly extract filename
+          const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
           if (filenameMatch) {
-            filename = filenameMatch[1];
+            filename = decodeURIComponent(filenameMatch[1]);
           }
         } else {
-          // Determine extension from file path
-          const ext = summary.filePath.toLowerCase().endsWith('.docx') ? '.docx' : '.pdf';
+          // Extract extension from file path more robustly
+          const pathParts = summary.filePath.split('.');
+          const ext = pathParts.length > 1 ? '.' + pathParts[pathParts.length - 1].toLowerCase() : '.pdf';
           filename = filename + ext;
         }
         

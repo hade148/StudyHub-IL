@@ -138,8 +138,12 @@ router.get('/:id/download', authenticate, async (req, res) => {
       ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       : 'application/pdf';
     
+    // Sanitize filename to prevent header injection attacks
+    const sanitizedTitle = summary.title.replace(/[^\w\s.-]/g, '_');
+    const filename = `${sanitizedTitle}${ext}`;
+    
     res.setHeader('Content-Type', mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${summary.title}${ext}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
     
     // Stream the file
     const fileStream = fs.createReadStream(filePath);
