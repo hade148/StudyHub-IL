@@ -15,6 +15,18 @@ const validate = (req, res, next) => {
 };
 
 /**
+ * Custom validator for courseId that handles both string and integer values
+ * This is needed because FormData sends all values as strings
+ */
+const validateCourseId = (value) => {
+  const numValue = parseInt(value, 10);
+  if (isNaN(numValue) || numValue < 1) {
+    throw new Error('מזהה קורס לא תקין');
+  }
+  return true;
+};
+
+/**
  * Validation rules for user registration
  */
 const registerValidation = [
@@ -98,7 +110,7 @@ const summaryValidation = [
     .isLength({ min: 3 }).withMessage('כותרת חייבת להכיל לפחות 3 תווים'),
   body('courseId')
     .notEmpty().withMessage('קורס הוא שדה חובה')
-    .isInt({ min: 1 }).withMessage('מזהה קורס לא תקין'),
+    .custom(validateCourseId),
   body('description')
     .optional()
     .trim(),
@@ -129,7 +141,7 @@ const forumPostValidation = [
     .isLength({ min: 10 }).withMessage('תוכן חייב להכיל לפחות 10 תווים'),
   body('courseId')
     .notEmpty().withMessage('קורס הוא שדה חובה')
-    .isInt({ min: 1 }).withMessage('מזהה קורס לא תקין'),
+    .custom(validateCourseId),
   validate
 ];
 

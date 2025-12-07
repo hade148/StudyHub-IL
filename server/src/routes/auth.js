@@ -81,8 +81,14 @@ router.get('/me', authenticate, async (req, res) => {
         _count: { select: { summaries: true, forumPosts: true, ratings: true } }
       }
     });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' });
+    }
+    
     res.json(user);
   } catch (error) {
+    console.error('Get user profile error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת פרטי משתמש' });
   }
 });
