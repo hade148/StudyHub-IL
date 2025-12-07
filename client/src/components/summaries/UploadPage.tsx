@@ -26,6 +26,7 @@ import api from '../../utils/api';
 interface UploadPageProps {
   onNavigateHome: () => void;
   onNavigateSummaries: () => void;
+  onNavigateSummary?: (id: number) => void;
 }
 
 interface FormData {
@@ -46,7 +47,7 @@ interface Course {
   institution: string;
 }
 
-export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPageProps) {
+export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSummary }: UploadPageProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -56,6 +57,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+  const [uploadedSummaryId, setUploadedSummaryId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch courses from API
@@ -236,6 +238,12 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
       });
 
       console.log('Upload successful:', response.data);
+      
+      // Store the uploaded summary ID for navigation
+      if (response.data.summary && response.data.summary.id) {
+        setUploadedSummaryId(response.data.summary.id);
+      }
+      
       setShowSuccess(true);
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -892,7 +900,15 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
               <div className="space-y-3">
                 <Button
-                  onClick={onNavigateSummaries}
+                  onClick={() => {
+                    // Navigate to the specific summary if ID is available and callback exists
+                    if (uploadedSummaryId && onNavigateSummary) {
+                      onNavigateSummary(uploadedSummaryId);
+                    } else {
+                      // Fallback to summaries list
+                      onNavigateSummaries();
+                    }
+                  }}
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
                   <BookOpen className="w-4 h-4 ml-2" />
@@ -903,6 +919,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                     setShowSuccess(false);
                     setCurrentStep(1);
                     setUploadedFile(null);
+                    setUploadedSummaryId(null);
                     setTags([]);
                     reset();
                   }}
