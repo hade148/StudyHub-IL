@@ -129,12 +129,21 @@ router.get('/:id/download', authenticate, async (req, res) => {
     // For local files, serve the file
     const filePath = path.join(__dirname, '../../', summary.filePath);
     
-    if (!fs.existsSync(filePath)) {
+    // Validate that the resolved path is within the expected directory
+    const uploadsDir = path.resolve(__dirname, '../../uploads');
+    const resolvedPath = path.resolve(filePath);
+    
+    if (!resolvedPath.startsWith(uploadsDir)) {
+      console.error('Path traversal attempt detected:', summary.filePath);
+      return res.status(403).json({ error: 'גישה לקובץ נדחתה' });
+    }
+    
+    if (!fs.existsSync(resolvedPath)) {
       return res.status(404).json({ error: 'קובץ לא נמצא' });
     }
 
     // Set appropriate headers
-    const ext = path.extname(filePath).toLowerCase();
+    const ext = path.extname(resolvedPath).toLowerCase();
     const mimeType = ext === '.docx' 
       ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       : 'application/pdf';
@@ -147,7 +156,7 @@ router.get('/:id/download', authenticate, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
     
     // Stream the file
-    const fileStream = fs.createReadStream(filePath);
+    const fileStream = fs.createReadStream(resolvedPath);
     fileStream.pipe(res);
   } catch (error) {
     console.error('Download file error:', error);
