@@ -152,7 +152,7 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
       const fileName = 'summary-' + uniqueSuffix + path.extname(req.file.originalname);
       const localPath = path.join(uploadDir, fileName);
       
-      fs.writeFileSync(localPath, req.file.buffer);
+      await fs.promises.writeFile(localPath, req.file.buffer);
       filePath = `uploads/${fileName}`;
       console.log(`⚠️ Azure not configured, saved locally: ${filePath}`);
     }
