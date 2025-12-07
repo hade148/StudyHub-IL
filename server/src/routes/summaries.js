@@ -221,6 +221,10 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
         }
         
         // Keep local file if Drive upload fails - this ensures upload reliability
+        // Note: Local storage fallback means:
+        // - Files are stored on server disk (ensure adequate storage)
+        // - Files won't be accessible via Drive links
+        // - Download endpoint will serve files from local storage
         console.log('Falling back to local storage for file:', req.file.filename);
         const permanentDir = path.join(__dirname, '../../uploads');
         if (!fs.existsSync(permanentDir)) {

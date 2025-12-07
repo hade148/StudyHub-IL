@@ -181,9 +181,22 @@ const verifyDriveCredentials = async () => {
       message: 'Google Drive credentials verified successfully'
     };
   } catch (error) {
+    // Categorize errors for better diagnostics
+    let message = 'Google Drive credential verification failed';
+    
+    if (error.code === 401 || error.message.includes('authentication')) {
+      message = 'Google Drive authentication failed - check credentials';
+    } else if (error.code === 403 || error.message.includes('permission')) {
+      message = 'Google Drive permission denied - check service account access';
+    } else if (error.code === 'ENOTFOUND' || error.message.includes('getaddrinfo')) {
+      message = 'Google Drive not reachable - check network connection';
+    } else {
+      message = `${message}: ${error.message}`;
+    }
+    
     return {
       success: false,
-      message: `Google Drive credential verification failed: ${error.message}`,
+      message: message,
       error: error
     };
   }
