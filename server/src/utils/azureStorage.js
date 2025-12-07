@@ -106,10 +106,15 @@ class AzureStorageService {
    */
   extractBlobName(urlOrPath) {
     // If it's an Azure URL, extract the blob name
-    if (urlOrPath.includes('blob.core.windows.net')) {
-      const parts = urlOrPath.split('/');
-      return parts[parts.length - 1];
+    // Check for full Azure blob storage URL pattern
+    const azureBlobPattern = /^https:\/\/[a-z0-9]+\.blob\.core\.windows\.net\/[^/]+\/(.+)$/i;
+    const match = urlOrPath.match(azureBlobPattern);
+    
+    if (match) {
+      // Return the captured blob name (group 1)
+      return match[1];
     }
+    
     // If it's a local path, extract the filename
     if (urlOrPath.includes('/')) {
       const parts = urlOrPath.split('/');
