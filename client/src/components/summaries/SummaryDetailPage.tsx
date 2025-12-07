@@ -122,6 +122,21 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
     }
   };
 
+  // Handle file download
+  const handleDownload = async () => {
+    try {
+      const response = await api.get(`/summaries/${summaryId}/download`);
+      
+      if (response.data.downloadUrl) {
+        // For Azure storage, open the URL in a new tab
+        window.open(response.data.downloadUrl, '_blank');
+      }
+    } catch (err) {
+      console.error('Error downloading file:', err);
+      alert('שגיאה בהורדת הקובץ');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -191,7 +206,10 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                   <span>{summary.avgRating.toFixed(1)}</span>
                 </div>
               )}
-              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white">
+              <Button 
+                onClick={handleDownload}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+              >
                 <Download className="w-4 h-4 ml-2" />
                 הורדה
               </Button>
