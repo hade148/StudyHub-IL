@@ -15,8 +15,10 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# Load DATABASE_URL from .env
-export $(grep -v '^#' .env | grep DATABASE_URL | xargs)
+# Source .env file safely
+set -a
+source .env 2>/dev/null
+set +a
 
 if [ -z "$DATABASE_URL" ]; then
     echo "❌ Error: DATABASE_URL not set in .env file"
@@ -29,7 +31,7 @@ echo ""
 # Option 1: Generate migration and apply it
 echo "Choose an option:"
 echo "1) Create and apply migration (recommended for development)"
-echo "2) Push schema changes directly (quick fix)"
+echo "2) Push schema changes directly (quick fix, skips migrations)"
 echo "3) Exit"
 echo ""
 read -p "Enter your choice (1-3): " choice

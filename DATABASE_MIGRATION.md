@@ -22,7 +22,10 @@ If you prefer to apply the migration manually, choose one of the following metho
 
 ### How to Apply the Migration
 
-### Method 1: Using Prisma Migrate (Recommended)
+### Method 1: Using Prisma Migrate Deploy (Production/CI)
+
+**When to use:** Production deployments, CI/CD pipelines, or when you want to apply existing committed migrations.
+
 ```bash
 cd server
 npx prisma migrate deploy
@@ -30,7 +33,29 @@ npx prisma migrate deploy
 
 This will apply all pending migrations to your database.
 
-### Method 2: Manual SQL Execution
+### Method 2: Using Prisma Migrate Dev (Development)
+
+**When to use:** Local development when creating migrations from schema changes.
+
+```bash
+cd server
+npx prisma migrate dev
+```
+
+This will detect schema changes, create a migration, apply it, and regenerate the Prisma client.
+
+### Method 3: Using Prisma DB Push (Quick Fix)
+
+**When to use:** Quick prototyping or emergency fixes when you want to sync schema without migration files.
+
+```bash
+cd server
+npx prisma db push
+```
+
+This pushes your schema changes directly to the database without creating migration files.
+
+### Method 4: Manual SQL Execution
 If you prefer to run the SQL manually, execute the following in your PostgreSQL database:
 
 ```sql
@@ -42,14 +67,6 @@ ADD COLUMN IF NOT EXISTS "fieldOfStudy" TEXT,
 ADD COLUMN IF NOT EXISTS "website" TEXT,
 ADD COLUMN IF NOT EXISTS "interests" TEXT[] DEFAULT ARRAY[]::TEXT[];
 ```
-
-### Method 3: Using Prisma Migrate Dev (Development Only)
-```bash
-cd server
-npx prisma migrate dev
-```
-
-This will apply the migration and regenerate the Prisma client.
 
 ## After Migration
 After applying the migration, make sure to regenerate the Prisma client:
