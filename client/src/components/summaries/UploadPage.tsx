@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +23,7 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import api from '../../utils/api';
+import type { AxiosError } from 'axios';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -115,6 +116,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const watchCategory = watch('category', '');
   const watchLanguage = watch('language', 'hebrew');
   const watchTerms = watch('terms', false);
+
+  // Memoize selected course lookup
+  const selectedCourse = useMemo(() => {
+    return watchCourseId ? courses.find(c => c.id === parseInt(watchCourseId)) : null;
+  }, [watchCourseId, courses]);
 
   // Handle file drop
   const handleDrop = (e: React.DragEvent) => {
@@ -232,26 +238,21 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
       }
 
       // Send to API
-      const response = await api.post('/summaries', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.post('/summaries', formData);
 
       console.log('Upload successful:', response.data);
       setShowSuccess(true);
       
-      // Navigate to the uploaded summary after a short delay
-      setTimeout(() => {
-        if (response.data.summary?.id) {
-          navigate(`/summaries/${response.data.summary.id}`);
-        } else {
-          onNavigateSummaries();
-        }
-      }, 2000);
-    } catch (error: any) {
+      // Navigate to the uploaded summary
+      if (response.data.summary?.id) {
+        navigate(`/summaries/${response.data.summary.id}`);
+      } else {
+        onNavigateSummaries();
+      }
+    } catch (error) {
       console.error('Upload failed:', error);
-      const errorMessage = error.response?.data?.error || 'שגיאה בהעלאת הסיכום. אנא נסה שנית.';
+      const axiosError = error as AxiosError<{ error: string }>;
+      const errorMessage = axiosError.response?.data?.error || 'שגיאה בהעלאת הסיכום. אנא נסה שנית.';
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -762,10 +763,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         <div className="flex-1">
                           <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
                           <p className="text-gray-600">
-                            {watchCourseId 
-                              ? courses.find(c => c.id === parseInt(watchCourseId))?.courseName || 'שם הקורס'
-                              : 'שם הקורס'
-                            }
+                            {selectedCourse?.courseName || 'שם הקורס'}
                           </p>
                         </div>
                         <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
