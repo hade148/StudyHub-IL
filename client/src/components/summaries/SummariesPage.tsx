@@ -39,11 +39,46 @@ interface ApiSummary {
   };
 }
 
+interface TransformedSummary {
+  id: number;
+  title: string;
+  course: string;
+  courseFullName: string;
+  institution: string;
+  rating: number;
+  views: number;
+  downloads: number;
+  comments: number;
+  fileType: string;
+  fileSize: string;
+  pages: number;
+  description: string;
+  uploader: string;
+  uploadDate: string;
+  tags: string[];
+  thumbnail: string;
+  isFavorite: boolean;
+}
+
 interface SummariesPageProps {
   onNavigateHome: () => void;
   onNavigateUpload?: () => void;
   onNavigateSummary?: (id: number) => void;
 }
+
+// Format upload date to relative time
+const formatUploadDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return 'היום';
+  if (diffDays === 1) return 'אתמול';
+  if (diffDays < 7) return `לפני ${diffDays} ימים`;
+  if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
+  return date.toLocaleDateString('he-IL');
+};
 
 export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSummary }: SummariesPageProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -53,7 +88,7 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
   const [fileTypeFilter, setFileTypeFilter] = useState('all');
   const [institutionFilter, setInstitutionFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
-  const [summaries, setSummaries] = useState<any[]>([]);
+  const [summaries, setSummaries] = useState<TransformedSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 9;
@@ -104,20 +139,6 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
 
     fetchSummaries();
   }, []);
-
-  // Format upload date to relative time
-  const formatUploadDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'היום';
-    if (diffDays === 1) return 'אתמול';
-    if (diffDays < 7) return `לפני ${diffDays} ימים`;
-    if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
-    return date.toLocaleDateString('he-IL');
-  };
 
   // Generate course options from the data
   const courseOptions = useMemo(() => {
