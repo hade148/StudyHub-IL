@@ -110,15 +110,19 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         let filename = summary.title;
         
         if (contentDisposition) {
-          // Use non-greedy match to correctly extract filename
-          const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
-          if (filenameMatch) {
-            filename = decodeURIComponent(filenameMatch[1]);
+          // Use robust pattern to extract filename from Content-Disposition header
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=(?:(['"]).*?\1|[^;\n]*)/i);
+          if (filenameMatch && filenameMatch[0]) {
+            // Extract the actual filename value
+            const filenameValue = filenameMatch[0].replace(/^filename[^=]*=\s*["']?/i, '').replace(/["']$/, '');
+            filename = decodeURIComponent(filenameValue);
           }
         } else {
-          // Extract extension from file path more robustly
-          const pathParts = summary.filePath.split('.');
-          const ext = pathParts.length > 1 ? '.' + pathParts[pathParts.length - 1].toLowerCase() : '.pdf';
+          // Extract extension from file path after the last slash
+          const filenamePart = summary.filePath.split('/').pop() || summary.filePath;
+          const ext = filenamePart.includes('.') 
+            ? '.' + filenamePart.split('.').pop()?.toLowerCase() 
+            : '.pdf';
           filename = filename + ext;
         }
         
