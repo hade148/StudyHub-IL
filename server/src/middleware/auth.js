@@ -45,11 +45,15 @@ const authenticate = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.error('Authentication error:', error);
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ error: 'טוקן לא תקין' });
     }
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'הטוקן פג תוקף' });
+    }
+    if (error.name === 'PrismaClientKnownRequestError' || error.name === 'PrismaClientUnknownRequestError') {
+      return res.status(500).json({ error: 'שגיאת מסד נתונים' });
     }
     return res.status(500).json({ error: 'שגיאת אימות' });
   }

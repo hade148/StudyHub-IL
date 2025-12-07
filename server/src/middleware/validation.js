@@ -98,7 +98,13 @@ const summaryValidation = [
     .isLength({ min: 3 }).withMessage('כותרת חייבת להכיל לפחות 3 תווים'),
   body('courseId')
     .notEmpty().withMessage('קורס הוא שדה חובה')
-    .isInt({ min: 1 }).withMessage('מזהה קורס לא תקין'),
+    .custom((value) => {
+      const numValue = parseInt(value, 10);
+      if (isNaN(numValue) || numValue < 1) {
+        throw new Error('מזהה קורס לא תקין');
+      }
+      return true;
+    }),
   body('description')
     .optional()
     .trim(),
