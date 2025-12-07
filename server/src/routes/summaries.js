@@ -108,6 +108,48 @@ router.get('/:id', optionalAuth, async (req, res) => {
   }
 });
 
+// GET /api/summaries/:id/download - Download summary file
+router.get('/:id/download', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const summary = await prisma.summary.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
+
+    // If file is on Google Drive, redirect to the Drive link
+    if (summary.filePath.startsWith('http://') || summary.filePath.startsWith('https://')) {
+      return res.redirect(summary.filePath);
+    }
+
+    // For local files, serve the file
+    const filePath = path.join(__dirname, '../../', summary.filePath);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'קובץ לא נמצא' });
+    }
+
+    // Set appropriate headers
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeType = ext === '.docx' 
+      ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : 'application/pdf';
+    
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${summary.title}${ext}"`);
+    
+    // Stream the file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error('Download file error:', error);
+    res.status(500).json({ error: 'שגיאה בהורדת קובץ' });
+  }
+});
+
 // POST /api/summaries - Upload new summary
 router.post('/', authenticate, upload.single('file'), summaryValidation, async (req, res) => {
   let tempFilePath = null;

@@ -86,14 +86,18 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
       setDownloading(true);
       
       // If the file is stored in Google Drive, open in new tab
-      if (summary.filePath.startsWith('http')) {
+      if (summary.filePath.startsWith('http://') || summary.filePath.startsWith('https://')) {
         window.open(summary.filePath, '_blank');
       } else {
-        // For local files, download via the API
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/${summary.filePath}`, {
+        // For local files, use a dedicated download endpoint with summary ID
+        // This is more secure than directly accessing the file path
+        const token = localStorage.getItem('token');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+        
+        const response = await fetch(`${apiUrl}/summaries/${summary.id}/download`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
           },
         });
         
@@ -101,11 +105,26 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
           throw new Error('Failed to download file');
         }
         
+        // Get filename from response header or construct from title and extension
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = summary.title;
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+          if (filenameMatch) {
+            filename = filenameMatch[1];
+          }
+        } else {
+          // Determine extension from file path
+          const ext = summary.filePath.toLowerCase().endsWith('.docx') ? '.docx' : '.pdf';
+          filename = filename + ext;
+        }
+        
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = summary.title + (summary.filePath.endsWith('.docx') ? '.docx' : '.pdf');
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
