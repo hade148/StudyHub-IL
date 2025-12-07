@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, Upload, Home } from 'lucide-react';
 import { Button } from '../ui/button';
 import { SummaryCard } from './SummaryCard';
@@ -13,6 +13,50 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '../ui/pagination';
+import api from '../../utils/api';
+
+// Interface for API response
+interface ApiSummary {
+  id: number;
+  title: string;
+  description: string | null;
+  filePath: string;
+  uploadDate: string;
+  avgRating: number | null;
+  course: {
+    courseCode: string;
+    courseName: string;
+  };
+  uploadedBy: {
+    id: number;
+    fullName: string;
+  };
+  _count: {
+    ratings: number;
+    comments: number;
+  };
+}
+
+// Interface for transformed summary data for UI
+interface TransformedSummary {
+  id: number;
+  title: string;
+  course: string;
+  courseFullName: string;
+  rating: number;
+  views: number;
+  downloads: number;
+  comments: number;
+  fileType: string;
+  fileSize: string;
+  pages: number;
+  description: string;
+  uploader: string;
+  uploadDate: string;
+  tags: string[];
+  thumbnail: string;
+  isFavorite: boolean;
+}
 
 const summariesData = [
   {
@@ -216,13 +260,91 @@ interface SummariesPageProps {
 export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSummary }: SummariesPageProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [summaries, setSummaries] = useState<TransformedSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const itemsPerPage = 9;
-  const totalPages = Math.ceil(summariesData.length / itemsPerPage);
 
-  const currentSummaries = summariesData.slice(
+  // Fetch summaries from API
+  const fetchSummaries = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get<ApiSummary[]>('/summaries');
+      
+      // Transform API data to UI format
+      const transformed = response.data.map((summary) => {
+        const fileExt = summary.filePath.split('.').pop()?.toUpperCase() || 'PDF';
+        const isUrl = summary.filePath.startsWith('http://') || summary.filePath.startsWith('https://');
+        
+        return {
+          id: summary.id,
+          title: summary.title,
+          course: summary.course.courseCode,
+          courseFullName: summary.course.courseName,
+          rating: summary.avgRating || 0,
+          views: 0, // View tracking not yet implemented
+          downloads: 0, // Download tracking not yet implemented
+          comments: summary._count.comments,
+          fileType: isUrl ? 'PDF' : fileExt,
+          fileSize: 'N/A', // File size not stored in database
+          pages: 0, // Page count not stored in database
+          description: summary.description || 'אין תיאור',
+          uploader: summary.uploadedBy.fullName,
+          uploadDate: formatDate(summary.uploadDate),
+          tags: [], // Tag system not yet implemented
+          thumbnail: fileExt === 'DOCX' ? 'placeholder-doc.jpg' : 'placeholder-pdf.jpg',
+          isFavorite: false, // Favorites feature not yet implemented
+        };
+      });
+      
+      setSummaries(transformed);
+    } catch (err) {
+      console.error('Failed to fetch summaries:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`שגיאה בטעינת הסיכומים: ${errorMessage}. אנא בדוק שהשרת רץ ונסה שוב.`);
+      setSummaries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummaries();
+  }, []);
+
+  // Format date to Hebrew relative time
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'היום';
+    if (diffDays === 1) return 'אתמול';
+    if (diffDays < 7) return `לפני ${diffDays} ימים`;
+    if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
+    if (diffDays < 365) return `לפני ${Math.floor(diffDays / 30)} חודשים`;
+    return `לפני ${Math.floor(diffDays / 365)} שנים`;
+  };
+
+  const totalPages = Math.ceil(summaries.length / itemsPerPage);
+  const currentSummaries = summaries.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">טוען סיכומים...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -264,67 +386,105 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
           </Button>
         </div>
 
+        {/* Error message with retry */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-800">
+                <span>❌</span>
+                <span>{error}</span>
+              </div>
+              <Button 
+                onClick={fetchSummaries}
+                variant="outline"
+                className="border-red-300 text-red-700 hover:bg-red-100"
+              >
+                נסה שוב
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters */}
         <SearchAndFilters
           viewMode={viewMode}
           setViewMode={setViewMode}
-          resultsCount={summariesData.length}
+          resultsCount={summaries.length}
         />
 
-        {/* Summaries Grid */}
-        <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
-          {currentSummaries.map((summary, index) => (
-            <SummaryCard 
-              key={summary.id} 
-              summary={summary} 
-              index={index} 
-              onClick={() => onNavigateSummary?.(summary.id)}
-            />
-          ))}
-        </div>
-
-        {/* Pagination */}
-        <div className="flex flex-col items-center gap-4 pt-8">
-          <div className="text-gray-600">
-            מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, summariesData.length)} מתוך {summariesData.length} תוצאות
+        {/* Empty state */}
+        {summaries.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📚</div>
+            <h3 className="text-xl text-gray-900 mb-2">אין סיכומים עדיין</h3>
+            <p className="text-gray-600 mb-4">היה הראשון להעלות סיכום!</p>
+            <Button onClick={onNavigateUpload} className="bg-gradient-to-r from-blue-500 to-purple-600">
+              <Upload className="w-5 h-5 ml-2" />
+              העלה סיכום
+            </Button>
           </div>
-          
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+        )}
+
+        {/* Summaries Grid */}
+        {summaries.length > 0 && (
+          <>
+            <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
+              {currentSummaries.map((summary, index) => (
+                <SummaryCard 
+                  key={summary.id} 
+                  summary={summary} 
+                  index={index} 
+                  onClick={() => onNavigateSummary?.(summary.id)}
                 />
-              </PaginationItem>
-              
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
               ))}
-              
-              {totalPages > 5 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-              
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex flex-col items-center gap-4 pt-8">
+                <div className="text-gray-600">
+                  מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, summaries.length)} מתוך {summaries.length} תוצאות
+                </div>
+                
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    {totalPages > 5 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
+        )}
       </motion.div>
     </div>
   );
