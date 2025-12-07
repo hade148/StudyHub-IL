@@ -139,8 +139,9 @@ router.get('/:id/download', authenticate, async (req, res) => {
       : 'application/pdf';
     
     // Sanitize filename to prevent header injection attacks
-    // Remove all non-alphanumeric characters except spaces
-    const sanitizedTitle = summary.title.replace(/[^\w\s]/g, '_').replace(/\s+/g, '_');
+    // Remove only characters that are invalid in filenames across platforms
+    // Keep Hebrew and other Unicode characters
+    const sanitizedTitle = summary.title.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_');
     // Ensure the filename doesn't start with special characters or contain '..'
     const safeTitle = sanitizedTitle.replace(/^[._-]+/, '').replace(/\.\./g, '_');
     const filename = `${safeTitle}${ext}`;

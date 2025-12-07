@@ -110,19 +110,21 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         let filename = summary.title;
         
         if (contentDisposition) {
-          // Use robust pattern to extract filename from Content-Disposition header
-          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=(?:(['"]).*?\1|[^;\n]*)/i);
-          if (filenameMatch && filenameMatch[0]) {
-            // Extract the actual filename value
-            const filenameValue = filenameMatch[0].replace(/^filename[^=]*=\s*["']?/i, '').replace(/["']$/, '');
-            filename = decodeURIComponent(filenameValue);
+          // Simple extraction of filename value from Content-Disposition header
+          // Handles: filename="name.pdf", filename=name.pdf, filename='name.pdf'
+          const matches = contentDisposition.match(/filename\s*=\s*["']?([^"';]+)["']?/i);
+          if (matches && matches[1]) {
+            filename = decodeURIComponent(matches[1].trim());
           }
-        } else {
+        } 
+        
+        // If we don't have a filename with extension, add it from file path
+        if (!filename.includes('.')) {
           // Extract extension from file path after the last slash
           const filenamePart = summary.filePath.split('/').pop() || summary.filePath;
           const ext = filenamePart.includes('.') 
             ? '.' + filenamePart.split('.').pop()?.toLowerCase() 
-            : '.pdf';
+            : '.pdf'; // Default to .pdf if no extension found
           filename = filename + ext;
         }
         
