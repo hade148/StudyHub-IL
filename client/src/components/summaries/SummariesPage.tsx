@@ -302,7 +302,8 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       setSummaries(transformed);
     } catch (err) {
       console.error('Failed to fetch summaries:', err);
-      setError('שגיאה בטעינת הסיכומים. אנא טען מחדש את הדף.');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`שגיאה בטעינת הסיכומים: ${errorMessage}. אנא בדוק שהשרת רץ ונסה שוב.`);
       setSummaries([]);
     } finally {
       setLoading(false);

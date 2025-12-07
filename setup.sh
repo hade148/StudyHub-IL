@@ -110,7 +110,7 @@ if [[ $REPLY == "1" ]]; then
     
     # Try to create database (will fail if already exists, which is ok)
     if command_exists psql; then
-        psql -U postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null || print_warning "Database might already exist"
+        psql -U postgres -c "CREATE DATABASE $DB_NAME;" 2>/dev/null || print_warning "Could not create database (may already exist, or check PostgreSQL connection)"
     else
         print_warning "Cannot create database automatically. Please create it manually:"
         echo "  psql -U postgres -c \"CREATE DATABASE studyhub_db;\""

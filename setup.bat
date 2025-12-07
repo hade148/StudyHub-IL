@@ -74,7 +74,7 @@ if "%choice%"=="1" (
     if %ERRORLEVEL% EQU 0 (
         psql -U postgres -c "CREATE DATABASE studyhub_db;" 2>nul
         if !ERRORLEVEL! NEQ 0 (
-            echo [WARNING] Database might already exist
+            echo [WARNING] Could not create database ^(may already exist, or check PostgreSQL connection^)
         )
     ) else (
         echo [WARNING] Cannot create database automatically. Please create it manually:
