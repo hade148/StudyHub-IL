@@ -23,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import api from '../../utils/api';
-import type { AxiosError } from 'axios';
+import axios, { type AxiosError } from 'axios';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -238,6 +238,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
       }
 
       // Send to API
+      // Note: Content-Type header is automatically set by axios/browser with proper boundary
       const response = await api.post('/summaries', formData);
 
       console.log('Upload successful:', response.data);
@@ -251,8 +252,13 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      const axiosError = error as AxiosError<{ error: string }>;
-      const errorMessage = axiosError.response?.data?.error || 'שגיאה בהעלאת הסיכום. אנא נסה שנית.';
+      let errorMessage = 'שגיאה בהעלאת הסיכום. אנא נסה שנית.';
+      
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ error: string }>;
+        errorMessage = axiosError.response?.data?.error || errorMessage;
+      }
+      
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
