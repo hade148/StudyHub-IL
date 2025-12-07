@@ -55,6 +55,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
@@ -75,6 +76,47 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Handle file download
+  const handleDownload = async () => {
+    if (!summary) return;
+
+    try {
+      setDownloading(true);
+      
+      // If the file is stored in Google Drive, open in new tab
+      if (summary.filePath.startsWith('http')) {
+        window.open(summary.filePath, '_blank');
+      } else {
+        // For local files, download via the API
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/${summary.filePath}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to download file');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = summary.title + (summary.filePath.endsWith('.docx') ? '.docx' : '.pdf');
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (err) {
+      console.error('Error downloading file:', err);
+      alert('שגיאה בהורדת הקובץ');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   // Fetch summary data
@@ -191,9 +233,13 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                   <span>{summary.avgRating.toFixed(1)}</span>
                 </div>
               )}
-              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white">
+              <Button 
+                onClick={handleDownload}
+                disabled={downloading}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+              >
                 <Download className="w-4 h-4 ml-2" />
-                הורדה
+                {downloading ? 'מוריד...' : 'הורדה'}
               </Button>
             </div>
           </div>

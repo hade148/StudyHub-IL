@@ -308,6 +308,7 @@ export default function App() {
               <UploadPage 
                 onNavigateHome={() => navigate('/dashboard')}
                 onNavigateSummaries={() => navigate('/summaries')}
+                onNavigateToSummary={(id: number) => navigate(`/summaries/${id}`)}
               />
             </div>
           </ProtectedRoute>

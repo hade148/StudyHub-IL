@@ -33,10 +33,14 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // DOCX
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('רק קבצי PDF מותרים'));
+      cb(new Error('רק קבצי PDF ו-DOCX מותרים'));
     }
   }
 });
@@ -112,7 +116,7 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
     const { title, description, courseId } = req.body;
 
     if (!req.file) {
-      return res.status(400).json({ error: 'יש להעלות קובץ PDF' });
+      return res.status(400).json({ error: 'יש להעלות קובץ PDF או DOCX' });
     }
 
     tempFilePath = req.file.path;
@@ -123,10 +127,14 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
     // Upload to Google Drive if configured
     if (isDriveConfigured()) {
       try {
+        // Determine file extension and mime type
+        const fileExt = path.extname(req.file.originalname);
+        const mimeType = req.file.mimetype;
+        
         const driveResult = await uploadFileToDrive({
           filePath: tempFilePath,
-          fileName: `${title}_${Date.now()}.pdf`,
-          mimeType: 'application/pdf'
+          fileName: `${title}_${Date.now()}${fileExt}`,
+          mimeType: mimeType
         });
         
         driveFileId = driveResult.fileId;
