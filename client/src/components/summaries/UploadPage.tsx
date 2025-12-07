@@ -240,7 +240,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
       console.log('Upload successful:', response.data);
       
       // Store the uploaded summary ID for navigation
-      if (response.data.summary && response.data.summary.id) {
+      if (response.data?.summary?.id) {
         setUploadedSummaryId(response.data.summary.id);
       }
       
