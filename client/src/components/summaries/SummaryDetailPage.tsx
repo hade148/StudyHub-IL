@@ -122,10 +122,13 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         if (!filename.includes('.')) {
           // Extract extension from file path after the last slash
           const filenamePart = summary.filePath.split('/').pop() || summary.filePath;
-          const ext = filenamePart.includes('.') 
-            ? '.' + filenamePart.split('.').pop()?.toLowerCase() 
-            : '.pdf'; // Default to .pdf if no extension found
-          filename = filename + ext;
+          if (filenamePart.includes('.')) {
+            const ext = '.' + filenamePart.split('.').pop()?.toLowerCase();
+            filename = filename + ext;
+          } else {
+            // Use default based on what formats we support
+            filename = filename + '.pdf'; // Most common default
+          }
         }
         
         const blob = await response.blob();

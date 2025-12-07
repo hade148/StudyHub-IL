@@ -6,6 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
 const { uploadFileToDrive, deleteFileFromDrive, isDriveConfigured } = require('../utils/googleDrive');
+const { sanitizeFilename } = require('../utils/fileUtils');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -138,12 +139,8 @@ router.get('/:id/download', authenticate, async (req, res) => {
       ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       : 'application/pdf';
     
-    // Sanitize filename to prevent header injection attacks
-    // Remove only characters that are invalid in filenames across platforms
-    // Keep Hebrew and other Unicode characters
-    const sanitizedTitle = summary.title.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_');
-    // Ensure the filename doesn't start with special characters or contain '..'
-    const safeTitle = sanitizedTitle.replace(/^[._-]+/, '').replace(/\.\./g, '_');
+    // Sanitize filename using utility function
+    const safeTitle = sanitizeFilename(summary.title);
     const filename = `${safeTitle}${ext}`;
     
     res.setHeader('Content-Type', mimeType);
