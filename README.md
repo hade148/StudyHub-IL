@@ -38,9 +38,10 @@ StudyHub-IL is a comprehensive educational platform designed to facilitate learn
 5. Run database migrations: 
    - Development: `npx prisma migrate dev`
    - Production: `npx prisma migrate deploy`
+   - Quick sync (if encountering schema errors): Run `./sync-database.sh` (Linux/Mac) or `sync-database.bat` (Windows)
 6. Start the server: `npm start` (or `npm run dev` for development)
 
-**Note:** If you encounter login errors about missing columns, see [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md) for migration instructions.
+**Note:** If you encounter login errors about missing columns (e.g., "The column `users.bio` does not exist"), your database schema is out of sync. Run the sync script: `./sync-database.sh` (Linux/Mac) or `sync-database.bat` (Windows). See [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md) for details.
 
 ### With Docker
 1. Clone the repository: `git clone <repository-url>`

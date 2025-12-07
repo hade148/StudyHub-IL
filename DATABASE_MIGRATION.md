@@ -4,9 +4,23 @@
 The application was experiencing login errors because the Prisma schema included user profile fields (`bio`, `location`, `institution`, `fieldOfStudy`, `website`, `interests`) that were not present in the actual PostgreSQL database.
 
 ## Solution
-A migration has been created to add these missing columns to the `users` table.
+The database schema needs to be synchronized with the Prisma schema to add these missing columns to the `users` table.
 
-## How to Apply the Migration
+## Quick Fix (Recommended)
+
+Run the provided sync script:
+
+```bash
+./sync-database.sh
+```
+
+This interactive script will help you choose the best method to synchronize your database.
+
+## Manual Methods
+
+If you prefer to apply the migration manually, choose one of the following methods:
+
+### How to Apply the Migration
 
 ### Method 1: Using Prisma Migrate (Recommended)
 ```bash

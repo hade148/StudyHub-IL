@@ -28,9 +28,6 @@ Thumbs.db
 server/uploads/*
 !server/uploads/.gitkeep
 
-# Prisma
-server/prisma/migrations/
-
 # Testing
 coverage/
 .nyc_output/
