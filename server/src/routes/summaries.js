@@ -204,12 +204,28 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
         }
         tempFilePath = null;
       } catch (driveError) {
-        // Log the full error for debugging, including original error details
+        // Log detailed error information for debugging
         console.error('Google Drive upload failed:', {
           message: driveError.message,
-          stack: driveError.stack
+          errorType: driveError.name || 'GoogleDriveError',
+          timestamp: new Date().toISOString()
         });
-        // Keep local file if Drive upload fails
+        
+        // Log additional details if available
+        if (driveError.originalError) {
+          console.error('Original error details:', {
+            message: driveError.originalError.message,
+            code: driveError.originalError.code,
+            status: driveError.originalError.status
+          });
+        }
+        
+        // Keep local file if Drive upload fails - this ensures upload reliability
+        // Note: Local storage fallback means:
+        // - Files are stored on server disk (ensure adequate storage)
+        // - Files won't be accessible via Drive links
+        // - Download endpoint will serve files from local storage
+        console.log('Falling back to local storage for file:', req.file.filename);
         const permanentDir = path.join(__dirname, '../../uploads');
         if (!fs.existsSync(permanentDir)) {
           fs.mkdirSync(permanentDir, { recursive: true });

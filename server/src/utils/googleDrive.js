@@ -14,12 +14,13 @@ const createDriveAuth = () => {
     return null;
   }
 
-  const auth = new google.auth.JWT(
-    process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
-    null,
-    process.env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    ['https://www.googleapis.com/auth/drive.file']
-  );
+  // Use options object format for googleapis v167+ compatibility
+  // The newer version requires this format instead of positional parameters
+  const auth = new google.auth.JWT({
+    email: process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+    key: process.env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    scopes: ['https://www.googleapis.com/auth/drive.file']
+  });
 
   return auth;
 };
@@ -152,10 +153,64 @@ const isDriveConfigured = () => {
   return !!(process.env.GOOGLE_DRIVE_CLIENT_EMAIL && process.env.GOOGLE_DRIVE_PRIVATE_KEY);
 };
 
+/**
+ * Verify Google Drive credentials are valid
+ * @returns {Promise<Object>} Object with status and message
+ */
+const verifyDriveCredentials = async () => {
+  if (!isDriveConfigured()) {
+    return {
+      success: false,
+      message: 'Google Drive credentials not configured'
+    };
+  }
+
+  const drive = getDriveClient();
+  if (!drive) {
+    return {
+      success: false,
+      message: 'Failed to create Drive client'
+    };
+  }
+
+  try {
+    // Try to access Drive API to verify credentials
+    await drive.files.list({ pageSize: 1, fields: 'files(id)' });
+    return {
+      success: true,
+      message: 'Google Drive credentials verified successfully'
+    };
+  } catch (error) {
+    // Categorize errors for better diagnostics
+    // Check HTTP status codes first, then fall back to error message patterns
+    let message = 'Google Drive credential verification failed';
+    const statusCode = error.response?.status || error.code;
+    const isNetworkError = error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT' || 
+                          (typeof error.message === 'string' && error.message.includes('getaddrinfo'));
+    
+    if (statusCode === 401 || (typeof error.message === 'string' && error.message.includes('authentication'))) {
+      message = 'Google Drive authentication failed - check credentials';
+    } else if (statusCode === 403 || (typeof error.message === 'string' && error.message.includes('permission'))) {
+      message = 'Google Drive permission denied - check service account access';
+    } else if (isNetworkError) {
+      message = 'Google Drive not reachable - check network connection';
+    } else if (error.message) {
+      message = `${message}: ${error.message}`;
+    }
+    
+    return {
+      success: false,
+      message: message,
+      error: error
+    };
+  }
+};
+
 module.exports = {
   uploadFileToDrive,
   deleteFileFromDrive,
   getFileInfo,
   isDriveConfigured,
-  getDriveClient
+  getDriveClient,
+  verifyDriveCredentials
 };

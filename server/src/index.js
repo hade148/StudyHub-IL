@@ -24,6 +24,9 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 4000;
 
+// Import Google Drive utilities for startup check
+const { isDriveConfigured } = require('./utils/googleDrive');
+
 // Middleware
 app.use(helmet());
 app.use(cors({
@@ -86,6 +89,13 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🗄️  Database: Connected`);
     console.log(`✨ Version: 2.0.0 - Full Features`);
+    
+    // Check Google Drive configuration
+    if (isDriveConfigured()) {
+      console.log(`☁️  Google Drive: Configured (files will be uploaded to Drive)`);
+    } else {
+      console.log(`💾 Google Drive: Not configured (files will be stored locally)`);
+    }
   });
 }
 
