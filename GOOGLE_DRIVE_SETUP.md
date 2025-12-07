@@ -104,9 +104,17 @@ console.log('Google Drive configured:', isDriveConfigured());
 
 ### "Google Drive not configured" Error
 
-- Check that all three environment variables are set
+- Check that all required environment variables are set
 - Verify the private key format (should include `\n` for newlines)
 - Ensure the service account JSON was downloaded correctly
+
+### Authentication Errors ("No key or keyFile set")
+
+If you see authentication errors like "No key or keyFile set" or "Failed to load service account from JSON":
+
+- This was fixed in version 2.0 by updating the JWT initialization
+- Make sure you're using googleapis v167+ with the new options object format
+- The code now properly handles the private key with the new API
 
 ### Upload Fails but Works Locally
 
@@ -114,12 +122,19 @@ console.log('Google Drive configured:', isDriveConfigured());
 - Verify the folder ID is correct
 - Ensure Google Drive API is enabled in your Google Cloud project
 - Check API quota limits
+- Review server logs for detailed error messages
 
 ### Files Not Accessible
 
 - Verify that permissions were set correctly on uploaded files
 - Check that the folder is shared with the service account
 - Ensure the web view link is being stored in the database
+
+### Server Startup Checks
+
+When the server starts, it will display the Google Drive configuration status:
+- `☁️ Google Drive: Configured` - Files will be uploaded to Google Drive
+- `💾 Google Drive: Not configured` - Files will be stored locally
 
 ## Code References
 
