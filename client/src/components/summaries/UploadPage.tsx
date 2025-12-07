@@ -752,7 +752,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
-                          <p className="text-gray-600">{watchCourse || 'שם הקורס'}</p>
+                          <p className="text-gray-600">
+                            {watchCourseId 
+                              ? courses.find(c => c.id === parseInt(watchCourseId))?.courseName || 'שם הקורס'
+                              : 'שם הקורס'}
+                          </p>
                         </div>
                         <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
                       </div>
