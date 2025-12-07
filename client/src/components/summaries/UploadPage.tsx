@@ -46,8 +46,6 @@ interface Course {
   institution: string;
 }
 
-}
-
 export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPageProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
