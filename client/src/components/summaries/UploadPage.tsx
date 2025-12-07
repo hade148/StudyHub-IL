@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import {
   Upload,
   FileText,
@@ -23,7 +22,6 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import api from '../../utils/api';
-import axios, { type AxiosError } from 'axios';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -48,27 +46,9 @@ interface Course {
   institution: string;
 }
 
-const categories = [
-  { id: 'math', label: 'מתמטיקה', icon: '📘' },
-  { id: 'cs', label: 'מדעי המחשב', icon: '💻' },
-  { id: 'science', label: 'מדעים', icon: '🔬' },
-  { id: 'humanities', label: 'הומניות', icon: '📚' },
-  { id: 'arts', label: 'אמנויות', icon: '🎨' },
-];
-
-const popularTags = [
-  'בחינה',
-  'מועד א',
-  'תרגילים',
-  'הרצאות',
-  'נוסחאות',
-  'דוגמאות',
-  'חומר מלא',
-  'סמסטר א',
-];
+}
 
 export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPageProps) {
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -80,14 +60,14 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const [loadingCourses, setLoadingCourses] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch courses on component mount
+  // Fetch courses from API
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const response = await api.get('/courses');
         setCourses(response.data);
       } catch (error) {
-        console.error('Failed to fetch courses:', error);
+        console.error('Error fetching courses:', error);
       } finally {
         setLoadingCourses(false);
       }
@@ -102,6 +82,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     setValue,
     watch,
     trigger,
+    reset,
   } = useForm<FormData>({
     defaultValues: {
       language: 'hebrew',
@@ -117,10 +98,24 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
   const watchLanguage = watch('language', 'hebrew');
   const watchTerms = watch('terms', false);
 
-  // Memoize selected course lookup
-  const selectedCourse = useMemo(() => {
-    return watchCourseId ? courses.find(c => c.id === parseInt(watchCourseId)) : null;
-  }, [watchCourseId, courses]);
+  const categories = [
+    { id: 'math', label: 'מתמטיקה', icon: '📘' },
+    { id: 'cs', label: 'מדעי המחשב', icon: '💻' },
+    { id: 'science', label: 'מדעים', icon: '🔬' },
+    { id: 'humanities', label: 'הומניות', icon: '📚' },
+    { id: 'arts', label: 'אמנויות', icon: '🎨' },
+  ];
+
+  const popularTags = [
+    'בחינה',
+    'מועד א',
+    'תרגילים',
+    'הרצאות',
+    'נוסחאות',
+    'דוגמאות',
+    'חומר מלא',
+    'סמסטר א',
+  ];
 
   // Handle file drop
   const handleDrop = (e: React.DragEvent) => {
@@ -221,14 +216,13 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
   const onSubmit = async (data: FormData) => {
     if (!uploadedFile) {
-      alert('אנא בחר קובץ להעלאה');
+      alert('אנא העלה קובץ');
       return;
     }
 
     setIsSubmitting(true);
-
+    
     try {
-      // Create FormData for file upload
       const formData = new FormData();
       formData.append('file', uploadedFile);
       formData.append('title', data.title);
@@ -237,28 +231,17 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
         formData.append('description', data.description);
       }
 
-      // Send to API
-      // Note: Content-Type header is automatically set by axios/browser with proper boundary
-      const response = await api.post('/summaries', formData);
+      const response = await api.post('/summaries', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       console.log('Upload successful:', response.data);
       setShowSuccess(true);
-      
-      // Navigate to the uploaded summary
-      if (response.data.summary?.id) {
-        navigate(`/summaries/${response.data.summary.id}`);
-      } else {
-        onNavigateSummaries();
-      }
-    } catch (error) {
-      console.error('Upload failed:', error);
-      let errorMessage = 'שגיאה בהעלאת הסיכום. אנא נסה שנית.';
-      
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<{ error: string }>;
-        errorMessage = axiosError.response?.data?.error || errorMessage;
-      }
-      
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      const errorMessage = error.response?.data?.error || 'שגיאה בהעלאת הסיכום';
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -441,6 +424,10 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                           <FileText className="w-4 h-4 ml-2" />
                           בחר קובץ מהמחשב
                         </Button>
+                        
+                        <p className="text-xs text-gray-500 mt-4 text-center">
+                          תומך בקבצי PDF ו-DOCX בלבד, עד 10MB
+                        </p>
                       </>
                     ) : (
                       // File Preview
@@ -527,24 +514,23 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                       <Label htmlFor="courseId" className="mb-2 flex items-center gap-2">
                         בחר קורס <span className="text-red-500">*</span>
                       </Label>
-                      {loadingCourses ? (
-                        <div className="text-sm text-gray-500">טוען קורסים...</div>
-                      ) : (
-                        <select
-                          id="courseId"
-                          {...register('courseId', { required: 'יש לבחור קורס' })}
-                          className={`w-full rounded-md border ${
-                            errors.courseId ? 'border-red-500' : 'border-gray-300'
-                          } px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        >
-                          <option value="">בחר קורס מהרשימה</option>
-                          {courses.map((course) => (
-                            <option key={course.id} value={course.id}>
-                              {course.courseName} ({course.courseCode}) - {course.institution}
-                            </option>
-                          ))}
-                        </select>
-                      )}
+                      <select
+                        id="courseId"
+                        {...register('courseId', { required: 'יש לבחור קורס' })}
+                        className={`w-full rounded-md border ${
+                          errors.courseId ? 'border-red-500' : 'border-gray-300'
+                        } px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        disabled={loadingCourses}
+                      >
+                        <option value="">
+                          {loadingCourses ? 'טוען קורסים...' : 'בחר קורס מהרשימה'}
+                        </option>
+                        {courses.map((course) => (
+                          <option key={course.id} value={course.id}>
+                            {course.courseCode} - {course.courseName} ({course.institution})
+                          </option>
+                        ))}
+                      </select>
                       {errors.courseId && (
                         <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
@@ -768,9 +754,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
-                          <p className="text-gray-600">
-                            {selectedCourse?.courseName || 'שם הקורס'}
-                          </p>
+                          <p className="text-gray-600">{watchCourse || 'שם הקורס'}</p>
                         </div>
                         <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
                       </div>
@@ -846,7 +830,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                       >
                         {isSubmitting ? 'מעלה...' : 'פרסם סיכום'}
-                        {!isSubmitting && <Check className="w-4 h-4 mr-2" />}
+                        <Check className="w-4 h-4 mr-2" />
                       </Button>
                     </div>
                   </motion.div>
@@ -922,11 +906,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                     setCurrentStep(1);
                     setUploadedFile(null);
                     setTags([]);
-                    setValue('title', '');
-                    setValue('courseId', '');
-                    setValue('description', '');
-                    setValue('category', '');
-                    setValue('terms', false);
+                    reset();
                   }}
                   variant="outline"
                   className="w-full"
