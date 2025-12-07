@@ -15,12 +15,20 @@ if not exist .env (
 )
 
 echo ✅ .env file found
+
+REM Check if DATABASE_URL is set by trying to run a simple prisma command
+npx prisma --version >nul 2>&1
+if errorlevel 1 (
+    echo ❌ Error: Prisma is not available. Please run 'npm install' first.
+    exit /b 1
+)
+
 echo.
 
 REM Display options
 echo Choose an option:
 echo 1) Create and apply migration (recommended for development)
-echo 2) Push schema changes directly (quick fix)
+echo 2) Push schema changes directly (quick fix, skips migrations)
 echo 3) Exit
 echo.
 
@@ -35,6 +43,10 @@ goto invalid
 echo.
 echo 📝 Creating migration...
 call npx prisma migrate dev --name add_user_profile_fields
+if errorlevel 1 (
+    echo ❌ Migration failed. Please check your DATABASE_URL in .env
+    exit /b 1
+)
 echo.
 echo ✅ Migration created and applied!
 goto finish
@@ -43,6 +55,10 @@ goto finish
 echo.
 echo ⚡ Pushing schema changes...
 call npx prisma db push
+if errorlevel 1 (
+    echo ❌ Push failed. Please check your DATABASE_URL in .env
+    exit /b 1
+)
 echo.
 echo ✅ Schema synchronized!
 goto finish
