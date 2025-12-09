@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { generateToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
@@ -13,6 +14,17 @@ const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Rate limiter for avatar upload - 5 uploads per 15 minutes per user
+const avatarUploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each user to 5 requests per windowMs
+  message: 'יותר מדי ניסיונות להעלאת תמונה. נסה שוב בעוד 15 דקות.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Use user ID from auth token for rate limiting
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
 
 // Multer configuration for avatar uploads
 const storage = multer.memoryStorage();
@@ -194,7 +206,7 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
 });
 
 // POST /api/auth/profile/avatar - Upload profile avatar
-router.post('/profile/avatar', authenticate, avatarUpload.single('avatar'), async (req, res) => {
+router.post('/profile/avatar', authenticate, avatarUploadLimiter, avatarUpload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'לא הועלה קובץ תמונה' });
@@ -229,15 +241,20 @@ router.post('/profile/avatar', authenticate, avatarUpload.single('avatar'), asyn
     if (azureStorage.isConfigured()) {
       try {
         // Delete old avatar from Azure if it exists and is a valid Azure URL
-        if (user.avatar && user.avatar.startsWith('https://') && user.avatar.includes('.blob.core.windows.net/')) {
+        // Validate that the URL is specifically from Azure Blob Storage
+        if (user.avatar) {
           try {
-            const oldFileName = azureStorage.extractBlobName(user.avatar);
-            if (oldFileName && oldFileName.startsWith('avatars/')) {
-              await azureStorage.deleteFile(oldFileName);
+            const url = new URL(user.avatar);
+            // Check if it's an Azure blob storage URL with expected domain pattern
+            if (url.protocol === 'https:' && url.hostname.endsWith('.blob.core.windows.net')) {
+              const oldFileName = azureStorage.extractBlobName(user.avatar);
+              if (oldFileName && oldFileName.startsWith('avatars/')) {
+                await azureStorage.deleteFile(oldFileName);
+              }
             }
-          } catch (deleteError) {
-            console.log('Could not delete old avatar:', deleteError.message);
-            // Don't fail if old file can't be deleted
+          } catch (urlError) {
+            // Invalid URL format, skip deletion
+            console.log('Invalid avatar URL format:', urlError.message);
           }
         }
 
