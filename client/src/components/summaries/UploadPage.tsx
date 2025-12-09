@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   Check,
   Home,
-  FileStack,
   BookOpen,
   AlertCircle,
   Sparkles,
