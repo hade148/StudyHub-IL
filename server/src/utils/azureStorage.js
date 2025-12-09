@@ -1,5 +1,10 @@
 const { BlobServiceClient } = require('@azure/storage-blob');
 
+// Disable SSL verification for development environment
+if (process.env.NODE_ENV === 'development') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 /**
  * Azure Blob Storage utility for handling file uploads and downloads
  */
