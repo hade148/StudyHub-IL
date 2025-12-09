@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { forumPostValidation, forumRatingValidation, commentValidation } = require('../middleware/validation');
@@ -138,9 +139,11 @@ router.post('/', authenticate, upload.array('images', 5), async (req, res) => {
     if (req.files && req.files.length > 0) {
       try {
         if (azureStorage.isConfigured()) {
-          for (const file of req.files) {
+          for (let i = 0; i < req.files.length; i++) {
+            const file = req.files[i];
             const timestamp = Date.now();
-            const fileName = `forum/${timestamp}-${file.originalname}`;
+            const fileExt = path.extname(file.originalname);
+            const fileName = `forum/${timestamp}-${i}${fileExt}`;
             const imageUrl = await azureStorage.uploadFile(file.buffer, fileName, file.mimetype);
             imageUrls.push(imageUrl);
           }

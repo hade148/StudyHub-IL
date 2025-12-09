@@ -16,6 +16,7 @@ import {
 import { QuestionCard } from './QuestionCard';
 import { ForumFilters } from './ForumFilters';
 import { ForumSidebar } from './ForumSidebar';
+import api from '../../utils/api';
 
 const questionsData = [
   {
@@ -367,9 +368,8 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     const fetchQuestions = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/forum');
-        const data = await response.json();
-        setQuestions(data);
+        const response = await api.get('/forum');
+        setQuestions(response.data);
       } catch (error) {
         console.error('Error fetching questions:', error);
         // Fallback to hardcoded data on error

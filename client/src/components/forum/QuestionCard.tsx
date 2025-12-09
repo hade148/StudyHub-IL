@@ -73,7 +73,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
         {/* Stats Section (Right) */}
         <div className="flex flex-col gap-3 items-center min-w-[80px]">
           {/* Rating */}
-          {question.avgRating !== undefined && question.avgRating !== null && (
+          {question.avgRating != null && (
             <div className="flex flex-col items-center gap-1">
               <div className="flex items-center gap-1 text-yellow-500">
                 <Star className="w-5 h-5 fill-current" />
