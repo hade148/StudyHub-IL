@@ -213,7 +213,11 @@ router.post('/profile/avatar', authenticate, avatarUpload.single('avatar'), asyn
     };
 
     // Get safe file extension from validated MIME type
-    const fileExtension = mimeToExtension[req.file.mimetype] || 'jpg';
+    // This should never fail due to multer fileFilter validation
+    const fileExtension = mimeToExtension[req.file.mimetype];
+    if (!fileExtension) {
+      return res.status(400).json({ error: 'סוג קובץ לא נתמך' });
+    }
     
     // Generate unique filename for the avatar
     const timestamp = Date.now();
@@ -225,7 +229,7 @@ router.post('/profile/avatar', authenticate, avatarUpload.single('avatar'), asyn
     if (azureStorage.isConfigured()) {
       try {
         // Delete old avatar from Azure if it exists and is a valid Azure URL
-        if (user.avatar && user.avatar.includes('blob.core.windows.net')) {
+        if (user.avatar && user.avatar.startsWith('https://') && user.avatar.includes('.blob.core.windows.net/')) {
           try {
             const oldFileName = azureStorage.extractBlobName(user.avatar);
             if (oldFileName && oldFileName.startsWith('avatars/')) {
