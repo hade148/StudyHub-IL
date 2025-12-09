@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, MessageCircle, Home } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -358,13 +358,34 @@ interface ForumPageProps {
 export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePost }: ForumPageProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('all');
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 10;
 
-  const unansweredCount = questionsData.filter((q) => !q.stats.isAnswered).length;
+  // Fetch questions from API
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/forum');
+        const data = await response.json();
+        setQuestions(data);
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        // Fallback to hardcoded data on error
+        setQuestions(questionsData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchQuestions();
+  }, []);
+
+  const unansweredCount = questions.filter((q) => !q.isAnswered).length;
   
   const filteredQuestions = activeTab === 'unanswered' 
-    ? questionsData.filter((q) => !q.stats.isAnswered)
-    : questionsData;
+    ? questions.filter((q) => !q.isAnswered)
+    : questions;
 
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
   const currentQuestions = filteredQuestions.slice(
@@ -449,14 +470,24 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
 
                 {/* Questions List */}
                 <div className="space-y-4">
-                  {currentQuestions.map((question, index) => (
-                    <QuestionCard 
-                      key={question.id} 
-                      question={question} 
-                      index={index}
-                      onClick={() => onNavigatePost?.(question.id)}
-                    />
-                  ))}
+                  {isLoading ? (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : currentQuestions.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      אין שאלות להצגה
+                    </div>
+                  ) : (
+                    currentQuestions.map((question, index) => (
+                      <QuestionCard 
+                        key={question.id} 
+                        question={question} 
+                        index={index}
+                        onClick={() => onNavigatePost?.(question.id)}
+                      />
+                    ))
+                  )}
                 </div>
 
                 {/* Pagination */}
