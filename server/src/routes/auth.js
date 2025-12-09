@@ -1,14 +1,39 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { generateToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
 const { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation, profileUpdateValidation } = require('../middleware/validation');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
+const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Multer configuration for avatar uploads
+const storage = multer.memoryStorage();
+const avatarUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB for avatars
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+      'image/webp'
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('רק קבצי תמונה (JPG, PNG, WEBP) מותרים'));
+    }
+  }
+});
 
 // POST /api/auth/register
 router.post('/register', registerValidation, async (req, res) => {
@@ -53,7 +78,20 @@ router.post('/login', loginValidation, async (req, res) => {
     res.json({
       message: 'התחברת בהצלחה',
       token,
-      user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role }
+      user: { 
+        id: user.id, 
+        fullName: user.fullName, 
+        email: user.email, 
+        role: user.role,
+        avatar: user.avatar,
+        bio: user.bio,
+        location: user.location,
+        institution: user.institution,
+        fieldOfStudy: user.fieldOfStudy,
+        website: user.website,
+        interests: user.interests,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -72,6 +110,7 @@ router.get('/me', authenticate, async (req, res) => {
         email: true, 
         role: true, 
         createdAt: true,
+        avatar: true,
         bio: true,
         location: true,
         institution: true,
@@ -133,6 +172,7 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
         email: true, 
         role: true, 
         createdAt: true,
+        avatar: true,
         bio: true,
         location: true,
         institution: true,
@@ -151,6 +191,97 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
       return res.status(404).json({ error: 'משתמש לא נמצא' });
     }
     res.status(500).json({ error: 'שגיאה בעדכון הפרופיל' });
+  }
+});
+
+// POST /api/auth/profile/avatar - Upload profile avatar
+router.post('/profile/avatar', authenticate, avatarUpload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'לא הועלה קובץ תמונה' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' });
+    }
+
+    // Generate unique filename for the avatar
+    const timestamp = Date.now();
+    const fileExtension = req.file.originalname.split('.').pop();
+    const fileName = `avatars/${user.id}_${timestamp}.${fileExtension}`;
+
+    let avatarUrl;
+
+    // Try to upload to Azure, fallback to local if Azure is not configured
+    if (azureStorage.isConfigured()) {
+      try {
+        // Delete old avatar from Azure if it exists
+        if (user.avatar) {
+          try {
+            const oldFileName = azureStorage.extractBlobName(user.avatar);
+            await azureStorage.deleteFile(oldFileName);
+          } catch (deleteError) {
+            console.log('Could not delete old avatar:', deleteError.message);
+            // Don't fail if old file can't be deleted
+          }
+        }
+
+        // Upload new avatar to Azure
+        avatarUrl = await azureStorage.uploadFile(
+          req.file.buffer,
+          fileName,
+          req.file.mimetype
+        );
+        console.log('Avatar uploaded to Azure:', avatarUrl);
+      } catch (azureError) {
+        console.error('Azure upload failed:', azureError);
+        return res.status(500).json({ error: 'שגיאה בהעלאת התמונה לענן' });
+      }
+    } else {
+      // Fallback: save locally (for development)
+      const localPath = path.join(__dirname, '../../uploads/avatars');
+      if (!fs.existsSync(localPath)) {
+        fs.mkdirSync(localPath, { recursive: true });
+      }
+      const localFilePath = path.join(localPath, `${user.id}_${timestamp}.${fileExtension}`);
+      fs.writeFileSync(localFilePath, req.file.buffer);
+      avatarUrl = `/uploads/avatars/${user.id}_${timestamp}.${fileExtension}`;
+      console.log('Avatar saved locally:', avatarUrl);
+    }
+
+    // Update user's avatar in database
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatar: avatarUrl },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        avatar: true,
+        bio: true,
+        location: true,
+        institution: true,
+        fieldOfStudy: true,
+        website: true,
+        interests: true,
+        _count: { select: { summaries: true, forumPosts: true, ratings: true } }
+      }
+    });
+
+    res.json({ 
+      message: 'תמונת הפרופיל עודכנה בהצלחה',
+      user: updatedUser,
+      avatarUrl 
+    });
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    if (error.message === 'רק קבצי תמונה (JPG, PNG, WEBP) מותרים') {
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'שגיאה בהעלאת תמונת הפרופיל' });
   }
 });
 

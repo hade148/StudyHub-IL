@@ -6,6 +6,7 @@ interface User {
   fullName: string;
   email: string;
   role?: string;
+  avatar?: string;
   bio?: string;
   location?: string;
   institution?: string;
@@ -36,6 +37,7 @@ interface AuthContextType {
   register: (fullName: string, email: string, password: string) => Promise<User>;
   logout: () => void;
   updateProfile: (data: ProfileUpdateData) => Promise<User>;
+  uploadAvatar: (file: File) => Promise<User>;
   loading: boolean;
   isAuthenticated: boolean;
 }
@@ -101,8 +103,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return updatedUser;
   };
 
+  const uploadAvatar = async (file: File): Promise<User> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    const res = await api.post('/auth/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    const updatedUser = res.data.user;
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, uploadAvatar, loading, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

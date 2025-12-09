@@ -1,6 +1,6 @@
 {
   "name": "studyhub-il-server",
-  "version": "2. 0.0",
+  "version": "2.0.0",
   "description": "StudyHub-IL Backend API with Full Features",
   "main": "src/index.js",
   "prisma": {

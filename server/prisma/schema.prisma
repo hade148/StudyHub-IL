@@ -19,6 +19,7 @@ model User {
   updatedAt           DateTime      @updatedAt
   
   // Profile fields
+  avatar              String?
   bio                 String?
   location            String?
   institution         String?
