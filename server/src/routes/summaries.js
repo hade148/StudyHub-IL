@@ -5,33 +5,27 @@ const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
+const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Multer configuration for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'summary-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage(); // Use memory storage for Azure
 
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('רק קבצי PDF מותרים'));
+      cb(new Error('רק קבצי PDF ו-DOCX מותרים'));
     }
   }
 });
@@ -39,15 +33,33 @@ const upload = multer({
 // GET /api/summaries - Get all summaries with filters
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { courseId, search, sortBy = 'recent' } = req.query;
+    const { courseId, search, sortBy = 'recent', institution } = req.query;
 
     const where = {};
-    if (courseId) where.courseId = parseInt(courseId);
+    const andConditions = [];
+    
+    if (courseId) {
+      andConditions.push({ courseId: parseInt(courseId) });
+    }
+    
+    // Filter by institution
+    if (institution) {
+      andConditions.push({ course: { institution } });
+    }
+    
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ];
+      andConditions.push({
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { course: { courseName: { contains: search, mode: 'insensitive' } } },
+          { course: { courseCode: { contains: search, mode: 'insensitive' } } }
+        ]
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     let orderBy = { uploadDate: 'desc' };
@@ -58,7 +70,7 @@ router.get('/', optionalAuth, async (req, res) => {
       where,
       orderBy,
       include: {
-        course: { select: { courseCode: true, courseName: true } },
+        course: { select: { courseCode: true, courseName: true, institution: true } },
         uploadedBy: { select: { id: true, fullName: true } },
         _count: { select: { ratings: true, comments: true } }
       }
@@ -105,14 +117,51 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
     const { title, description, courseId } = req.body;
 
     if (!req.file) {
-      return res.status(400).json({ error: 'יש להעלות קובץ PDF' });
+      return res.status(400).json({ error: 'יש להעלות קובץ PDF או DOCX' });
+    }
+
+    let filePath;
+    let fileUrl;
+
+    // Try to upload to Azure Blob Storage
+    if (azureStorage.isConfigured()) {
+      try {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileName = 'summary-' + uniqueSuffix + path.extname(req.file.originalname);
+        
+        fileUrl = await azureStorage.uploadFile(
+          req.file.buffer,
+          fileName,
+          req.file.mimetype
+        );
+        
+        filePath = fileName; // Store just the filename in DB
+        console.log(`✅ File uploaded to Azure: ${fileName}`);
+      } catch (azureError) {
+        console.error('Azure upload failed:', azureError);
+        return res.status(500).json({ error: 'שגיאה בהעלאת קובץ לענן' });
+      }
+    } else {
+      // Fallback to local storage if Azure is not configured
+      const uploadDir = path.join(__dirname, '../../uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const fileName = 'summary-' + uniqueSuffix + path.extname(req.file.originalname);
+      const localPath = path.join(uploadDir, fileName);
+      
+      await fs.promises.writeFile(localPath, req.file.buffer);
+      filePath = `uploads/${fileName}`;
+      console.log(`⚠️ Azure not configured, saved locally: ${filePath}`);
     }
 
     const summary = await prisma.summary.create({
       data: {
         title,
         description,
-        filePath: `uploads/${req.file.filename}`,
+        filePath,
         courseId: parseInt(courseId),
         uploadedById: req.user.id
       },
@@ -124,14 +173,13 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
 
     res.status(201).json({
       message: 'סיכום הועלה בהצלחה',
-      summary
+      summary: {
+        ...summary,
+        fileUrl: azureStorage.isConfigured() ? fileUrl : undefined
+      }
     });
   } catch (error) {
     console.error('Upload summary error:', error);
-    // Delete uploaded file on error
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
-    }
     res.status(500).json({ error: 'שגיאה בהעלאת סיכום' });
   }
 });
@@ -153,10 +201,23 @@ router.delete('/:id', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'אין לך הרשאה למחוק סיכום זה' });
     }
 
-    // Delete file
-    const filePath = path.join(__dirname, '../../', summary.filePath);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Delete file from storage
+    if (azureStorage.isConfigured()) {
+      try {
+        const blobName = azureStorage.extractBlobName(summary.filePath);
+        await azureStorage.deleteFile(blobName);
+        console.log(`✅ File deleted from Azure: ${blobName}`);
+      } catch (azureError) {
+        console.error('Azure delete failed:', azureError);
+        // Continue with DB deletion even if Azure delete fails
+      }
+    } else {
+      // Delete from local storage
+      const filePath = path.join(__dirname, '../../', summary.filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`✅ File deleted locally: ${filePath}`);
+      }
     }
 
     await prisma.summary.delete({
@@ -167,6 +228,40 @@ router.delete('/:id', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Delete summary error:', error);
     res.status(500).json({ error: 'שגיאה במחיקת סיכום' });
+  }
+});
+
+// GET /api/summaries/:id/download - Get download URL for summary file
+router.get('/:id/download', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const summary = await prisma.summary.findUnique({
+      where: { id: parseInt(id) },
+      select: { filePath: true, title: true }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
+
+    if (azureStorage.isConfigured()) {
+      // Return Azure blob URL
+      const fileUrl = azureStorage.getFileUrl(summary.filePath);
+      res.json({ 
+        downloadUrl: fileUrl,
+        fileName: summary.title
+      });
+    } else {
+      // For local storage, serve the file directly
+      const filePath = path.join(__dirname, '../../', summary.filePath);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'קובץ לא נמצא' });
+      }
+      res.download(filePath);
+    }
+  } catch (error) {
+    console.error('Download summary error:', error);
+    res.status(500).json({ error: 'שגיאה בהורדת סיכום' });
   }
 });
 

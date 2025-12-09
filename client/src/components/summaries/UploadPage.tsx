@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import {
@@ -9,7 +9,6 @@ import {
   ChevronLeft,
   Check,
   Home,
-  FileStack,
   BookOpen,
   AlertCircle,
   Sparkles,
@@ -21,16 +20,18 @@ import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
+import api from '../../utils/api';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
   onNavigateSummaries: () => void;
+  onNavigateSummary?: (id: number) => void;
 }
 
 interface FormData {
   file: File | null;
   title: string;
-  course: string;
+  courseId: string;
   description: string;
   language: string;
   category: string;
@@ -38,48 +39,40 @@ interface FormData {
   terms: boolean;
 }
 
-const courses = [
-  'מבוא למדעי המחשב',
-  'אלגברה לינארית',
-  'חשבון אינפיניטסימלי 1',
-  'חשבון אינפיניטסימלי 2',
-  'מבני נתונים',
-  'אלגוריתמים',
-  'מערכות הפעלה',
-  'רשתות מחשבים',
-  'פיזיקה 1',
-  'פיזיקה 2',
-  'ביולוגיה כללית',
-  'כימיה אורגנית',
-];
+interface Course {
+  id: number;
+  courseCode: string;
+  courseName: string;
+  institution: string;
+}
 
-const categories = [
-  { id: 'math', label: 'מתמטיקה', icon: '📘' },
-  { id: 'cs', label: 'מדעי המחשב', icon: '💻' },
-  { id: 'science', label: 'מדעים', icon: '🔬' },
-  { id: 'humanities', label: 'הומניות', icon: '📚' },
-  { id: 'arts', label: 'אמנויות', icon: '🎨' },
-];
-
-const popularTags = [
-  'בחינה',
-  'מועד א',
-  'תרגילים',
-  'הרצאות',
-  'נוסחאות',
-  'דוגמאות',
-  'חומר מלא',
-  'סמסטר א',
-];
-
-export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPageProps) {
+export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSummary }: UploadPageProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [uploadedSummaryId, setUploadedSummaryId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await api.get('/courses');
+        setCourses(response.data);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const {
     register,
@@ -88,6 +81,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     setValue,
     watch,
     trigger,
+    reset,
   } = useForm<FormData>({
     defaultValues: {
       language: 'hebrew',
@@ -98,10 +92,29 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
   const watchTitle = watch('title', '');
   const watchDescription = watch('description', '');
-  const watchCourse = watch('course', '');
+  const watchCourseId = watch('courseId', '');
   const watchCategory = watch('category', '');
   const watchLanguage = watch('language', 'hebrew');
   const watchTerms = watch('terms', false);
+
+  const categories = [
+    { id: 'math', label: 'מתמטיקה', icon: '📘' },
+    { id: 'cs', label: 'מדעי המחשב', icon: '💻' },
+    { id: 'science', label: 'מדעים', icon: '🔬' },
+    { id: 'humanities', label: 'הומניות', icon: '📚' },
+    { id: 'arts', label: 'אמנויות', icon: '🎨' },
+  ];
+
+  const popularTags = [
+    'בחינה',
+    'מועד א',
+    'תרגילים',
+    'הרצאות',
+    'נוסחאות',
+    'דוגמאות',
+    'חומר מלא',
+    'סמסטר א',
+  ];
 
   // Handle file drop
   const handleDrop = (e: React.DragEvent) => {
@@ -132,7 +145,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
   const validateAndSetFile = (file: File) => {
     const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = ['pdf', 'docx', 'ppt', 'pptx'];
+    const allowedTypes = ['pdf', 'docx'];
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
     if (file.size > maxSize) {
@@ -141,7 +154,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     }
 
     if (!fileExtension || !allowedTypes.includes(fileExtension)) {
-      alert('סוג קובץ לא נתמך. אנא העלה PDF, DOCX או PPT');
+      alert('סוג קובץ לא נתמך. אנא העלה PDF או DOCX');
       return;
     }
 
@@ -186,7 +199,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     if (currentStep === 1) {
       isValid = !!uploadedFile;
     } else if (currentStep === 2) {
-      isValid = await trigger(['title', 'course']);
+      isValid = await trigger(['title', 'courseId']);
     } else if (currentStep === 3) {
       isValid = !!watchCategory && tags.length > 0;
     }
@@ -200,9 +213,44 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
     setCurrentStep(currentStep - 1);
   };
 
-  const onSubmit = (data: FormData) => {
-    console.log('Form submitted:', data);
-    setShowSuccess(true);
+  const onSubmit = async (data: FormData) => {
+    if (!uploadedFile) {
+      alert('אנא העלה קובץ');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+      formData.append('title', data.title);
+      formData.append('courseId', data.courseId);
+      if (data.description) {
+        formData.append('description', data.description);
+      }
+
+      const response = await api.post('/summaries', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Upload successful:', response.data);
+      
+      // Store the uploaded summary ID for navigation
+      if (response.data?.summary?.id) {
+        setUploadedSummaryId(response.data.summary.id);
+      }
+      
+      setShowSuccess(true);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      const errorMessage = error.response?.data?.error || 'שגיאה בהעלאת הסיכום';
+      alert(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -355,13 +403,13 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                         >
                           <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                           <p className="text-gray-900 mb-2">גרור קובץ לכאן או לחץ לבחירה</p>
-                          <p className="text-sm text-gray-500">PDF, DOCX, PPT - עד 10MB</p>
+                          <p className="text-sm text-gray-500">PDF או DOCX - עד 10MB</p>
                         </div>
 
                         <input
                           ref={fileInputRef}
                           type="file"
-                          accept=".pdf,.docx,.ppt,.pptx"
+                          accept=".pdf,.docx"
                           onChange={handleFileSelect}
                           className="hidden"
                         />
@@ -381,6 +429,10 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                           <FileText className="w-4 h-4 ml-2" />
                           בחר קובץ מהמחשב
                         </Button>
+                        
+                        <p className="text-xs text-gray-500 mt-4 text-center">
+                          תומך בקבצי PDF ו-DOCX בלבד, עד 10MB
+                        </p>
                       </>
                     ) : (
                       // File Preview
@@ -464,27 +516,30 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
                     {/* Course Selection */}
                     <div>
-                      <Label htmlFor="course" className="mb-2 flex items-center gap-2">
+                      <Label htmlFor="courseId" className="mb-2 flex items-center gap-2">
                         בחר קורס <span className="text-red-500">*</span>
                       </Label>
                       <select
-                        id="course"
-                        {...register('course', { required: 'יש לבחור קורס' })}
+                        id="courseId"
+                        {...register('courseId', { required: 'יש לבחור קורס' })}
                         className={`w-full rounded-md border ${
-                          errors.course ? 'border-red-500' : 'border-gray-300'
+                          errors.courseId ? 'border-red-500' : 'border-gray-300'
                         } px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        disabled={loadingCourses}
                       >
-                        <option value="">בחר קורס מהרשימה</option>
+                        <option value="">
+                          {loadingCourses ? 'טוען קורסים...' : 'בחר קורס מהרשימה'}
+                        </option>
                         {courses.map((course) => (
-                          <option key={course} value={course}>
-                            {course}
+                          <option key={course.id} value={course.id}>
+                            {course.courseCode} - {course.courseName} ({course.institution})
                           </option>
                         ))}
                       </select>
-                      {errors.course && (
+                      {errors.courseId && (
                         <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
-                          {errors.course.message}
+                          {errors.courseId.message}
                         </p>
                       )}
                     </div>
@@ -704,7 +759,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
-                          <p className="text-gray-600">{watchCourse || 'שם הקורס'}</p>
+                          <p className="text-gray-600">{watchCourseId || 'שם הקורס'}</p>
                         </div>
                         <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
                       </div>
@@ -776,10 +831,10 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                       </Button>
                       <Button
                         type="submit"
-                        disabled={!watchTerms}
+                        disabled={!watchTerms || isSubmitting}
                         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                       >
-                        פרסם סיכום
+                        {isSubmitting ? 'מעלה...' : 'פרסם סיכום'}
                         <Check className="w-4 h-4 mr-2" />
                       </Button>
                     </div>
@@ -844,7 +899,15 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
 
               <div className="space-y-3">
                 <Button
-                  onClick={onNavigateSummaries}
+                  onClick={() => {
+                    // Navigate to the specific summary if ID is available and callback exists
+                    if (uploadedSummaryId && onNavigateSummary) {
+                      onNavigateSummary(uploadedSummaryId);
+                    } else {
+                      // Fallback to summaries list
+                      onNavigateSummaries();
+                    }
+                  }}
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
                   <BookOpen className="w-4 h-4 ml-2" />
@@ -855,12 +918,9 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries }: UploadPagePr
                     setShowSuccess(false);
                     setCurrentStep(1);
                     setUploadedFile(null);
+                    setUploadedSummaryId(null);
                     setTags([]);
-                    setValue('title', '');
-                    setValue('course', '');
-                    setValue('description', '');
-                    setValue('category', '');
-                    setValue('terms', false);
+                    reset();
                   }}
                   variant="outline"
                   className="w-full"

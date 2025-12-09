@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Eye, Download, MessageCircle, Heart, FileText } from 'lucide-react';
+import { Eye, Download, MessageCircle, Heart, FileText, Building2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { useState } from 'react';
@@ -10,6 +10,7 @@ interface SummaryCardProps {
     title: string;
     course: string;
     courseFullName: string;
+    institution: string;
     rating: number;
     views: number;
     downloads: number;
@@ -77,8 +78,14 @@ export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
         {/* Title */}
         <h3 className="line-clamp-2 min-h-[3rem]">{summary.title}</h3>
 
+        {/* Institution Badge */}
+        <div className="flex items-center gap-2 text-gray-600">
+          <Building2 className="w-4 h-4 text-blue-500" />
+          <span className="text-sm font-medium">{summary.institution}</span>
+        </div>
+
         {/* Description */}
-        <p className="text-gray-600 line-clamp-3 min-h-[4.5rem]">
+        <p className="text-gray-600 line-clamp-2 min-h-[3rem]">
           {summary.description}
         </p>
 
