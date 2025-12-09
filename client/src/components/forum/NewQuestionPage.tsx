@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Home, 
@@ -19,6 +20,7 @@ import { ImageUpload } from './ImageUpload';
 import { SimilarQuestions } from './SimilarQuestions';
 import { QuestionPreviewModal } from './QuestionPreviewModal';
 import { SuccessModal } from './SuccessModal';
+import api from '../../utils/api';
 
 interface CodeSnippet {
   id: string;
@@ -26,13 +28,21 @@ interface CodeSnippet {
   code: string;
 }
 
+interface Course {
+  id: number;
+  courseCode: string;
+  courseName: string;
+  institution: string;
+}
+
 interface FormData {
   title: string;
   description: string;
   category: string;
+  courseId: number;
   tags: string[];
   codeSnippets: CodeSnippet[];
-  images: string[];
+  images: File[];
   isUrgent: boolean;
   followPost: boolean;
 }
@@ -84,11 +94,17 @@ const SIMILAR_QUESTIONS = [
 ];
 
 export function NewQuestionPage() {
+  const navigate = useNavigate();
   const [showSimilarQuestions, setShowSimilarQuestions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [createdPostId, setCreatedPostId] = useState<number | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [userPoints] = useState(45);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   const {
     register,
@@ -102,6 +118,7 @@ export function NewQuestionPage() {
       title: '',
       description: '',
       category: '',
+      courseId: 0,
       tags: [],
       codeSnippets: [],
       images: [],
@@ -111,6 +128,19 @@ export function NewQuestionPage() {
   });
 
   const watchedFields = watch();
+
+  // Fetch courses on mount
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await api.get('/courses');
+        setCourses(response.data);
+      } catch (err) {
+        console.error('Error fetching courses:', err);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   // Auto-save functionality
   useEffect(() => {
@@ -132,10 +162,47 @@ export function NewQuestionPage() {
     }
   }, [watchedFields.title]);
 
-  const onSubmit = (data: FormData) => {
-    console.log('Form submitted:', data);
-    setShowSuccess(true);
-    localStorage.removeItem('questionDraft');
+  const onSubmit = async (data: FormData) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Create FormData for multipart upload
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('content', data.description);
+      formData.append('courseId', data.courseId.toString());
+      
+      if (data.category) {
+        formData.append('category', data.category);
+      }
+      
+      if (data.tags && data.tags.length > 0) {
+        formData.append('tags', JSON.stringify(data.tags));
+      }
+      
+      formData.append('isUrgent', data.isUrgent.toString());
+
+      // Add image files
+      imageFiles.forEach((file) => {
+        formData.append('images', file);
+      });
+
+      const response = await api.post('/forum', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Question created:', response.data);
+      setCreatedPostId(response.data.post.id);
+      setShowSuccess(true);
+      localStorage.removeItem('questionDraft');
+    } catch (err: any) {
+      console.error('Error creating question:', err);
+      setError(err.response?.data?.error || 'שגיאה ביצירת שאלה');
+      setIsLoading(false);
+    }
   };
 
   const handleSaveDraft = () => {
@@ -144,11 +211,15 @@ export function NewQuestionPage() {
   };
 
   const handleViewQuestion = () => {
-    window.location.href = '/forum';
+    if (createdPostId) {
+      navigate(`/forum/${createdPostId}`);
+    } else {
+      navigate('/forum');
+    }
   };
 
   const handleAskAnother = () => {
-    window.location.reload();
+    navigate(0); // Reload current route
   };
 
   const getValidationStatus = () => {
@@ -157,6 +228,7 @@ export function NewQuestionPage() {
       description: watchedFields.description.length >= 50,
       category: !!watchedFields.category,
       tags: watchedFields.tags.length >= 1,
+      course: !!watchedFields.courseId && watchedFields.courseId > 0,
     };
   };
 
@@ -309,7 +381,22 @@ export function NewQuestionPage() {
                     <label className="block text-sm mb-2">תמונות (אופציונלי)</label>
                     <ImageUpload
                       images={watchedFields.images}
-                      onChange={(images) => setValue('images', images)}
+                      onChange={(images) => {
+                        setValue('images', images);
+                        // Convert base64 to File objects for upload
+                        const files = images.map((base64, index) => {
+                          const arr = base64.split(',');
+                          const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+                          const bstr = atob(arr[1]);
+                          let n = bstr.length;
+                          const u8arr = new Uint8Array(n);
+                          while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
+                          }
+                          return new File([u8arr], `image-${index}.${mime.split('/')[1]}`, { type: mime });
+                        });
+                        setImageFiles(files);
+                      }}
                     />
                   </div>
                 </div>
@@ -328,6 +415,30 @@ export function NewQuestionPage() {
                 </h2>
 
                 <div className="space-y-6">
+                  {/* Course Selection */}
+                  <div>
+                    <label className="block text-sm mb-3">
+                      קורס <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      {...register('courseId', { 
+                        required: 'יש לבחור קורס',
+                        validate: (value) => value > 0 || 'יש לבחור קורס'
+                      })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="0">בחר קורס...</option>
+                      {courses.map((course) => (
+                        <option key={course.id} value={course.id}>
+                          {course.courseCode} - {course.courseName}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.courseId && (
+                      <p className="text-red-500 text-sm mt-2">{errors.courseId.message}</p>
+                    )}
+                  </div>
+
                   {/* Category */}
                   <div>
                     <label className="block text-sm mb-3">
@@ -472,6 +583,16 @@ export function NewQuestionPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
+                    {validationStatus.course ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-gray-400" />
+                    )}
+                    <span className={validationStatus.course ? 'text-green-700' : 'text-gray-600'}>
+                      קורס נבחר
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
                     {validationStatus.category ? (
                       <CheckCircle className="w-4 h-4 text-green-500" />
                     ) : (
@@ -559,13 +680,21 @@ export function NewQuestionPage() {
       {/* Sticky Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+          
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Left Side */}
             <div className="flex items-center gap-4">
               <button
                 type="button"
                 onClick={handleSaveDraft}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 💾 שמור טיוטה
@@ -582,7 +711,7 @@ export function NewQuestionPage() {
               <button
                 type="button"
                 onClick={() => setShowPreview(true)}
-                disabled={!allValid}
+                disabled={!allValid || isLoading}
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Eye className="w-4 h-4" />
@@ -591,7 +720,8 @@ export function NewQuestionPage() {
               <button
                 type="button"
                 onClick={() => window.history.back()}
-                className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
               >
                 <XIcon className="w-4 h-4" />
                 ביטול
@@ -599,11 +729,20 @@ export function NewQuestionPage() {
               <button
                 type="submit"
                 onClick={handleSubmit(onSubmit)}
-                disabled={!allValid}
+                disabled={!allValid || isLoading}
                 className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CheckCircle className="w-4 h-4" />
-                ✓ פרסם שאלה
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    שומר...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    ✓ פרסם שאלה
+                  </>
+                )}
               </button>
             </div>
           </div>
