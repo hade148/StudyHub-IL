@@ -1,19 +1,45 @@
 const express = require('express');
+const multer = require('multer');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { forumPostValidation, commentValidation } = require('../middleware/validation');
+const { forumPostValidation, forumRatingValidation, commentValidation } = require('../middleware/validation');
+const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Multer configuration for image uploads
+const storage = multer.memoryStorage(); // Use memory storage for Azure
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per image
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp'
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('רק קבצי תמונה מותרים (JPEG, PNG, GIF, WebP)'));
+    }
+  }
+});
+
 // GET /api/forum - Get all forum posts
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { courseId, search, answered } = req.query;
+    const { courseId, search, answered, category } = req.query;
 
     const where = {};
     if (courseId) where.courseId = parseInt(courseId);
     if (answered !== undefined) where.isAnswered = answered === 'true';
+    if (category) where.category = category;
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -27,7 +53,7 @@ router.get('/', optionalAuth, async (req, res) => {
       include: {
         author: { select: { id: true, fullName: true } },
         course: { select: { courseCode: true, courseName: true } },
-        _count: { select: { comments: true } }
+        _count: { select: { comments: true, ratings: true } }
       }
     });
 
@@ -59,7 +85,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
             author: { select: { id: true, fullName: true } }
           },
           orderBy: { createdAt: 'asc' }
-        }
+        },
+        _count: { select: { ratings: true } }
       }
     });
 
@@ -74,31 +101,82 @@ router.get('/:id', optionalAuth, async (req, res) => {
   }
 });
 
-// POST /api/forum - Create new forum post
-router.post('/', authenticate, forumPostValidation, async (req, res) => {
+// POST /api/forum - Create new forum post with optional images
+router.post('/', authenticate, upload.array('images', 5), async (req, res) => {
   try {
-    const { title, content, courseId } = req.body;
+    const { title, content, courseId, category, tags, isUrgent } = req.body;
+
+    // Validate required fields
+    if (!title || title.trim().length < 10 || title.trim().length > 150) {
+      return res.status(400).json({ error: 'כותרת חייבת להכיל בין 10 ל-150 תווים' });
+    }
+
+    if (!content || content.trim().length < 50) {
+      return res.status(400).json({ error: 'תוכן חייב להכיל לפחות 50 תווים' });
+    }
+
+    if (!courseId || isNaN(parseInt(courseId))) {
+      return res.status(400).json({ error: 'קורס הוא שדה חובה' });
+    }
+
+    // Parse tags if provided as string
+    let parsedTags = [];
+    if (tags) {
+      if (typeof tags === 'string') {
+        try {
+          parsedTags = JSON.parse(tags);
+        } catch {
+          parsedTags = tags.split(',').map(t => t.trim()).filter(t => t);
+        }
+      } else if (Array.isArray(tags)) {
+        parsedTags = tags;
+      }
+    }
+
+    // Upload images to Azure Storage if any
+    const imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      try {
+        if (azureStorage.isConfigured()) {
+          for (const file of req.files) {
+            const timestamp = Date.now();
+            const fileName = `forum/${timestamp}-${file.originalname}`;
+            const imageUrl = await azureStorage.uploadFile(file.buffer, fileName, file.mimetype);
+            imageUrls.push(imageUrl);
+          }
+        } else {
+          console.warn('Azure Storage not configured, skipping image upload');
+        }
+      } catch (uploadError) {
+        console.error('Error uploading images:', uploadError);
+        return res.status(500).json({ error: 'שגיאה בהעלאת תמונות' });
+      }
+    }
 
     const post = await prisma.forumPost.create({
       data: {
-        title,
-        content,
+        title: title.trim(),
+        content: content.trim(),
+        category: category || null,
+        tags: parsedTags,
+        images: imageUrls,
+        isUrgent: isUrgent === 'true' || isUrgent === true,
         courseId: parseInt(courseId),
         authorId: req.user.id
       },
       include: {
-        author: { select: { fullName: true } },
+        author: { select: { id: true, fullName: true } },
         course: { select: { courseCode: true, courseName: true } }
       }
     });
 
     res.status(201).json({
-      message: 'פוסט נוצר בהצלחה',
+      message: 'השאלה נוצרה בהצלחה',
       post
     });
   } catch (error) {
     console.error('Create forum post error:', error);
-    res.status(500).json({ error: 'שגיאה ביצירת פוסט' });
+    res.status(500).json({ error: 'שגיאה ביצירת שאלה' });
   }
 });
 
@@ -179,6 +257,19 @@ router.delete('/:id', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'אין לך הרשאה למחוק פוסט זה' });
     }
 
+    // Delete images from Azure Storage if any
+    if (post.images && post.images.length > 0 && azureStorage.isConfigured()) {
+      for (const imageUrl of post.images) {
+        try {
+          const blobName = azureStorage.extractBlobName(imageUrl);
+          await azureStorage.deleteFile(blobName);
+        } catch (deleteError) {
+          console.error('Error deleting image:', deleteError);
+          // Continue with deletion even if image deletion fails
+        }
+      }
+    }
+
     await prisma.forumPost.delete({
       where: { id: parseInt(id) }
     });
@@ -187,6 +278,98 @@ router.delete('/:id', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Delete forum post error:', error);
     res.status(500).json({ error: 'שגיאה במחיקת פוסט' });
+  }
+});
+
+// POST /api/forum/:id/ratings - Rate a forum post
+router.post('/:id/ratings', authenticate, forumRatingValidation, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating } = req.body;
+
+    // Check if post exists
+    const post = await prisma.forumPost.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: 'פוסט לא נמצא' });
+    }
+
+    // Create or update rating
+    const forumRating = await prisma.forumRating.upsert({
+      where: {
+        postId_userId: {
+          postId: parseInt(id),
+          userId: req.user.id
+        }
+      },
+      update: {
+        rating: parseInt(rating)
+      },
+      create: {
+        rating: parseInt(rating),
+        postId: parseInt(id),
+        userId: req.user.id
+      }
+    });
+
+    // Calculate average rating
+    const ratings = await prisma.forumRating.findMany({
+      where: { postId: parseInt(id) }
+    });
+
+    const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+
+    // Update post with average rating
+    await prisma.forumPost.update({
+      where: { id: parseInt(id) },
+      data: { avgRating }
+    });
+
+    res.status(201).json({
+      message: 'דירוג נשמר בהצלחה',
+      rating: forumRating,
+      avgRating
+    });
+  } catch (error) {
+    console.error('Rate forum post error:', error);
+    res.status(500).json({ error: 'שגיאה בשמירת דירוג' });
+  }
+});
+
+// GET /api/forum/:id/ratings - Get ratings for a forum post
+router.get('/:id/ratings', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const ratings = await prisma.forumRating.findMany({
+      where: { postId: parseInt(id) },
+      include: {
+        user: { select: { id: true, fullName: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const avgRating = ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+      : null;
+
+    let userRating = null;
+    if (req.user) {
+      const rating = ratings.find(r => r.userId === req.user.id);
+      userRating = rating ? rating.rating : null;
+    }
+
+    res.json({
+      ratings,
+      avgRating,
+      userRating,
+      totalRatings: ratings.length
+    });
+  } catch (error) {
+    console.error('Get forum post ratings error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
   }
 });
 
