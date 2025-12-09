@@ -248,7 +248,7 @@ interface ProfilePageNewProps {
 }
 
 export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, uploadAvatar } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [favoritesTab, setFavoritesTab] = useState('summaries');
   const [forumTab, setForumTab] = useState('questions');
@@ -264,7 +264,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
     username: user?.email?.split('@')[0] || '',
     name: user?.fullName || '',
     email: user?.email || '',
-    avatar: staticUserData.avatar,
+    avatar: user?.avatar || staticUserData.avatar,
     coverPhoto: staticUserData.coverPhoto,
     role: user?.role?.toLowerCase() === 'admin' ? 'admin' : 'student',
     bio: user?.bio || '',
@@ -321,6 +321,15 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
       setSaveError(extractErrorMessage(error));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      await uploadAvatar(file);
+    } catch (error: any) {
+      console.error('Failed to upload avatar:', error);
+      throw error; // Re-throw to let modal handle the error
     }
   };
 
@@ -740,6 +749,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
         }}
         user={userData}
         onSave={handleSaveProfile}
+        onAvatarUpload={handleAvatarUpload}
         isSaving={isSaving}
         error={saveError}
       />
