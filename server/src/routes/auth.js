@@ -15,15 +15,15 @@ const azureStorage = require('../utils/azureStorage');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Rate limiter for avatar upload - 5 uploads per 15 minutes per user
+// Rate limiter for avatar upload - 5 uploads per 15 minutes per user/IP
 const avatarUploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each user to 5 requests per windowMs
   message: 'יותר מדי ניסיונות להעלאת תמונה. נסה שוב בעוד 15 דקות.',
   standardHeaders: true,
   legacyHeaders: false,
-  // Use user ID from auth token for rate limiting
-  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+  // Use IP for rate limiting (applied before auth)
+  keyGenerator: (req) => req.ip
 });
 
 // Multer configuration for avatar uploads
@@ -206,7 +206,7 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
 });
 
 // POST /api/auth/profile/avatar - Upload profile avatar
-router.post('/profile/avatar', authenticate, avatarUploadLimiter, avatarUpload.single('avatar'), async (req, res) => {
+router.post('/profile/avatar', avatarUploadLimiter, authenticate, avatarUpload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'לא הועלה קובץ תמונה' });
