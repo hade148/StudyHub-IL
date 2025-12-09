@@ -23,7 +23,6 @@ const avatarUpload = multer({
     const allowedMimeTypes = [
       'image/jpeg',
       'image/png',
-      'image/jpg',
       'image/webp'
     ];
     
@@ -206,9 +205,18 @@ router.post('/profile/avatar', authenticate, avatarUpload.single('avatar'), asyn
       return res.status(404).json({ error: 'משתמש לא נמצא' });
     }
 
+    // Map MIME types to safe file extensions
+    const mimeToExtension = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp'
+    };
+
+    // Get safe file extension from validated MIME type
+    const fileExtension = mimeToExtension[req.file.mimetype] || 'jpg';
+    
     // Generate unique filename for the avatar
     const timestamp = Date.now();
-    const fileExtension = req.file.originalname.split('.').pop();
     const fileName = `avatars/${user.id}_${timestamp}.${fileExtension}`;
 
     let avatarUrl;
@@ -216,11 +224,13 @@ router.post('/profile/avatar', authenticate, avatarUpload.single('avatar'), asyn
     // Try to upload to Azure, fallback to local if Azure is not configured
     if (azureStorage.isConfigured()) {
       try {
-        // Delete old avatar from Azure if it exists
-        if (user.avatar) {
+        // Delete old avatar from Azure if it exists and is a valid Azure URL
+        if (user.avatar && user.avatar.includes('blob.core.windows.net')) {
           try {
             const oldFileName = azureStorage.extractBlobName(user.avatar);
-            await azureStorage.deleteFile(oldFileName);
+            if (oldFileName && oldFileName.startsWith('avatars/')) {
+              await azureStorage.deleteFile(oldFileName);
+            }
           } catch (deleteError) {
             console.log('Could not delete old avatar:', deleteError.message);
             // Don't fail if old file can't be deleted
