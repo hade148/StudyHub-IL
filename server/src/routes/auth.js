@@ -1,14 +1,50 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { generateToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
 const { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation, profileUpdateValidation } = require('../middleware/validation');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
+const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Rate limiter for avatar upload - 5 uploads per 15 minutes per user/IP
+const avatarUploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each user to 5 requests per windowMs
+  message: 'יותר מדי ניסיונות להעלאת תמונה. נסה שוב בעוד 15 דקות.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Use IP for rate limiting (applied before auth)
+  keyGenerator: (req) => req.ip
+});
+
+// Multer configuration for avatar uploads
+const storage = multer.memoryStorage();
+const avatarUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB for avatars
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('רק קבצי תמונה (JPG, PNG, WEBP) מותרים'));
+    }
+  }
+});
 
 // POST /api/auth/register
 router.post('/register', registerValidation, async (req, res) => {
@@ -53,7 +89,20 @@ router.post('/login', loginValidation, async (req, res) => {
     res.json({
       message: 'התחברת בהצלחה',
       token,
-      user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role }
+      user: { 
+        id: user.id, 
+        fullName: user.fullName, 
+        email: user.email, 
+        role: user.role,
+        avatar: user.avatar,
+        bio: user.bio,
+        location: user.location,
+        institution: user.institution,
+        fieldOfStudy: user.fieldOfStudy,
+        website: user.website,
+        interests: user.interests,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -72,6 +121,7 @@ router.get('/me', authenticate, async (req, res) => {
         email: true, 
         role: true, 
         createdAt: true,
+        avatar: true,
         bio: true,
         location: true,
         institution: true,
@@ -92,15 +142,37 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
   try {
     const { fullName, bio, location, institution, fieldOfStudy, website, interests } = req.body;
 
+    // Helper to convert empty strings to null for optional fields
+    const emptyToNull = (value) => (value === '' ? null : value);
+
     // Build update data object with only provided fields
+    // Convert empty strings to null for optional fields to keep database clean
     const updateData = {};
-    if (fullName !== undefined) updateData.fullName = fullName;
-    if (bio !== undefined) updateData.bio = bio;
-    if (location !== undefined) updateData.location = location;
-    if (institution !== undefined) updateData.institution = institution;
-    if (fieldOfStudy !== undefined) updateData.fieldOfStudy = fieldOfStudy;
-    if (website !== undefined) updateData.website = website;
-    if (interests !== undefined) updateData.interests = interests;
+    // fullName is required in the schema, so we only update it if a non-empty value is provided
+    // This prevents accidentally clearing the user's name
+    if (fullName !== undefined && fullName !== '') {
+      updateData.fullName = fullName.trim();
+    }
+    if (bio !== undefined) {
+      updateData.bio = emptyToNull(bio);
+    }
+    if (location !== undefined) {
+      updateData.location = emptyToNull(location);
+    }
+    if (institution !== undefined) {
+      updateData.institution = emptyToNull(institution);
+    }
+    if (fieldOfStudy !== undefined) {
+      updateData.fieldOfStudy = emptyToNull(fieldOfStudy);
+    }
+    if (website !== undefined) {
+      updateData.website = emptyToNull(website);
+    }
+    // interests should be validated as an array by the validation middleware
+    // This is defensive coding to ensure we always store a valid array
+    if (interests !== undefined) {
+      updateData.interests = Array.isArray(interests) ? interests : [];
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
@@ -111,6 +183,7 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
         email: true, 
         role: true, 
         createdAt: true,
+        avatar: true,
         bio: true,
         location: true,
         institution: true,
@@ -124,7 +197,122 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
     res.json({ message: 'הפרופיל עודכן בהצלחה', user: updatedUser });
   } catch (error) {
     console.error('Profile update error:', error);
+    // Provide more specific error message for common Prisma errors
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'משתמש לא נמצא' });
+    }
     res.status(500).json({ error: 'שגיאה בעדכון הפרופיל' });
+  }
+});
+
+// POST /api/auth/profile/avatar - Upload profile avatar
+router.post('/profile/avatar', avatarUploadLimiter, authenticate, avatarUpload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'לא הועלה קובץ תמונה' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' });
+    }
+
+    // Map MIME types to safe file extensions
+    const mimeToExtension = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp'
+    };
+
+    // Get safe file extension from validated MIME type
+    // This should never fail due to multer fileFilter validation
+    const fileExtension = mimeToExtension[req.file.mimetype];
+    if (!fileExtension) {
+      return res.status(400).json({ error: 'סוג קובץ לא נתמך' });
+    }
+    
+    // Generate unique filename for the avatar
+    const timestamp = Date.now();
+    const fileName = `avatars/${user.id}_${timestamp}.${fileExtension}`;
+
+    let avatarUrl;
+
+    // Try to upload to Azure, fallback to local if Azure is not configured
+    if (azureStorage.isConfigured()) {
+      try {
+        // Delete old avatar from Azure if it exists and is a valid Azure URL
+        // Validate that the URL is specifically from Azure Blob Storage
+        if (user.avatar) {
+          try {
+            const url = new URL(user.avatar);
+            // Check if it's an Azure blob storage URL with expected domain pattern
+            if (url.protocol === 'https:' && url.hostname.endsWith('.blob.core.windows.net')) {
+              const oldFileName = azureStorage.extractBlobName(user.avatar);
+              if (oldFileName && oldFileName.startsWith('avatars/')) {
+                await azureStorage.deleteFile(oldFileName);
+              }
+            }
+          } catch (urlError) {
+            // Invalid URL format, skip deletion
+            console.log('Invalid avatar URL format:', urlError.message);
+          }
+        }
+
+        // Upload new avatar to Azure
+        avatarUrl = await azureStorage.uploadFile(
+          req.file.buffer,
+          fileName,
+          req.file.mimetype
+        );
+        console.log('Avatar uploaded to Azure:', avatarUrl);
+      } catch (azureError) {
+        console.error('Azure upload failed:', azureError);
+        return res.status(500).json({ error: 'שגיאה בהעלאת התמונה לענן' });
+      }
+    } else {
+      // Fallback: save locally (for development)
+      const localPath = path.join(__dirname, '../../uploads/avatars');
+      if (!fs.existsSync(localPath)) {
+        fs.mkdirSync(localPath, { recursive: true });
+      }
+      const localFilePath = path.join(localPath, `${user.id}_${timestamp}.${fileExtension}`);
+      fs.writeFileSync(localFilePath, req.file.buffer);
+      avatarUrl = `/uploads/avatars/${user.id}_${timestamp}.${fileExtension}`;
+      console.log('Avatar saved locally:', avatarUrl);
+    }
+
+    // Update user's avatar in database
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatar: avatarUrl },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        avatar: true,
+        bio: true,
+        location: true,
+        institution: true,
+        fieldOfStudy: true,
+        website: true,
+        interests: true,
+        _count: { select: { summaries: true, forumPosts: true, ratings: true } }
+      }
+    });
+
+    res.json({ 
+      message: 'תמונת הפרופיל עודכנה בהצלחה',
+      user: updatedUser,
+      avatarUrl 
+    });
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    if (error.message === 'רק קבצי תמונה (JPG, PNG, WEBP) מותרים') {
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'שגיאה בהעלאת תמונת הפרופיל' });
   }
 });
 

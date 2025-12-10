@@ -180,6 +180,18 @@ describe('Auth API Tests', () => {
       expect(res.body.user.interests).toEqual(['Python', 'AI']);
     });
 
+    it('should accept website URLs without protocol', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          website: 'www.example.com'
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.user).toHaveProperty('website', 'www.example.com');
+    });
+
     it('should update fullName', async () => {
       const res = await request(app)
         .put('/api/auth/profile')
@@ -220,6 +232,97 @@ describe('Auth API Tests', () => {
         });
 
       expect(res.statusCode).toBe(400);
+    });
+
+    it('should accept empty string fields as optional', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          fullName: 'Test User',
+          bio: '',
+          location: '',
+          institution: '',
+          fieldOfStudy: '',
+          website: '',
+          interests: []
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('message');
+      expect(res.body.user).toHaveProperty('fullName', 'Test User');
+    });
+  });
+
+  describe('POST /api/auth/profile/avatar', () => {
+    let token;
+
+    beforeAll(async () => {
+      // Login to get token
+      const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'password123'
+        });
+      token = loginRes.body.token;
+    });
+
+    it('should reject request without file', async () => {
+      const res = await request(app)
+        .post('/api/auth/profile/avatar')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+
+    it('should reject non-image files', async () => {
+      const res = await request(app)
+        .post('/api/auth/profile/avatar')
+        .set('Authorization', `Bearer ${token}`)
+        .attach('avatar', Buffer.from('fake pdf content'), {
+          filename: 'test.pdf',
+          contentType: 'application/pdf'
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty('error');
+    });
+
+    it('should upload valid image file', async () => {
+      // Create a minimal valid PNG image (1x1 pixel)
+      const pngBuffer = Buffer.from([
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+        0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41,
+        0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+        0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
+        0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+        0x42, 0x60, 0x82
+      ]);
+
+      const res = await request(app)
+        .post('/api/auth/profile/avatar')
+        .set('Authorization', `Bearer ${token}`)
+        .attach('avatar', pngBuffer, {
+          filename: 'test-avatar.png',
+          contentType: 'image/png'
+        });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('avatarUrl');
+      expect(res.body.user).toHaveProperty('avatar');
+    });
+
+    it('should require authentication', async () => {
+      const res = await request(app)
+        .post('/api/auth/profile/avatar');
+
+      expect(res.statusCode).toBe(401);
     });
   });
 

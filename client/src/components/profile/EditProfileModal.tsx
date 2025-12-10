@@ -22,10 +22,12 @@ interface EditProfileModalProps {
     interests: string[];
   };
   onSave: (data: any) => Promise<void>;
+  onAvatarUpload: (file: File) => Promise<void>;
   isSaving?: boolean;
+  error?: string | null;
 }
 
-export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = false }: EditProfileModalProps) {
+export function EditProfileModal({ isOpen, onClose, user, onSave, onAvatarUpload, isSaving = false, error = null }: EditProfileModalProps) {
   const [formData, setFormData] = useState({
     name: user.name || '',
     avatar: user.avatar || '',
@@ -37,6 +39,8 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
     interests: user.interests || [],
   });
   const [newInterest, setNewInterest] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState<string>(user.avatar || '');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Reinitialize form when user data changes or modal opens
   useEffect(() => {
@@ -51,8 +55,45 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
         website: user.website || '',
         interests: user.interests || [],
       });
+      setAvatarPreview(user.avatar || '');
     }
   }, [isOpen, user]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('נא לבחור קובץ תמונה בלבד');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('גודל התמונה חייב להיות עד 5MB');
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload avatar
+    try {
+      setIsUploadingAvatar(true);
+      await onAvatarUpload(file);
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+      alert('שגיאה בהעלאת התמונה');
+      setAvatarPreview(user.avatar || '');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const handleSave = async () => {
     await onSave(formData);
@@ -65,6 +106,13 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
         interests: [...formData.interests, newInterest.trim()],
       });
       setNewInterest('');
+    }
+  };
+
+  const handleInterestKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addInterest();
     }
   };
 
@@ -115,18 +163,51 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
               <div className="flex flex-col items-center gap-4">
                 <div className="relative group">
                   <Avatar className="w-32 h-32 border-4 border-gray-200">
-                    <AvatarImage src={formData.avatar} />
+                    <AvatarImage src={avatarPreview} />
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-4xl">
                       {formData.name.split(' ').map((n) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <button className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera className="w-8 h-8 text-white" />
-                  </button>
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 text-white animate-spin" />
+                    </div>
+                  )}
+                  {!isUploadingAvatar && (
+                    <button 
+                      type="button"
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                      className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Camera className="w-8 h-8 text-white" />
+                    </button>
+                  )}
                 </div>
-                <Button variant="outline" size="sm">
-                  <UploadIcon className="w-4 h-4 ml-2" />
-                  העלה תמונה חדשה
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  type="button"
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
+                  disabled={isUploadingAvatar}
+                >
+                  {isUploadingAvatar ? (
+                    <>
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      מעלה...
+                    </>
+                  ) : (
+                    <>
+                      <UploadIcon className="w-4 h-4 ml-2" />
+                      העלה תמונה חדשה
+                    </>
+                  )}
                 </Button>
               </div>
 
@@ -212,7 +293,7 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
                   <Input
                     value={newInterest}
                     onChange={(e) => setNewInterest(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addInterest()}
+                    onKeyDown={handleInterestKeyDown}
                     placeholder="הוסף תחום עניין..."
                     className="text-right flex-1"
                   />
@@ -235,24 +316,32 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, isSaving = fal
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
-              <Button variant="outline" onClick={onClose} disabled={isSaving}>
-                ביטול
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                    שומר...
-                  </>
-                ) : (
-                  'שמור שינויים'
-                )}
-              </Button>
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex flex-col gap-3">
+              {error && (
+                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={onClose} disabled={isSaving} type="button">
+                  ביטול
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      שומר...
+                    </>
+                  ) : (
+                    'שמור שינויים'
+                  )}
+                </Button>
+              </div>
             </div>
           </motion.div>
           </div>
