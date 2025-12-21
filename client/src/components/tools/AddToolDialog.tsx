@@ -41,6 +41,13 @@ export function AddToolDialog({ isOpen, onClose, onSuccess }: AddToolDialogProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate category is selected
+    if (!formData.category) {
+      setError('יש לבחור קטגוריה');
+      return;
+    }
+
     setLoading(true);
 
     try {

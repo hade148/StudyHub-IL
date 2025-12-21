@@ -27,14 +27,14 @@ describe('Tools API Tests', () => {
   afterAll(async () => {
     // Clean up test data
     if (toolId) {
-      await prisma.tool.deleteMany({
+      await prisma.tool.delete({
         where: { id: toolId }
-      });
+      }).catch(() => {}); // Ignore if already deleted
     }
     if (userId) {
-      await prisma.user.deleteMany({
+      await prisma.user.delete({
         where: { id: userId }
-      });
+      }).catch(() => {}); // Ignore if already deleted
     }
     await prisma.$disconnect();
   });

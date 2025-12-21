@@ -115,6 +115,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
             <Button
               onClick={() => setIsAddDialogOpen(true)}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              aria-label="הוסף כלי חדש"
             >
               <Plus className="w-4 h-4 ml-2" />
               הוסף כלי
@@ -232,6 +233,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
                 <Button
                   onClick={() => setIsAddDialogOpen(true)}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  aria-label="הוסף כלי חדש"
                 >
                   <Plus className="w-4 h-4 ml-2" />
                   הוסף כלי
