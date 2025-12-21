@@ -66,6 +66,10 @@ function Dashboard() {
     return names[0].slice(0, 2);
   };
 
+  const handleAddTool = () => {
+    navigate('/tools?addTool=true');
+  };
+
   return (
     <div dir="rtl" className="min-h-screen bg-gray-50">
       <motion.div
@@ -153,6 +157,7 @@ function Dashboard() {
           onNavigateUpload={() => navigate('/upload')}
           onNavigateForum={() => navigate('/forum')}
           onNavigateTools={() => navigate('/tools')}
+          onAddTool={handleAddTool}
         />
 
         {/* Recent Summaries */}

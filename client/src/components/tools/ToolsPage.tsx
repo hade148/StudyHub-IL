@@ -1,176 +1,20 @@
 import { motion } from 'motion/react';
-import { useState } from 'react';
-import { ChevronRight, Home, Wrench } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronRight, Home, Wrench, Plus } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
+import { Button } from '../ui/button';
 import { ToolCard } from './ToolCard';
+import { AddToolDialog } from './AddToolDialog';
+import api from '../../utils/api';
 
-const toolsData = [
-  {
-    id: 1,
-    name: 'מחשבון ממוצע ציונים',
-    description: 'חשב את הממוצע שלך בקלות ובמהירות',
-    icon: '📊',
-    category: 'מחשבונים',
-    usageCount: 1234,
-    gradient: 'from-blue-500 to-cyan-500',
-    route: '/tools/grade-calculator',
-    featured: true,
-  },
-  {
-    id: 2,
-    name: 'מתכנן לימודים שבועי',
-    description: 'תכנן את לוח הזמנים השבועי שלך',
-    icon: '📅',
-    category: 'מתכננים',
-    usageCount: 892,
-    gradient: 'from-purple-500 to-pink-500',
-    route: '/tools/study-planner',
-    featured: true,
-  },
-  {
-    id: 3,
-    name: 'יצירת כרטיסיות למידה',
-    description: 'צור כרטיסיות ללמידה יעילה ומהירה',
-    icon: '📝',
-    category: 'יצירה',
-    usageCount: 756,
-    gradient: 'from-blue-600 to-purple-600',
-    route: '/tools/flashcards',
-    featured: true,
-  },
-  {
-    id: 4,
-    name: 'מחשבון GPA',
-    description: 'חשב את ה-GPA שלך לפי הציונים',
-    icon: '📈',
-    category: 'מחשבונים',
-    usageCount: 645,
-    gradient: 'from-green-500 to-teal-500',
-    route: '/tools/gpa-calculator',
-    featured: false,
-  },
-  {
-    id: 5,
-    name: 'מחשבון שעות לימוד',
-    description: 'עקוב אחר שעות הלימוד שלך',
-    icon: '⏰',
-    category: 'מחשבונים',
-    usageCount: 523,
-    gradient: 'from-orange-500 to-red-500',
-    route: '/tools/study-hours',
-    featured: false,
-  },
-  {
-    id: 6,
-    name: 'ממיר יחידות',
-    description: 'המר בין יחידות מידה שונות',
-    icon: '🔄',
-    category: 'ממירים',
-    usageCount: 489,
-    gradient: 'from-purple-600 to-pink-600',
-    route: '/tools/unit-converter',
-    featured: false,
-  },
-  {
-    id: 7,
-    name: 'ממיר מטבעות',
-    description: 'המר בין מטבעות שונים',
-    icon: '💱',
-    category: 'ממירים',
-    usageCount: 412,
-    gradient: 'from-yellow-400 to-orange-500',
-    route: '/tools/currency-converter',
-    featured: false,
-  },
-  {
-    id: 8,
-    name: 'מתכנן מבחנים',
-    description: 'תכנן ונהל את המבחנים שלך',
-    icon: '📆',
-    category: 'מתכננים',
-    usageCount: 678,
-    gradient: 'from-red-500 to-pink-500',
-    route: '/tools/exam-planner',
-    featured: false,
-  },
-  {
-    id: 9,
-    name: 'מעקב אחר משימות',
-    description: 'עקוב אחר המשימות והתרגילים',
-    icon: '✅',
-    category: 'מתכננים',
-    usageCount: 834,
-    gradient: 'from-green-500 to-emerald-500',
-    route: '/tools/task-tracker',
-    featured: false,
-  },
-  {
-    id: 10,
-    name: 'יצירת מצגות',
-    description: 'צור מצגות מרשימות במהירות',
-    icon: '🎨',
-    category: 'יצירה',
-    usageCount: 567,
-    gradient: 'from-pink-500 to-rose-500',
-    route: '/tools/presentation-maker',
-    featured: false,
-  },
-  {
-    id: 11,
-    name: 'יצירת מפות חשיבה',
-    description: 'ארגן רעיונות עם מפות חשיבה',
-    icon: '🧠',
-    category: 'יצירה',
-    usageCount: 445,
-    gradient: 'from-cyan-500 to-blue-500',
-    route: '/tools/mind-map',
-    featured: false,
-  },
-  {
-    id: 12,
-    name: 'טיימר פומודורו',
-    description: 'שפר את הריכוז עם טכניקת פומודורו',
-    icon: '⏲️',
-    category: 'אחר',
-    usageCount: 1089,
-    gradient: 'from-red-600 to-orange-600',
-    route: '/tools/pomodoro',
-    featured: false,
-  },
-  {
-    id: 13,
-    name: 'רשימת קריאה',
-    description: 'נהל את רשימת הקריאה שלך',
-    icon: '📚',
-    category: 'אחר',
-    usageCount: 398,
-    gradient: 'from-indigo-500 to-purple-500',
-    route: '/tools/reading-list',
-    featured: false,
-  },
-  {
-    id: 14,
-    name: 'מחולל ביבליוגרפיה',
-    description: 'צור ביבליוגרפיה בפורמטים שונים',
-    icon: '📖',
-    category: 'אחר',
-    usageCount: 612,
-    gradient: 'from-gray-600 to-slate-600',
-    route: '/tools/bibliography',
-    featured: false,
-  },
-  {
-    id: 15,
-    name: 'מחשבון אחוזים',
-    description: 'חשב אחוזים ושינויים במהירות',
-    icon: '💯',
-    category: 'מחשבונים',
-    usageCount: 723,
-    gradient: 'from-teal-500 to-cyan-600',
-    route: '/tools/percentage',
-    featured: false,
-  },
-];
+interface Tool {
+  id: number;
+  title: string;
+  description: string;
+  url: string;
+  category: string;
+  isFavorite: boolean;
+}
 
 interface ToolsPageProps {
   onNavigateHome: () => void;
@@ -178,18 +22,74 @@ interface ToolsPageProps {
 
 export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [tools, setTools] = useState<Tool[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const featuredTools = toolsData.filter((tool) => tool.featured);
-  const regularTools = toolsData.filter((tool) => !tool.featured);
+  // Check URL params for addTool query
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('addTool') === 'true') {
+      setIsAddDialogOpen(true);
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const loadTools = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await api.get('/tools');
+      setTools(response.data);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'שגיאה בטעינת כלים');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTools();
+  }, []);
+
+  const handleToggleFavorite = async (toolId: number) => {
+    const tool = tools.find((t) => t.id === toolId);
+    if (!tool) return;
+
+    try {
+      if (tool.isFavorite) {
+        await api.delete(`/favorites/tool/${toolId}`);
+      } else {
+        await api.post(`/favorites/tool/${toolId}`);
+      }
+
+      // Update local state
+      setTools((prevTools) =>
+        prevTools.map((t) =>
+          t.id === toolId ? { ...t, isFavorite: !t.isFavorite } : t
+        )
+      );
+    } catch (err: any) {
+      console.error('Toggle favorite error:', err);
+    }
+  };
+
+  const handleAddSuccess = () => {
+    setSuccessMessage('הכלי נוסף בהצלחה! ✅');
+    loadTools();
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
 
   const filterToolsByCategory = (category: string) => {
-    if (category === 'all') return toolsData;
-    return toolsData.filter((tool) => tool.category === category);
+    if (category === 'all') return tools;
+    if (category === 'favorites') return tools.filter((tool) => tool.isFavorite);
+    return tools.filter((tool) => tool.category === category);
   };
 
   const filteredTools = filterToolsByCategory(activeCategory);
-  const filteredFeatured = filteredTools.filter((tool) => tool.featured);
-  const filteredRegular = filteredTools.filter((tool) => !tool.featured);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -202,14 +102,23 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
         {/* Page Header */}
         <div className="space-y-4">
           {/* Title */}
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-              <Wrench className="w-6 h-6" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
+                <Wrench className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-gray-900">כלים אקדמיים</h1>
+                <p className="text-gray-600">כלים שימושיים לסטודנטים</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-gray-900">כלים אקדמיים</h1>
-              <p className="text-gray-600">כלים שימושיים לסטודנטים</p>
-            </div>
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            >
+              <Plus className="w-4 h-4 ml-2" />
+              הוסף כלי
+            </Button>
           </div>
 
           {/* Breadcrumb */}
@@ -226,11 +135,35 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
           </div>
         </div>
 
+        {/* Success Message */}
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg"
+          >
+            {successMessage}
+          </motion.div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
         {/* Category Tabs */}
         <Tabs defaultValue="all" className="w-full" onValueChange={setActiveCategory}>
           <TabsList className="bg-white rounded-lg shadow-sm p-1 w-full flex-wrap h-auto">
             <TabsTrigger value="all" className="flex-1 md:flex-none">
               הכל
+            </TabsTrigger>
+            <TabsTrigger value="favorites" className="flex-1 md:flex-none">
+              <span className="flex items-center gap-1">
+                מועדפים
+                <span>❤️</span>
+              </span>
             </TabsTrigger>
             <TabsTrigger value="מחשבונים" className="flex-1 md:flex-none">
               <span className="flex items-center gap-1">
@@ -265,46 +198,44 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
           </TabsList>
 
           <TabsContent value={activeCategory} className="space-y-8 mt-8">
-            {/* Featured Tools */}
-            {filteredFeatured.length > 0 && (
-              <div>
-                <h2 className="mb-6 text-gray-900">כלים מומלצים</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredFeatured.map((tool, index) => (
-                    <ToolCard key={tool.id} tool={tool} index={index} />
-                  ))}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">טוען כלים...</p>
                 </div>
               </div>
-            )}
-
-            {/* Regular Tools */}
-            {filteredRegular.length > 0 && (
-              <div>
-                {filteredFeatured.length > 0 && (
-                  <h2 className="mb-6 text-gray-900">כלים נוספים</h2>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredRegular.map((tool, index) => (
-                    <ToolCard
-                      key={tool.id}
-                      tool={tool}
-                      index={index + filteredFeatured.length}
-                    />
-                  ))}
-                </div>
+            ) : filteredTools.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTools.map((tool, index) => (
+                  <ToolCard
+                    key={tool.id}
+                    tool={tool}
+                    index={index}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+                ))}
               </div>
-            )}
-
-            {/* Empty State */}
-            {filteredTools.length === 0 && (
+            ) : (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4"
               >
                 <div className="text-6xl">🔍</div>
-                <h3>לא נמצאו כלים בקטגוריה זו</h3>
-                <p className="text-gray-600">נסה לבחור קטגוריה אחרת</p>
+                <h3>לא נמצאו כלים{activeCategory !== 'all' ? ' בקטגוריה זו' : ''}</h3>
+                <p className="text-gray-600">
+                  {activeCategory === 'all'
+                    ? 'התחל על ידי הוספת כלי חדש'
+                    : 'נסה לבחור קטגוריה אחרת או הוסף כלי חדש'}
+                </p>
+                <Button
+                  onClick={() => setIsAddDialogOpen(true)}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                >
+                  <Plus className="w-4 h-4 ml-2" />
+                  הוסף כלי
+                </Button>
               </motion.div>
             )}
           </TabsContent>
@@ -319,17 +250,19 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div>
-              <div className="text-4xl mb-2">{toolsData.length}</div>
+              <div className="text-4xl mb-2">{tools.length}</div>
               <p className="opacity-90">כלים זמינים</p>
             </div>
             <div>
               <div className="text-4xl mb-2">
-                {toolsData.reduce((sum, tool) => sum + tool.usageCount, 0).toLocaleString('he-IL')}
+                {tools.filter((t) => t.isFavorite).length}
               </div>
-              <p className="opacity-90">סה״כ שימושים</p>
+              <p className="opacity-90">כלים מועדפים</p>
             </div>
             <div>
-              <div className="text-4xl mb-2">6</div>
+              <div className="text-4xl mb-2">
+                {Array.from(new Set(tools.map((t) => t.category))).length}
+              </div>
               <p className="opacity-90">קטגוריות</p>
             </div>
           </div>
@@ -342,9 +275,16 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
           transition={{ delay: 0.5 }}
           className="text-center py-8 text-gray-600 border-t border-gray-200"
         >
-          <p>💡 יש לך רעיון לכלי חדש? שלח לנו הצעה!</p>
+          <p>💡 יש לך רעיון לכלי חדש? הוסף אותו עכשיו!</p>
         </motion.div>
       </motion.div>
+
+      {/* Add Tool Dialog */}
+      <AddToolDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onSuccess={handleAddSuccess}
+      />
     </div>
   );
 }
