@@ -1,10 +1,31 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { toolValidation } = require('../middleware/validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Rate limiter for tool creation - 10 tools per hour per user
+const createToolLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: 'יותר מדי ניסיונות להוספת כלי. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
+
+// Rate limiter for tool deletion - 20 deletions per hour per user
+const deleteToolLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,
+  message: 'יותר מדי ניסיונות למחיקת כלי. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
 
 // GET /api/tools - Get all tools
 router.get('/', optionalAuth, async (req, res) => {
@@ -77,7 +98,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 });
 
 // POST /api/tools - Add new tool
-router.post('/', authenticate, toolValidation, async (req, res) => {
+router.post('/', authenticate, createToolLimiter, toolValidation, async (req, res) => {
   try {
     const { title, url, description, category } = req.body;
 
@@ -105,7 +126,7 @@ router.post('/', authenticate, toolValidation, async (req, res) => {
 });
 
 // DELETE /api/tools/:id - Delete tool
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id', authenticate, deleteToolLimiter, async (req, res) => {
   try {
     const { id } = req.params;
     const tool = await prisma.tool.findUnique({
