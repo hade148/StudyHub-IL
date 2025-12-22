@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { ChevronRight, Home, MessageCircle, Send, User, CheckCircle2, Star, Eye } from 'lucide-react';
+import { ChevronRight, Home, MessageCircle, Send, User, CheckCircle2, Star, Eye , ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/textarea';
