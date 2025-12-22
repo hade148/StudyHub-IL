@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Eye, MessageCircle, ArrowUp, ArrowDown, CheckCircle2 } from 'lucide-react';
+import { Eye, MessageCircle, Star, CheckCircle2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
@@ -7,24 +7,35 @@ interface QuestionCardProps {
   question: {
     id: number;
     title: string;
-    description: string;
-    category: string;
+    content?: string;
+    description?: string;
+    category?: string;
     tags: string[];
     author: {
-      name: string;
-      avatar: string;
-      reputation: number;
+      id?: number;
+      name?: string;
+      fullName?: string;
+      avatar?: string;
+      reputation?: number;
     };
-    stats: {
+    stats?: {
       views: number;
       answers: number;
-      votes: number;
+      votes?: number;
       isAnswered: boolean;
     };
-    time: string;
+    views?: number;
+    isAnswered?: boolean;
+    avgRating?: number | null;
+    time?: string;
+    createdAt?: string;
     lastActivity?: {
       user: string;
       time: string;
+    };
+    _count?: {
+      comments: number;
+      ratings: number;
     };
   };
   index: number;
@@ -41,6 +52,14 @@ const categoryColors: Record<string, string> = {
 };
 
 export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
+  const displayName = question.author.fullName || question.author.name || 'אנונימי';
+  const displayAvatar = question.author.avatar || displayName.substring(0, 2);
+  const views = question.views || question.stats?.views || 0;
+  const answers = question._count?.comments || question.stats?.answers || 0;
+  const isAnswered = question.isAnswered || question.stats?.isAnswered || false;
+  const description = question.content || question.description || '';
+  const displayTime = question.time || (question.createdAt ? new Date(question.createdAt).toLocaleDateString('he-IL') : '');
+  
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -53,45 +72,49 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
       <div className="flex gap-6">
         {/* Stats Section (Right) */}
         <div className="flex flex-col gap-3 items-center min-w-[80px]">
-          {/* Votes */}
-          <div className="flex flex-col items-center gap-1">
-            <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-              <ArrowUp className="w-5 h-5 text-gray-600" />
-            </button>
-            <span className="text-gray-900">{question.stats.votes}</span>
-            <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-              <ArrowDown className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
+          {/* Rating */}
+          {question.avgRating != null && (
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-1 text-yellow-500">
+                <Star className="w-5 h-5 fill-current" />
+                <span className="text-gray-900">{question.avgRating.toFixed(1)}</span>
+              </div>
+              <span className="text-xs text-gray-500">
+                {question._count?.ratings || 0} דירוגים
+              </span>
+            </div>
+          )}
 
           {/* Answers */}
           <div
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg ${
-              question.stats.isAnswered
+              isAnswered
                 ? 'bg-green-100 text-green-700'
                 : 'bg-gray-100 text-gray-600'
             }`}
           >
-            {question.stats.isAnswered && (
+            {isAnswered && (
               <CheckCircle2 className="w-4 h-4" />
             )}
-            <span>{question.stats.answers}</span>
+            <span>{answers}</span>
             <span className="text-xs">תשובות</span>
           </div>
 
           {/* Views */}
           <div className="flex items-center gap-1 text-gray-600">
             <Eye className="w-4 h-4" />
-            <span>{question.stats.views}</span>
+            <span>{views}</span>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 space-y-3">
           {/* Category Badge */}
-          <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]}`}>
-            {question.category}
-          </Badge>
+          {question.category && (
+            <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]}`}>
+              {question.category}
+            </Badge>
+          )}
 
           {/* Title */}
           <h3 className="text-gray-900 hover:text-blue-600 transition-colors">
@@ -99,38 +122,48 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           </h3>
 
           {/* Description */}
-          <p className="text-gray-600 line-clamp-2">
-            {question.description}
-          </p>
+          {description && (
+            <p className="text-gray-600 line-clamp-2">
+              {description}
+            </p>
+          )}
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2">
-            {question.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          {question.tags && question.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {question.tags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
 
           {/* Author and Activity */}
           <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-2">
             <div className="flex items-center gap-2">
               <Avatar className="w-6 h-6">
                 <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
-                  {question.author.avatar}
+                  {displayAvatar}
                 </AvatarFallback>
               </Avatar>
-              <span>{question.author.name}</span>
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                {question.author.reputation}
-              </span>
+              <span>{displayName}</span>
+              {question.author.reputation && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                  {question.author.reputation}
+                </span>
+              )}
             </div>
-            <span>•</span>
-            <span>נשאל {question.time}</span>
+            {displayTime && (
+              <>
+                <span>•</span>
+                <span>נשאל {displayTime}</span>
+              </>
+            )}
             {question.lastActivity && (
               <>
                 <span>•</span>

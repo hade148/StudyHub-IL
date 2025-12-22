@@ -116,20 +116,47 @@ const ratingValidation = [
 ];
 
 /**
+ * Validation rules for rating a forum post
+ */
+const forumRatingValidation = [
+  body('rating')
+    .notEmpty().withMessage('דירוג הוא שדה חובה')
+    .isInt({ min: 1, max: 5 }).withMessage('דירוג חייב להיות בין 1 ל-5'),
+  validate
+];
+
+/**
  * Validation rules for creating a forum post
  */
 const forumPostValidation = [
   body('title')
     .trim()
     .notEmpty().withMessage('כותרת היא שדה חובה')
-    .isLength({ min: 5 }).withMessage('כותרת חייבת להכיל לפחות 5 תווים'),
+    .isLength({ min: 10, max: 150 }).withMessage('כותרת חייבת להכיל בין 10 ל-150 תווים'),
   body('content')
     .trim()
     .notEmpty().withMessage('תוכן הוא שדה חובה')
-    .isLength({ min: 10 }).withMessage('תוכן חייב להכיל לפחות 10 תווים'),
+    .isLength({ min: 50 }).withMessage('תוכן חייב להכיל לפחות 50 תווים'),
   body('courseId')
     .notEmpty().withMessage('קורס הוא שדה חובה')
     .isInt({ min: 1 }).withMessage('מזהה קורס לא תקין'),
+  body('category')
+    .optional()
+    .trim()
+    .isIn(['computer-science', 'mathematics', 'physics', 'chemistry', 'study-resources', 'general'])
+    .withMessage('קטגוריה לא תקינה'),
+  body('tags')
+    .optional()
+    .isArray().withMessage('תגיות חייבות להיות רשימה')
+    .custom((value) => {
+      if (value && value.length > 5) {
+        throw new Error('ניתן להוסיף עד 5 תגיות');
+      }
+      return true;
+    }),
+  body('isUrgent')
+    .optional()
+    .isBoolean().withMessage('isUrgent חייב להיות ערך בוליאני'),
   validate
 ];
 
@@ -215,6 +242,7 @@ module.exports = {
   summaryValidation,
   ratingValidation,
   forumPostValidation,
+  forumRatingValidation,
   commentValidation,
   toolValidation,
   profileUpdateValidation,

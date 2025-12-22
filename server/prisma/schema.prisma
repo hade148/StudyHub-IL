@@ -32,6 +32,7 @@ model User {
   comments      Comment[]
   forumPosts    ForumPost[]
   forumComments ForumComment[]
+  forumRatings  ForumRating[]
   tools         Tool[]
   helpRequests  HelpRequest[]
   
@@ -111,8 +112,13 @@ model ForumPost {
   id         Int      @id @default(autoincrement())
   title      String
   content    String
+  category   String?
+  tags       String[] @default([])
+  images     String[] @default([])
+  isUrgent   Boolean  @default(false)
   views      Int      @default(0)
   isAnswered Boolean  @default(false)
+  avgRating  Float?
   createdAt  DateTime @default(now())
   
   courseId   Int
@@ -122,6 +128,7 @@ model ForumPost {
   author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
   comments   ForumComment[]
+  ratings    ForumRating[]
   
   @@map("forum_posts")
 }
@@ -138,6 +145,21 @@ model ForumComment {
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
   @@map("forum_comments")
+}
+
+model ForumRating {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1-5
+  createdAt DateTime @default(now())
+  
+  postId    Int
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, userId])
+  @@map("forum_ratings")
 }
 
 model Tool {

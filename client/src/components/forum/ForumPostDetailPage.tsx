@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { ChevronRight, Home, MessageCircle, Send, User, CheckCircle2, ArrowUp, ArrowDown, Eye } from 'lucide-react';
+import { ChevronRight, Home, MessageCircle, Send, User, CheckCircle2, Star, Eye , ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/textarea';
@@ -22,8 +22,13 @@ interface ForumPost {
   id: number;
   title: string;
   content: string;
+  category?: string;
+  tags?: string[];
+  images?: string[];
+  isUrgent?: boolean;
   views: number;
   isAnswered: boolean;
+  avgRating?: number | null;
   createdAt: string;
   author: {
     id: number;
@@ -35,6 +40,9 @@ interface ForumPost {
     courseName: string;
   };
   comments: ForumComment[];
+  _count?: {
+    ratings: number;
+  };
 }
 
 interface ForumPostDetailPageProps {
@@ -50,6 +58,9 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
@@ -72,13 +83,24 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
     });
   };
 
-  // Fetch post data
+  // Fetch post data and user rating
   useEffect(() => {
     const fetchPost = async () => {
       try {
         setLoading(true);
         const response = await api.get(`/forum/${postId}`);
         setPost(response.data);
+        
+        // Fetch user's rating if logged in
+        if (user) {
+          try {
+            const ratingsResponse = await api.get(`/forum/${postId}/ratings`);
+            setUserRating(ratingsResponse.data.userRating);
+          } catch (err) {
+            console.error('Error fetching rating:', err);
+          }
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching post:', err);
@@ -89,7 +111,34 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
     };
 
     fetchPost();
-  }, [postId]);
+  }, [postId, user]);
+
+  // Handle rating submission
+  const handleRating = async (rating: number) => {
+    if (!user) {
+      alert('יש להתחבר כדי לדרג שאלה');
+      return;
+    }
+
+    try {
+      setRatingSubmitting(true);
+      const response = await api.post(`/forum/${postId}/ratings`, { rating });
+      
+      // Update local state
+      setUserRating(rating);
+      if (post) {
+        setPost({
+          ...post,
+          avgRating: response.data.avgRating
+        });
+      }
+    } catch (err: any) {
+      console.error('Error submitting rating:', err);
+      alert(err.response?.data?.error || 'שגיאה בשמירת דירוג');
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
 
   // Handle adding a comment/answer
   const handleAddComment = async () => {
@@ -210,6 +259,78 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
           {/* Question Content */}
           <div className="text-gray-700 whitespace-pre-wrap">
             {post.content}
+          </div>
+
+          {/* Images */}
+          {post.images && post.images.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+              {post.images.map((image, index) => (
+                <img
+                  key={index}
+                  src={image}
+                  alt={`תמונה ${index + 1}`}
+                  className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Tags */}
+          {post.tags && post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {post.tags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="border-gray-300 text-gray-700"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Rating Section */}
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-gray-700 font-medium">דרג את השאלה:</span>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => handleRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(null)}
+                      disabled={ratingSubmitting || !user}
+                      className="transition-transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          (hoverRating !== null ? star <= hoverRating : (userRating !== null && star <= userRating))
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {userRating && (
+                  <span className="text-sm text-gray-500">
+                    (דירגת {userRating} כוכבים)
+                  </span>
+                )}
+              </div>
+              {post.avgRating !== null && post.avgRating !== undefined && (
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  <span className="font-medium">{post.avgRating.toFixed(1)}</span>
+                  <span className="text-sm">
+                    ({post._count?.ratings || 0} דירוגים)
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
