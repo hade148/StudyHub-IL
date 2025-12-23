@@ -10,6 +10,12 @@ const azureStorage = require('../utils/azureStorage');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Helper function to calculate average rating
+const calculateAverageRating = (ratings) => {
+  if (ratings.length === 0) return null;
+  return ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+};
+
 // Multer configuration for file uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
 
@@ -291,7 +297,7 @@ router.post('/:id/rate', authenticate, ratingValidation, async (req, res) => {
     const ratings = await prisma.rating.findMany({
       where: { summaryId: parseInt(id) }
     });
-    const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+    const avgRating = calculateAverageRating(ratings);
 
     await prisma.summary.update({
       where: { id: parseInt(id) },
@@ -349,9 +355,7 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
       orderBy: { date: 'desc' }
     });
 
-    const avgRating = ratings.length > 0
-      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
-      : null;
+    const avgRating = calculateAverageRating(ratings);
 
     let userRating = null;
     if (req.user) {

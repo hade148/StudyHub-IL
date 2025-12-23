@@ -50,13 +50,16 @@ describe('Summary Rating API Tests', () => {
   });
 
   afterAll(async () => {
-    // Clean up
+    // Clean up in reverse dependency order to avoid foreign key violations
+    // Delete ratings first (depends on summary and user)
     await prisma.rating.deleteMany({
       where: { summaryId }
     });
+    // Delete summary second (depends on user and course)
     await prisma.summary.deleteMany({
       where: { id: summaryId }
     });
+    // Delete user last (no dependencies on it from remaining records)
     await prisma.user.deleteMany({
       where: { id: userId }
     });

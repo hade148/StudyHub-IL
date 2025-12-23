@@ -89,19 +89,17 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         const response = await api.get(`/summaries/${summaryId}`);
         setSummary(response.data);
         
+        // Set total ratings from summary data
+        setTotalRatings(response.data.ratings?.length || 0);
+        
         // Fetch user's rating if logged in
         if (user) {
           try {
             const ratingsResponse = await api.get(`/summaries/${summaryId}/ratings`);
             setUserRating(ratingsResponse.data.userRating);
-            setTotalRatings(ratingsResponse.data.totalRatings);
           } catch (err) {
             console.error('Error fetching rating:', err);
           }
-        } else {
-          // If not logged in, just get the rating count from summary data
-          const ratingsResponse = await api.get(`/summaries/${summaryId}/ratings`);
-          setTotalRatings(ratingsResponse.data.totalRatings);
         }
         
         setError(null);
@@ -318,7 +316,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                   </span>
                 )}
               </div>
-              {summary.avgRating !== null && summary.avgRating !== undefined && (
+              {summary.avgRating != null && (
                 <div className="flex items-center gap-2 text-gray-600">
                   <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   <span className="font-medium">{summary.avgRating.toFixed(1)}</span>
