@@ -89,10 +89,10 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
         const response = await api.get(`/summaries/${summaryId}`);
         setSummary(response.data);
         
-        // Set total ratings from summary data
+        // Use ratings array length from summary data (already includes all ratings)
         setTotalRatings(response.data.ratings?.length || 0);
         
-        // Fetch user's rating if logged in
+        // Fetch user's specific rating if logged in
         if (user) {
           try {
             const ratingsResponse = await api.get(`/summaries/${summaryId}/ratings`);
@@ -316,7 +316,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                   </span>
                 )}
               </div>
-              {summary.avgRating != null && (
+              {summary.avgRating !== null && summary.avgRating !== undefined && (
                 <div className="flex items-center gap-2 text-gray-600">
                   <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   <span className="font-medium">{summary.avgRating.toFixed(1)}</span>
