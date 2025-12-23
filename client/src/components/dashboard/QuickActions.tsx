@@ -1,14 +1,15 @@
 import { motion } from 'motion/react';
-import { Upload, MessageCircle, Wrench } from 'lucide-react';
+import { Upload, MessageCircle, Wrench, Plus } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface QuickActionsProps {
   onNavigateUpload?: () => void;
   onNavigateForum?: () => void;
   onNavigateTools?: () => void;
+  onAddTool?: () => void;
 }
 
-export function QuickActions({ onNavigateUpload, onNavigateForum, onNavigateTools }: QuickActionsProps) {
+export function QuickActions({ onNavigateUpload, onNavigateForum, onNavigateTools, onAddTool }: QuickActionsProps) {
   const actions = [
     {
       icon: Upload,
@@ -34,9 +35,17 @@ export function QuickActions({ onNavigateUpload, onNavigateForum, onNavigateTool
       hoverGradient: 'hover:from-green-600 hover:to-green-700',
       onClick: onNavigateTools,
     },
+    {
+      icon: Plus,
+      label: 'הוסף כלי חדש',
+      emoji: '➕',
+      gradient: 'from-orange-500 to-orange-600',
+      hoverGradient: 'hover:from-orange-600 hover:to-orange-700',
+      onClick: onAddTool,
+    },
   ];
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {actions.map((action, index) => (
         <motion.div
           key={action.label}

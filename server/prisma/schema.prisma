@@ -35,6 +35,7 @@ model User {
   forumRatings  ForumRating[]
   tools         Tool[]
   helpRequests  HelpRequest[]
+  favorites     Favorite[]
   
   @@map("users")
 }
@@ -75,6 +76,7 @@ model Summary {
   
   ratings     Rating[]
   comments    Comment[]
+  favorites   Favorite[]
   
   @@map("summaries")
 }
@@ -173,6 +175,8 @@ model Tool {
   addedById   Int
   addedBy     User     @relation(fields: [addedById], references: [id], onDelete: Cascade)
   
+  favorites   Favorite[]
+  
   @@map("tools")
 }
 
@@ -190,4 +194,22 @@ model HelpRequest {
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   
   @@map("help_requests")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  summaryId Int?
+  summary   Summary? @relation(fields: [summaryId], references: [id], onDelete: Cascade)
+  
+  toolId    Int?
+  tool      Tool?    @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, summaryId])
+  @@unique([userId, toolId])
+  @@map("favorites")
 }
