@@ -34,6 +34,7 @@ model User {
   forumComments ForumComment[]
   forumRatings  ForumRating[]
   tools         Tool[]
+  toolRatings   ToolRating[]
   helpRequests  HelpRequest[]
   favorites     Favorite[]
   
@@ -170,12 +171,14 @@ model Tool {
   url         String
   description String?
   category    String?
+  avgRating   Float?
   createdAt   DateTime @default(now())
   
   addedById   Int
   addedBy     User     @relation(fields: [addedById], references: [id], onDelete: Cascade)
   
   favorites   Favorite[]
+  ratings     ToolRating[]
   
   @@map("tools")
 }
@@ -212,4 +215,19 @@ model Favorite {
   @@unique([userId, summaryId])
   @@unique([userId, toolId])
   @@map("favorites")
+}
+
+model ToolRating {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1-5
+  createdAt DateTime @default(now())
+  
+  toolId    Int
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([toolId, userId])
+  @@map("tool_ratings")
 }
