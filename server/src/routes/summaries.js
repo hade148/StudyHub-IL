@@ -336,4 +336,39 @@ router.post('/:id/comments', authenticate, commentValidation, async (req, res) =
   }
 });
 
+// GET /api/summaries/:id/ratings - Get ratings for a summary
+router.get('/:id/ratings', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const ratings = await prisma.rating.findMany({
+      where: { summaryId: parseInt(id) },
+      include: {
+        user: { select: { id: true, fullName: true } }
+      },
+      orderBy: { date: 'desc' }
+    });
+
+    const avgRating = ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+      : null;
+
+    let userRating = null;
+    if (req.user) {
+      const rating = ratings.find(r => r.userId === req.user.id);
+      userRating = rating ? rating.rating : null;
+    }
+
+    res.json({
+      ratings,
+      avgRating,
+      userRating,
+      totalRatings: ratings.length
+    });
+  } catch (error) {
+    console.error('Get summary ratings error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
+  }
+});
+
 module.exports = router;
