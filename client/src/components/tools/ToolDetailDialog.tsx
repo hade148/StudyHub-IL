@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { X, Star, ExternalLink, Heart, User as UserIcon } from 'lucide-react';
+import { X, Star, ExternalLink, Heart } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import api from '../../utils/api';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface ToolDetailDialogProps {
   tool: {
