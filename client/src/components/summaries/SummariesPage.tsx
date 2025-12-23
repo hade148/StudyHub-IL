@@ -153,11 +153,11 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
         result.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
         break;
       case 'downloads':
-        // Downloads not available in API, sort by rating as fallback
-        result.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+        // Downloads tracking not implemented, sort by comments as a proxy for popularity
+        result.sort((a, b) => b._count.comments - a._count.comments);
         break;
       case 'views':
-        // Views not available in API, sort by comments as fallback
+        // Views tracking not implemented, sort by comments as a proxy for engagement
         result.sort((a, b) => b._count.comments - a._count.comments);
         break;
       case 'title':
@@ -215,17 +215,17 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
       courseFullName: apiSummary.course.courseName,
       institution: apiSummary.course.institution,
       rating: apiSummary.avgRating || 0,
-      views: 0, // Not available from API
-      downloads: 0, // Not available from API
+      views: 0, // View tracking not implemented yet
+      downloads: 0, // Download tracking not implemented yet
       comments: apiSummary._count.comments,
       fileType: fileExt,
-      fileSize: '0 MB', // Not available from API
-      pages: 0, // Not available from API
+      fileSize: '', // File size not available from API
+      pages: 0, // Page count not available from API
       description: apiSummary.description || '',
       uploader: apiSummary.uploadedBy.fullName,
       uploadDate: new Date(apiSummary.uploadDate).toLocaleDateString('he-IL'),
-      tags: [], // Not available from API
-      isFavorite: false, // Not available from API
+      tags: [], // Tags not implemented yet
+      isFavorite: false, // Favorites not implemented yet
     };
   };
 

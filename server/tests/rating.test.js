@@ -303,7 +303,7 @@ describe('Rating API Tests', () => {
         .get('/api/summaries');
 
       expect(summariesRes.statusCode).toBe(200);
-      const summary = summariesRes.body.find((s: any) => s.id === summaryId);
+      const summary = summariesRes.body.find((s) => s.id === summaryId);
       expect(summary).toBeDefined();
       expect(summary.avgRating).toBe(2);
     });
