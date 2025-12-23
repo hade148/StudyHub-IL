@@ -263,7 +263,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
             </div>
             
             <div className="flex items-center gap-3">
-              {summary.avgRating && (
+              {summary.avgRating && summary.avgRating > 0 && (
                 <div className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-3 py-1 rounded-lg">
                   <Star className="w-4 h-4 fill-yellow-500" />
                   <span>{summary.avgRating.toFixed(1)}</span>
@@ -344,7 +344,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                 </div>
                 
                 {/* Current Rating Display */}
-                {summary.avgRating && (
+                {summary.avgRating && summary.avgRating > 0 && (
                   <div className="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded-lg mr-4">
                     <span className="text-sm text-gray-600">ממוצע:</span>
                     <span className="font-bold text-yellow-700">{summary.avgRating.toFixed(1)}</span>
