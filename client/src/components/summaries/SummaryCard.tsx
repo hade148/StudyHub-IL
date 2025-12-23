@@ -67,10 +67,12 @@ export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
         </Badge>
 
         {/* Rating Badge */}
-        <Badge className="absolute top-3 left-14 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 flex items-center gap-1">
-          <span>⭐</span>
-          {summary.rating}
-        </Badge>
+        {summary.rating > 0 && (
+          <Badge className="absolute top-3 left-14 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 flex items-center gap-1">
+            <span>⭐</span>
+            {summary.rating.toFixed(1)}
+          </Badge>
+        )}
       </div>
 
       {/* Content Section */}
