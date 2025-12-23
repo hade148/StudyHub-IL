@@ -12,6 +12,7 @@ interface SummaryCardProps {
     courseFullName: string;
     institution: string;
     rating: number;
+    ratingCount: number;
     views: number;
     downloads: number;
     comments: number;
@@ -69,7 +70,10 @@ export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
         {/* Rating Badge */}
         <Badge className="absolute top-3 left-14 bg-yellow-100 text-yellow-700 hover:bg-yellow-100 flex items-center gap-1">
           <span>⭐</span>
-          {summary.rating}
+          {summary.rating > 0 ? summary.rating.toFixed(1) : '0.0'}
+          {summary.ratingCount > 0 && (
+            <span className="text-xs">({summary.ratingCount})</span>
+          )}
         </Badge>
       </div>
 

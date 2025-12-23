@@ -46,6 +46,7 @@ interface TransformedSummary {
   courseFullName: string;
   institution: string;
   rating: number;
+  ratingCount: number;
   views: number;
   downloads: number;
   comments: number;
@@ -113,6 +114,7 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
             courseFullName: summary.course.courseName,
             institution: summary.course.institution,
             rating: summary.avgRating || 0,
+            ratingCount: summary._count.ratings,
             views: 0, // Not tracked in current schema
             downloads: 0, // Not tracked in current schema
             comments: summary._count.comments,
