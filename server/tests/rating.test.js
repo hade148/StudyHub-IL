@@ -213,4 +213,99 @@ describe('Rating API Tests', () => {
       expect(res.body).toHaveProperty('error');
     });
   });
+
+  describe('Multi-user Rating Visibility', () => {
+    let token2;
+    let userId2;
+
+    beforeAll(async () => {
+      // Create a second test user
+      const registerRes = await request(app)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'Rating Test User 2',
+          email: 'ratingtest2@example.com',
+          password: 'password123'
+        });
+
+      token2 = registerRes.body.token;
+      userId2 = registerRes.body.user.id;
+    });
+
+    afterAll(async () => {
+      // Clean up second user
+      await prisma.user.deleteMany({
+        where: { email: 'ratingtest2@example.com' }
+      });
+    });
+
+    it('should show updated avgRating to all users after multiple ratings', async () => {
+      // User 1 rates with 5 stars
+      const rating1Res = await request(app)
+        .post(`/api/summaries/${summaryId}/rate`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ rating: 5 });
+
+      expect(rating1Res.statusCode).toBe(200);
+      expect(rating1Res.body.avgRating).toBe(5);
+      expect(rating1Res.body.totalRatings).toBe(1);
+
+      // User 2 rates with 3 stars
+      const rating2Res = await request(app)
+        .post(`/api/summaries/${summaryId}/rate`)
+        .set('Authorization', `Bearer ${token2}`)
+        .send({ rating: 3 });
+
+      expect(rating2Res.statusCode).toBe(200);
+      expect(rating2Res.body.avgRating).toBe(4); // (5 + 3) / 2 = 4
+      expect(rating2Res.body.totalRatings).toBe(2);
+
+      // Both users should see the same avgRating when fetching summary
+      const summaryRes1 = await request(app)
+        .get(`/api/summaries/${summaryId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+      const summaryRes2 = await request(app)
+        .get(`/api/summaries/${summaryId}`)
+        .set('Authorization', `Bearer ${token2}`);
+
+      expect(summaryRes1.statusCode).toBe(200);
+      expect(summaryRes2.statusCode).toBe(200);
+      expect(summaryRes1.body.avgRating).toBe(4);
+      expect(summaryRes2.body.avgRating).toBe(4);
+      expect(summaryRes1.body.ratings.length).toBe(2);
+      expect(summaryRes2.body.ratings.length).toBe(2);
+    });
+
+    it('should show updated avgRating to unauthenticated users', async () => {
+      // Unauthenticated user fetches summary
+      const summaryRes = await request(app)
+        .get(`/api/summaries/${summaryId}`);
+
+      expect(summaryRes.statusCode).toBe(200);
+      expect(summaryRes.body.avgRating).toBe(4); // Should match authenticated users
+      expect(summaryRes.body.ratings.length).toBe(2);
+    });
+
+    it('should reflect rating updates in summary list', async () => {
+      // User 1 updates their rating to 1 star
+      const updateRes = await request(app)
+        .post(`/api/summaries/${summaryId}/rate`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ rating: 1 });
+
+      expect(updateRes.statusCode).toBe(200);
+      expect(updateRes.body.avgRating).toBe(2); // (1 + 3) / 2 = 2
+      expect(updateRes.body.totalRatings).toBe(2);
+
+      // Fetch all summaries and verify avgRating is updated
+      const summariesRes = await request(app)
+        .get('/api/summaries');
+
+      expect(summariesRes.statusCode).toBe(200);
+      const summary = summariesRes.body.find((s: any) => s.id === summaryId);
+      expect(summary).toBeDefined();
+      expect(summary.avgRating).toBe(2);
+    });
+  });
 });
