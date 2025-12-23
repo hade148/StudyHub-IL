@@ -33,6 +33,16 @@ const deleteToolLimiter = rateLimit({
   keyGenerator: (req) => req.user?.id?.toString() || req.ip
 });
 
+// Rate limiter for tool rating - 100 ratings per hour per user
+const rateToolLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100,
+  message: 'יותר מדי ניסיונות לדירוג. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
+
 // GET /api/tools - Get all tools
 router.get('/', optionalAuth, async (req, res) => {
   try {
@@ -165,7 +175,7 @@ router.delete('/:id', authenticate, deleteToolLimiter, async (req, res) => {
 });
 
 // POST /api/tools/:id/rate - Rate a tool
-router.post('/:id/rate', authenticate, toolRatingValidation, async (req, res) => {
+router.post('/:id/rate', authenticate, rateToolLimiter, toolRatingValidation, async (req, res) => {
   try {
     const { id } = req.params;
     const { rating } = req.body;
