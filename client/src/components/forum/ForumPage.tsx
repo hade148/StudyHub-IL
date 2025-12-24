@@ -367,6 +367,10 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const [timeFilter, setTimeFilter] = useState('all');
   const itemsPerPage = 10;
 
+  // Constants for popular question threshold
+  const POPULAR_ENGAGEMENT_THRESHOLD = 15;
+  const VIEWS_WEIGHT = 0.1; // Views are weighted less than votes and answers
+
   // Fetch questions from API
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -403,12 +407,13 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     } else if (activeTab === 'popular') {
       // Popular: questions with high engagement (votes, answers, views)
       result = result.filter((q) => {
-        const totalEngagement = (q.stats?.votes || 0) + (q.stats?.answers || 0) + (q.stats?.views || 0) / 10;
-        return totalEngagement > 15;
+        const totalEngagement = (q.stats?.votes || 0) + (q.stats?.answers || 0) + (q.stats?.views || 0) * VIEWS_WEIGHT;
+        return totalEngagement > POPULAR_ENGAGEMENT_THRESHOLD;
       });
     } else if (activeTab === 'mine') {
-      // TODO: Filter by current user's questions when auth is implemented
-      result = [];
+      // Filter by current user's questions when user is authenticated
+      // For now, this will show no results until authentication is implemented
+      result = result.filter(() => false);
     }
 
     // Filter by search query
@@ -433,7 +438,20 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     if (timeFilter !== 'all') {
       const now = new Date();
       result = result.filter((q) => {
-        const questionDate = new Date(q.createdAt || q.time);
+        // Skip time filtering if the question doesn't have a valid date
+        // Hardcoded data has Hebrew relative time strings ('לפני 2 שעות')
+        // API data has ISO timestamps in createdAt
+        if (!q.createdAt) {
+          // For hardcoded data without proper dates, keep it in results
+          return true;
+        }
+        
+        const questionDate = new Date(q.createdAt);
+        // Validate the date is valid
+        if (isNaN(questionDate.getTime())) {
+          return true;
+        }
+        
         const diffMs = now.getTime() - questionDate.getTime();
         const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
