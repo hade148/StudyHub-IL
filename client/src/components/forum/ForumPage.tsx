@@ -654,12 +654,14 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                   <div className="text-6xl">📭</div>
                   <h3>אין לך שאלות עדיין</h3>
                   <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
-                  <Button 
-                    onClick={onNavigateNewQuestion}
-                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
-                    <span className="text-xl ml-2">❓</span>
-                    שאל שאלה ראשונה
-                  </Button>
+                  {onNavigateNewQuestion && (
+                    <Button 
+                      onClick={onNavigateNewQuestion}
+                      className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
+                      <span className="text-xl ml-2">❓</span>
+                      שאל שאלה ראשונה
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">

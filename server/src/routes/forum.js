@@ -43,7 +43,11 @@ router.get('/', optionalAuth, async (req, res) => {
     if (category) where.category = category;
     
     // Filter by current user's questions
-    if (myQuestions === 'true' && req.user) {
+    if (myQuestions === 'true') {
+      // If not authenticated, return empty array
+      if (!req.user) {
+        return res.json([]);
+      }
       where.authorId = req.user.id;
     }
     
