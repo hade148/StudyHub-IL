@@ -371,12 +371,34 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const POPULAR_ENGAGEMENT_THRESHOLD = 15;
   const VIEWS_WEIGHT = 0.1; // Views are weighted less than votes and answers
 
-  // Fetch questions from API
+  // Fetch questions from API with filters
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/forum');
+        
+        // Build query parameters
+        const params = new URLSearchParams();
+        
+        // Add search query if present
+        if (searchQuery.trim()) {
+          params.append('search', searchQuery.trim());
+        }
+        
+        // Add category filter if not 'all'
+        if (categoryFilter !== 'all') {
+          params.append('category', categoryFilter);
+        }
+        
+        // Add answered filter based on active tab
+        if (activeTab === 'unanswered') {
+          params.append('answered', 'false');
+        }
+        
+        const queryString = params.toString();
+        const url = queryString ? `/forum?${queryString}` : '/forum';
+        
+        const response = await api.get(url);
         setQuestions(response.data);
       } catch (error) {
         console.error('Error fetching questions:', error);
@@ -387,24 +409,21 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
       }
     };
     fetchQuestions();
-  }, []);
+  }, [searchQuery, categoryFilter, activeTab]);
 
   const unansweredCount = questions.filter((q) => {
     const isAnswered = q.isAnswered ?? q.stats?.isAnswered ?? false;
     return !isAnswered;
   }).length;
   
-  // Apply filters and sorting with memoization for better performance
+  // Apply client-side filters and sorting with memoization for better performance
+  // Note: Search and category filtering are now handled by the backend API
   const filteredQuestions = useMemo(() => {
     let result = [...questions];
 
-    // Filter by tab
-    if (activeTab === 'unanswered') {
-      result = result.filter((q) => {
-        const isAnswered = q.isAnswered ?? q.stats?.isAnswered ?? false;
-        return !isAnswered;
-      });
-    } else if (activeTab === 'popular') {
+    // Filter by tab (client-side only for 'popular' and 'mine' tabs)
+    // 'unanswered' is handled by the backend via the answered query parameter
+    if (activeTab === 'popular') {
       // Popular: questions with high engagement (votes, answers, views)
       result = result.filter((q) => {
         const totalEngagement = (q.stats?.votes || 0) + (q.stats?.answers || 0) + (q.stats?.views || 0) * VIEWS_WEIGHT;
@@ -416,23 +435,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
       result = result.filter(() => false);
     }
 
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
-      result = result.filter((q) => {
-        const inTitle = (q.title || '').toLowerCase().includes(query);
-        const inDescription = (q.description || '').toLowerCase().includes(query);
-        const inCategory = (q.category || '').toLowerCase().includes(query);
-        const inTags = (q.tags || []).join(' ').toLowerCase().includes(query);
-        const inAuthor = (q.author?.name || '').toLowerCase().includes(query);
-        return inTitle || inDescription || inCategory || inTags || inAuthor;
-      });
-    }
-
-    // Filter by category
-    if (categoryFilter !== 'all') {
-      result = result.filter((q) => q.category === categoryFilter);
-    }
+    // Search and category filtering are now handled server-side
 
     // Filter by time
     if (timeFilter !== 'all') {
@@ -498,7 +501,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     }
 
     return result;
-  }, [questions, activeTab, searchQuery, categoryFilter, sortBy, timeFilter]);
+  }, [questions, activeTab, sortBy, timeFilter]);
 
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
   const currentQuestions = filteredQuestions.slice(
