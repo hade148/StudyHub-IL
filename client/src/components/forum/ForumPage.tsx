@@ -464,8 +464,8 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
       case 'unanswered':
         result.sort((a, b) => {
           // Handle both data structures: API has isAnswered at root, hardcoded has it in stats
-          const aAnswered = a.isAnswered || a.stats?.isAnswered || false;
-          const bAnswered = b.isAnswered || b.stats?.isAnswered || false;
+          const aAnswered = a.isAnswered ?? a.stats?.isAnswered ?? false;
+          const bAnswered = b.isAnswered ?? b.stats?.isAnswered ?? false;
           if (aAnswered === bAnswered) return 0;
           return aAnswered ? 1 : -1;
         });
