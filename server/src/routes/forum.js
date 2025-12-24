@@ -35,12 +35,22 @@ const upload = multer({
 // GET /api/forum - Get all forum posts
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { courseId, search, answered, category } = req.query;
+    const { courseId, search, answered, category, myQuestions } = req.query;
 
     const where = {};
     if (courseId) where.courseId = parseInt(courseId);
     if (answered !== undefined) where.isAnswered = answered === 'true';
     if (category) where.category = category;
+    
+    // Filter by current user's questions
+    if (myQuestions === 'true') {
+      // If not authenticated, return empty array
+      if (!req.user) {
+        return res.json([]);
+      }
+      where.authorId = req.user.id;
+    }
+    
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
