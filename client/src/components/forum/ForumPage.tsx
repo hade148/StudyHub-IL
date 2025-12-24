@@ -15,6 +15,7 @@ import {
 } from '../ui/pagination';
 import { QuestionCard } from './QuestionCard';
 import { ForumFilters } from './ForumFilters';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
 const questionsData = [
@@ -362,6 +363,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 10;
+  const { isAuthenticated } = useAuth();
 
   // Constants for popular question threshold
   const POPULAR_ENGAGEMENT_THRESHOLD = 15;
@@ -384,6 +386,11 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
         // Add answered filter based on active tab
         if (activeTab === 'unanswered') {
           params.append('answered', 'false');
+        }
+        
+        // Add myQuestions filter for 'mine' tab
+        if (activeTab === 'mine') {
+          params.append('myQuestions', 'true');
         }
         
         const queryString = params.toString();
@@ -412,21 +419,17 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const filteredQuestions = useMemo(() => {
     let result = [...questions];
 
-    // Filter by tab (client-side only for 'popular' and 'mine' tabs)
-    // 'unanswered' is handled by the backend via the answered query parameter
+    // Filter by tab (client-side only for 'popular' tab)
+    // 'unanswered' and 'mine' are handled by the backend via query parameters
     if (activeTab === 'popular') {
       // Popular: questions with high engagement (votes, answers, views)
       result = result.filter((q) => {
         const totalEngagement = (q.stats?.votes || 0) + (q.stats?.answers || 0) + (q.stats?.views || 0) * VIEWS_WEIGHT;
         return totalEngagement > POPULAR_ENGAGEMENT_THRESHOLD;
       });
-    } else if (activeTab === 'mine') {
-      // Filter by current user's questions when user is authenticated
-      // For now, this will show no results until authentication is implemented
-      result = result.filter(() => false);
     }
 
-    // Search filtering is now handled server-side
+    // Search and 'mine' filtering are now handled server-side
 
     return result;
   }, [questions, activeTab]);
@@ -640,15 +643,36 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                 searchQuery={searchQuery}
                 onSearchChange={handleSearchChange}
               />
-              <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
-                <div className="text-6xl">📭</div>
-                <h3>אין לך שאלות עדיין</h3>
-                <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
-                <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
-                  <span className="text-xl ml-2">❓</span>
-                  שאל שאלה ראשונה
-                </Button>
-              </div>
+              {!isAuthenticated ? (
+                <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
+                  <div className="text-6xl">🔒</div>
+                  <h3>נדרש כניסה למערכת</h3>
+                  <p className="text-gray-600">התחבר כדי לראות את השאלות שלך</p>
+                </div>
+              ) : currentQuestions.length === 0 ? (
+                <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
+                  <div className="text-6xl">📭</div>
+                  <h3>אין לך שאלות עדיין</h3>
+                  <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
+                  <Button 
+                    onClick={onNavigateNewQuestion}
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
+                    <span className="text-xl ml-2">❓</span>
+                    שאל שאלה ראשונה
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {currentQuestions.map((question, index) => (
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      index={index}
+                      onClick={() => onNavigatePost?.(question.id)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
