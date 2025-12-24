@@ -8,7 +8,27 @@ import {
   SelectValue,
 } from '../ui/select';
 
-export function ForumFilters() {
+interface ForumFiltersProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  categoryFilter: string;
+  onCategoryFilterChange: (category: string) => void;
+  sortBy: string;
+  onSortChange: (sort: string) => void;
+  timeFilter: string;
+  onTimeFilterChange: (time: string) => void;
+}
+
+export function ForumFilters({
+  searchQuery,
+  onSearchChange,
+  categoryFilter,
+  onCategoryFilterChange,
+  sortBy,
+  onSortChange,
+  timeFilter,
+  onTimeFilterChange,
+}: ForumFiltersProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex flex-col md:flex-row gap-4">
@@ -19,27 +39,29 @@ export function ForumFilters() {
             type="text"
             placeholder="חפש שאלות..."
             className="pr-10 border-gray-300"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
 
         {/* Category Filter */}
-        <Select defaultValue="all">
+        <Select value={categoryFilter} onValueChange={onCategoryFilterChange}>
           <SelectTrigger className="w-full md:w-[180px] border-gray-300">
             <SelectValue placeholder="כל הקטגוריות" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הקטגוריות</SelectItem>
-            <SelectItem value="algorithms">אלגוריתמים</SelectItem>
-            <SelectItem value="math">מתמטיקה</SelectItem>
-            <SelectItem value="physics">פיזיקה</SelectItem>
-            <SelectItem value="chemistry">כימיה</SelectItem>
-            <SelectItem value="resources">משאבי לימוד</SelectItem>
-            <SelectItem value="general">כללי</SelectItem>
+            <SelectItem value="אלגוריתמים">אלגוריתמים</SelectItem>
+            <SelectItem value="מתמטיקה">מתמטיקה</SelectItem>
+            <SelectItem value="פיזיקה">פיזיקה</SelectItem>
+            <SelectItem value="כימיה">כימיה</SelectItem>
+            <SelectItem value="משאבי לימוד">משאבי לימוד</SelectItem>
+            <SelectItem value="כללי">כללי</SelectItem>
           </SelectContent>
         </Select>
 
         {/* Sort By */}
-        <Select defaultValue="newest">
+        <Select value={sortBy} onValueChange={onSortChange}>
           <SelectTrigger className="w-full md:w-[150px] border-gray-300">
             <SelectValue placeholder="מיון" />
           </SelectTrigger>
@@ -52,7 +74,7 @@ export function ForumFilters() {
         </Select>
 
         {/* Time Filter */}
-        <Select defaultValue="all">
+        <Select value={timeFilter} onValueChange={onTimeFilterChange}>
           <SelectTrigger className="w-full md:w-[150px] border-gray-300">
             <SelectValue placeholder="זמן" />
           </SelectTrigger>
