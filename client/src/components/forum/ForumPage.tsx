@@ -385,7 +385,10 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     fetchQuestions();
   }, []);
 
-  const unansweredCount = questions.filter((q) => !q.isAnswered).length;
+  const unansweredCount = questions.filter((q) => {
+    const isAnswered = q.isAnswered ?? q.stats?.isAnswered ?? false;
+    return !isAnswered;
+  }).length;
   
   // Apply filters and sorting
   const getFilteredQuestions = () => {
@@ -393,7 +396,10 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
 
     // Filter by tab
     if (activeTab === 'unanswered') {
-      result = result.filter((q) => !q.isAnswered);
+      result = result.filter((q) => {
+        const isAnswered = q.isAnswered ?? q.stats?.isAnswered ?? false;
+        return !isAnswered;
+      });
     } else if (activeTab === 'popular') {
       // Popular: questions with high engagement (votes, answers, views)
       result = result.filter((q) => {
@@ -457,8 +463,11 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
         break;
       case 'unanswered':
         result.sort((a, b) => {
-          if (a.stats?.isAnswered === b.stats?.isAnswered) return 0;
-          return a.stats?.isAnswered ? 1 : -1;
+          // Handle both data structures: API has isAnswered at root, hardcoded has it in stats
+          const aAnswered = a.isAnswered || a.stats?.isAnswered || false;
+          const bAnswered = b.isAnswered || b.stats?.isAnswered || false;
+          if (aAnswered === bAnswered) return 0;
+          return aAnswered ? 1 : -1;
         });
         break;
       case 'votes':
