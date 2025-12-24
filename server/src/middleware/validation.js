@@ -192,6 +192,16 @@ const toolValidation = [
 ];
 
 /**
+ * Validation rules for rating a tool
+ */
+const toolRatingValidation = [
+  body('rating')
+    .notEmpty().withMessage('דירוג הוא שדה חובה')
+    .isInt({ min: 1, max: 5 }).withMessage('דירוג חייב להיות בין 1 ל-5'),
+  validate
+];
+
+/**
  * Validation rules for updating user profile
  */
 const profileUpdateValidation = [
@@ -245,6 +255,7 @@ module.exports = {
   forumRatingValidation,
   commentValidation,
   toolValidation,
+  toolRatingValidation,
   profileUpdateValidation,
   validate
 };

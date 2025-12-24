@@ -2,10 +2,16 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { toolValidation } = require('../middleware/validation');
+const { toolValidation, toolRatingValidation } = require('../middleware/validation');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Helper function to calculate average rating
+const calculateAverageRating = (ratings) => {
+  if (ratings.length === 0) return null;
+  return ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+};
 
 // Rate limiter for tool creation - 10 tools per hour per user
 const createToolLimiter = rateLimit({
@@ -22,6 +28,16 @@ const deleteToolLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 20,
   message: 'יותר מדי ניסיונות למחיקת כלי. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
+
+// Rate limiter for tool rating - 100 ratings per hour per user
+const rateToolLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100,
+  message: 'יותר מדי ניסיונות לדירוג. נסה שוב בעוד שעה.',
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => req.user?.id?.toString() || req.ip
@@ -48,7 +64,8 @@ router.get('/', optionalAuth, async (req, res) => {
         addedBy: { select: { id: true, fullName: true } },
         favorites: req.user ? {
           where: { userId: req.user.id }
-        } : false
+        } : false,
+        _count: { select: { ratings: true } }
       }
     });
 
@@ -56,7 +73,8 @@ router.get('/', optionalAuth, async (req, res) => {
     const toolsWithFavorite = tools.map(tool => ({
       ...tool,
       isFavorite: req.user ? tool.favorites.length > 0 : false,
-      favorites: undefined // Remove favorites array from response
+      favorites: undefined, // Remove favorites array from response
+      ratingCount: tool._count.ratings
     }));
 
     res.json(toolsWithFavorite);
@@ -73,10 +91,12 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const tool = await prisma.tool.findUnique({
       where: { id: parseInt(id) },
       include: {
-        addedBy: { select: { fullName: true, email: true } },
+        addedBy: { select: { id: true, fullName: true, email: true } },
         favorites: req.user ? {
           where: { userId: req.user.id }
-        } : false
+        } : false,
+        ratings: { include: { user: { select: { fullName: true } } } },
+        _count: { select: { ratings: true } }
       }
     });
 
@@ -87,7 +107,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const toolWithFavorite = {
       ...tool,
       isFavorite: req.user ? tool.favorites.length > 0 : false,
-      favorites: undefined
+      favorites: undefined,
+      ratingCount: tool._count.ratings
     };
 
     res.json(toolWithFavorite);
@@ -150,6 +171,83 @@ router.delete('/:id', authenticate, deleteToolLimiter, async (req, res) => {
   } catch (error) {
     console.error('Delete tool error:', error);
     res.status(500).json({ error: 'שגיאה במחיקת כלי' });
+  }
+});
+
+// POST /api/tools/:id/rate - Rate a tool
+router.post('/:id/rate', authenticate, rateToolLimiter, toolRatingValidation, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating } = req.body;
+
+    // Upsert rating
+    const newRating = await prisma.toolRating.upsert({
+      where: {
+        toolId_userId: {
+          toolId: parseInt(id),
+          userId: req.user.id
+        }
+      },
+      update: { rating },
+      create: {
+        rating,
+        toolId: parseInt(id),
+        userId: req.user.id
+      }
+    });
+
+    // Update average rating
+    const ratings = await prisma.toolRating.findMany({
+      where: { toolId: parseInt(id) }
+    });
+    const avgRating = calculateAverageRating(ratings);
+
+    await prisma.tool.update({
+      where: { id: parseInt(id) },
+      data: { avgRating }
+    });
+
+    res.json({
+      message: 'דירוג נשמר בהצלחה',
+      rating: newRating,
+      avgRating
+    });
+  } catch (error) {
+    console.error('Rate tool error:', error);
+    res.status(500).json({ error: 'שגיאה בדירוג כלי' });
+  }
+});
+
+// GET /api/tools/:id/ratings - Get ratings for a tool
+router.get('/:id/ratings', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const ratings = await prisma.toolRating.findMany({
+      where: { toolId: parseInt(id) },
+      include: {
+        user: { select: { id: true, fullName: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const avgRating = calculateAverageRating(ratings);
+
+    let userRating = null;
+    if (req.user) {
+      const rating = ratings.find(r => r.userId === req.user.id);
+      userRating = rating ? rating.rating : null;
+    }
+
+    res.json({
+      ratings,
+      avgRating,
+      userRating,
+      totalRatings: ratings.length
+    });
+  } catch (error) {
+    console.error('Get tool ratings error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
   }
 });
 

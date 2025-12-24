@@ -10,6 +10,12 @@ const azureStorage = require('../utils/azureStorage');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Helper function to calculate average rating
+const calculateAverageRating = (ratings) => {
+  if (ratings.length === 0) return null;
+  return ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+};
+
 // Multer configuration for file uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
 
@@ -291,7 +297,7 @@ router.post('/:id/rate', authenticate, ratingValidation, async (req, res) => {
     const ratings = await prisma.rating.findMany({
       where: { summaryId: parseInt(id) }
     });
-    const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+    const avgRating = calculateAverageRating(ratings);
 
     await prisma.summary.update({
       where: { id: parseInt(id) },
@@ -333,6 +339,39 @@ router.post('/:id/comments', authenticate, commentValidation, async (req, res) =
   } catch (error) {
     console.error('Add comment error:', error);
     res.status(500).json({ error: 'שגיאה בהוספת תגובה' });
+  }
+});
+
+// GET /api/summaries/:id/ratings - Get ratings for a summary
+router.get('/:id/ratings', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const ratings = await prisma.rating.findMany({
+      where: { summaryId: parseInt(id) },
+      include: {
+        user: { select: { id: true, fullName: true } }
+      },
+      orderBy: { date: 'desc' }
+    });
+
+    const avgRating = calculateAverageRating(ratings);
+
+    let userRating = null;
+    if (req.user) {
+      const rating = ratings.find(r => r.userId === req.user.id);
+      userRating = rating ? rating.rating : null;
+    }
+
+    res.json({
+      ratings,
+      avgRating,
+      userRating,
+      totalRatings: ratings.length
+    });
+  } catch (error) {
+    console.error('Get summary ratings error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
   }
 });
 

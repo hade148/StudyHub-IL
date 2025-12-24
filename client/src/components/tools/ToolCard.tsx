@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Heart } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
@@ -10,10 +10,18 @@ interface ToolCardProps {
     description: string;
     url: string;
     category: string;
+    avgRating?: number | null;
+    ratingCount?: number;
     isFavorite?: boolean;
+    addedBy?: {
+      id: number;
+      fullName: string;
+    };
+    createdAt?: string;
   };
   index: number;
   onToggleFavorite?: (toolId: number) => void;
+  onCardClick?: () => void;
 }
 
 const categoryGradients: Record<string, string> = {
@@ -32,11 +40,12 @@ const categoryEmojis: Record<string, string> = {
   'אחר': '📦',
 };
 
-export function ToolCard({ tool, index, onToggleFavorite }: ToolCardProps) {
+export function ToolCard({ tool, index, onToggleFavorite, onCardClick }: ToolCardProps) {
   const gradient = categoryGradients[tool.category] || categoryGradients['אחר'];
   const emoji = categoryEmojis[tool.category] || categoryEmojis['אחר'];
 
-  const handleUseTool = () => {
+  const handleUseTool = (e: React.MouseEvent) => {
+    e.stopPropagation();
     window.open(tool.url, '_blank', 'noopener,noreferrer');
   };
 
@@ -47,13 +56,20 @@ export function ToolCard({ tool, index, onToggleFavorite }: ToolCardProps) {
     }
   };
 
+  const handleCardClick = () => {
+    if (onCardClick) {
+      onCardClick();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       whileHover={{ scale: 1.05, boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)' }}
-      className={`bg-gradient-to-br ${gradient} rounded-xl shadow-lg p-8 text-white transition-all duration-300 relative overflow-hidden`}
+      onClick={handleCardClick}
+      className={`bg-gradient-to-br ${gradient} rounded-xl shadow-lg p-8 text-white transition-all duration-300 relative overflow-hidden cursor-pointer`}
     >
       {/* Favorite Button */}
       {onToggleFavorite && (
@@ -73,6 +89,17 @@ export function ToolCard({ tool, index, onToggleFavorite }: ToolCardProps) {
       <Badge className="absolute top-4 right-4 bg-white/20 text-white border-white/30 backdrop-blur-sm hover:bg-white/20">
         {tool.category}
       </Badge>
+
+      {/* Rating Badge */}
+      {tool.avgRating !== null && tool.avgRating !== undefined && (
+        <Badge className="absolute top-14 right-4 bg-white/20 text-white border-white/30 backdrop-blur-sm hover:bg-white/20 flex items-center gap-1">
+          <Star className="w-3 h-3 fill-white text-white" />
+          <span>{tool.avgRating > 0 ? tool.avgRating.toFixed(1) : '0.0'}</span>
+          {tool.ratingCount !== undefined && tool.ratingCount > 0 && (
+            <span className="text-xs">({tool.ratingCount})</span>
+          )}
+        </Badge>
+      )}
 
       {/* Decorative circles */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />

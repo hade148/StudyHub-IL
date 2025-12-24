@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { ToolCard } from './ToolCard';
 import { AddToolDialog } from './AddToolDialog';
+import { ToolDetailDialog } from './ToolDetailDialog';
 import api from '../../utils/api';
 
 interface Tool {
@@ -13,7 +14,14 @@ interface Tool {
   description: string;
   url: string;
   category: string;
+  avgRating: number | null;
+  ratingCount: number;
   isFavorite: boolean;
+  addedBy?: {
+    id: number;
+    fullName: string;
+  };
+  createdAt?: string;
 }
 
 interface ToolsPageProps {
@@ -27,6 +35,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
   const [error, setError] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 
   // Check URL params for addTool query
   useEffect(() => {
@@ -214,6 +223,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
                     tool={tool}
                     index={index}
                     onToggleFavorite={handleToggleFavorite}
+                    onCardClick={() => setSelectedTool(tool)}
                   />
                 ))}
               </div>
@@ -287,6 +297,17 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
         onClose={() => setIsAddDialogOpen(false)}
         onSuccess={handleAddSuccess}
       />
+
+      {/* Tool Detail Dialog */}
+      {selectedTool && (
+        <ToolDetailDialog
+          tool={selectedTool}
+          isOpen={!!selectedTool}
+          onClose={() => setSelectedTool(null)}
+          onToggleFavorite={handleToggleFavorite}
+          onRatingUpdate={loadTools}
+        />
+      )}
     </div>
   );
 }
