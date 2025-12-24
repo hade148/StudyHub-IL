@@ -410,7 +410,9 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   }, [searchQuery, activeTab]);
 
   const unansweredCount = questions.filter((q) => {
-    const isAnswered = q.isAnswered ?? q.stats?.isAnswered ?? false;
+    // A question is considered answered if it has comments or the isAnswered flag is true
+    const hasComments = (q._count?.comments || 0) > 0;
+    const isAnswered = q.isAnswered || q.stats?.isAnswered || hasComments;
     return !isAnswered;
   }).length;
   

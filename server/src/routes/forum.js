@@ -39,7 +39,6 @@ router.get('/', optionalAuth, async (req, res) => {
 
     const where = {};
     if (courseId) where.courseId = parseInt(courseId);
-    if (answered !== undefined) where.isAnswered = answered === 'true';
     if (category) where.category = category;
     
     // Filter by current user's questions
@@ -68,7 +67,21 @@ router.get('/', optionalAuth, async (req, res) => {
       }
     });
 
-    res.json(posts);
+    // Filter posts based on answered status
+    let filteredPosts = posts;
+    if (answered !== undefined) {
+      const shouldBeAnswered = answered === 'true';
+      filteredPosts = posts.filter(post => {
+        // A post is considered answered if:
+        // 1. It has the isAnswered flag set to true, OR
+        // 2. It has at least one comment
+        const hasComments = post._count.comments > 0;
+        const isAnswered = post.isAnswered || hasComments;
+        return shouldBeAnswered ? isAnswered : !isAnswered;
+      });
+    }
+
+    res.json(filteredPosts);
   } catch (error) {
     console.error('Get forum posts error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת פוסטים' });

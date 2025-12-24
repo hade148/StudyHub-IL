@@ -56,7 +56,9 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
   const displayAvatar = question.author.avatar || displayName.substring(0, 2);
   const views = question.views || question.stats?.views || 0;
   const answers = question._count?.comments || question.stats?.answers || 0;
-  const isAnswered = question.isAnswered || question.stats?.isAnswered || false;
+  // A question is considered answered if it has comments or the isAnswered flag is true
+  const hasComments = answers > 0;
+  const isAnswered = question.isAnswered || question.stats?.isAnswered || hasComments;
   const description = question.content || question.description || '';
   const displayTime = question.time || (question.createdAt ? new Date(question.createdAt).toLocaleDateString('he-IL') : '');
   
