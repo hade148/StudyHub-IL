@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, MessageCircle, Home } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -394,8 +394,8 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     return !isAnswered;
   }).length;
   
-  // Apply filters and sorting
-  const getFilteredQuestions = () => {
+  // Apply filters and sorting with memoization for better performance
+  const filteredQuestions = useMemo(() => {
     let result = [...questions];
 
     // Filter by tab
@@ -498,9 +498,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     }
 
     return result;
-  };
-
-  const filteredQuestions = getFilteredQuestions();
+  }, [questions, activeTab, searchQuery, categoryFilter, sortBy, timeFilter]);
 
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
   const currentQuestions = filteredQuestions.slice(
