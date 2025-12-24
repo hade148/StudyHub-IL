@@ -15,7 +15,6 @@ import {
 } from '../ui/pagination';
 import { QuestionCard } from './QuestionCard';
 import { ForumFilters } from './ForumFilters';
-import { ForumSidebar } from './ForumSidebar';
 import api from '../../utils/api';
 
 const questionsData = [
@@ -362,9 +361,6 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
-  const [timeFilter, setTimeFilter] = useState('all');
   const itemsPerPage = 10;
 
   // Constants for popular question threshold
@@ -383,11 +379,6 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
         // Add search query if present
         if (searchQuery.trim()) {
           params.append('search', searchQuery.trim());
-        }
-        
-        // Add category filter if not 'all'
-        if (categoryFilter !== 'all') {
-          params.append('category', categoryFilter);
         }
         
         // Add answered filter based on active tab
@@ -409,15 +400,15 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
       }
     };
     fetchQuestions();
-  }, [searchQuery, categoryFilter, activeTab]);
+  }, [searchQuery, activeTab]);
 
   const unansweredCount = questions.filter((q) => {
     const isAnswered = q.isAnswered ?? q.stats?.isAnswered ?? false;
     return !isAnswered;
   }).length;
   
-  // Apply client-side filters and sorting with memoization for better performance
-  // Note: Search and category filtering are now handled by the backend API
+  // Apply client-side filters with memoization for better performance
+  // Note: Search filtering is now handled by the backend API
   const filteredQuestions = useMemo(() => {
     let result = [...questions];
 
@@ -435,73 +426,10 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
       result = result.filter(() => false);
     }
 
-    // Search and category filtering are now handled server-side
-
-    // Filter by time
-    if (timeFilter !== 'all') {
-      const now = new Date();
-      result = result.filter((q) => {
-        // Skip time filtering if the question doesn't have a valid date
-        // Hardcoded data has relative time strings (e.g., 'before 2 hours')
-        // API data has ISO timestamps in createdAt
-        if (!q.createdAt) {
-          // For hardcoded data without proper dates, keep it in results
-          return true;
-        }
-        
-        const questionDate = new Date(q.createdAt);
-        // Validate the date is valid
-        if (isNaN(questionDate.getTime())) {
-          return true;
-        }
-        
-        const diffMs = now.getTime() - questionDate.getTime();
-        const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-        switch (timeFilter) {
-          case 'today':
-            return diffDays < 1;
-          case 'week':
-            return diffDays < 7;
-          case 'month':
-            return diffDays < 30;
-          case 'year':
-            return diffDays < 365;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Sort
-    switch (sortBy) {
-      case 'popular':
-        result.sort((a, b) => {
-          const aEngagement = (a.stats?.votes || 0) + (a.stats?.answers || 0);
-          const bEngagement = (b.stats?.votes || 0) + (b.stats?.answers || 0);
-          return bEngagement - aEngagement;
-        });
-        break;
-      case 'unanswered':
-        result.sort((a, b) => {
-          // Handle both data structures: API has isAnswered at root, hardcoded has it in stats
-          const aAnswered = a.isAnswered ?? a.stats?.isAnswered ?? false;
-          const bAnswered = b.isAnswered ?? b.stats?.isAnswered ?? false;
-          if (aAnswered === bAnswered) return 0;
-          return aAnswered ? 1 : -1;
-        });
-        break;
-      case 'votes':
-        result.sort((a, b) => (b.stats?.votes || 0) - (a.stats?.votes || 0));
-        break;
-      case 'newest':
-      default:
-        // Keep original order (assumed to be newest first from API)
-        break;
-    }
+    // Search filtering is now handled server-side
 
     return result;
-  }, [questions, activeTab, sortBy, timeFilter]);
+  }, [questions, activeTab]);
 
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
   const currentQuestions = filteredQuestions.slice(
@@ -509,24 +437,9 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     currentPage * itemsPerPage
   );
 
-  // Handler functions that reset to page 1 when filters change
+  // Handler function that resets to page 1 when search changes
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
-  };
-
-  const handleCategoryFilterChange = (category: string) => {
-    setCategoryFilter(category);
-    setCurrentPage(1);
-  };
-
-  const handleSortChange = (sort: string) => {
-    setSortBy(sort);
-    setCurrentPage(1);
-  };
-
-  const handleTimeFilterChange = (time: string) => {
-    setTimeFilter(time);
     setCurrentPage(1);
   };
 
@@ -599,189 +512,142 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           </TabsList>
 
           <TabsContent value="all" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Filters */}
-                <ForumFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={handleSearchChange}
-                  categoryFilter={categoryFilter}
-                  onCategoryFilterChange={handleCategoryFilterChange}
-                  sortBy={sortBy}
-                  onSortChange={handleSortChange}
-                  timeFilter={timeFilter}
-                  onTimeFilterChange={handleTimeFilterChange}
-                />
+            <div className="space-y-6">
+              {/* Filters */}
+              <ForumFilters
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+              />
 
-                {/* Questions List */}
-                <div className="space-y-4">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center py-12">
-                      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : currentQuestions.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      אין שאלות להצגה
-                    </div>
-                  ) : (
-                    currentQuestions.map((question, index) => (
-                      <QuestionCard 
-                        key={question.id} 
-                        question={question} 
-                        index={index}
-                        onClick={() => onNavigatePost?.(question.id)}
-                      />
-                    ))
-                  )}
-                </div>
-
-                {/* Pagination */}
-                <div className="flex flex-col items-center gap-4 pt-4">
-                  <div className="text-gray-600">
-                    מציג {(currentPage - 1) * itemsPerPage + 1}-
-                    {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך{' '}
-                    {filteredQuestions.length} שאלות
+              {/* Questions List */}
+              <div className="space-y-4">
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   </div>
-
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                          className={
-                            currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
-                          }
-                        />
-                      </PaginationItem>
-
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(
-                        (page) => (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        )
-                      )}
-
-                      {totalPages > 5 && (
-                        <PaginationItem>
-                          <PaginationEllipsis />
-                        </PaginationItem>
-                      )}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                          className={
-                            currentPage === totalPages
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
+                ) : currentQuestions.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    אין שאלות להצגה
+                  </div>
+                ) : (
+                  currentQuestions.map((question, index) => (
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      index={index}
+                      onClick={() => onNavigatePost?.(question.id)}
+                    />
+                  ))
+                )}
               </div>
 
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
-                <ForumSidebar />
+              {/* Pagination */}
+              <div className="flex flex-col items-center gap-4 pt-4">
+                <div className="text-gray-600">
+                  מציג {(currentPage - 1) * itemsPerPage + 1}-
+                  {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך{' '}
+                  {filteredQuestions.length} שאלות
+                </div>
+
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        className={
+                          currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                        }
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(
+                      (page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
+
+                    {totalPages > 5 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        className={
+                          currentPage === totalPages
+                            ? 'pointer-events-none opacity-50'
+                            : 'cursor-pointer'
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="unanswered" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <ForumFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={handleSearchChange}
-                  categoryFilter={categoryFilter}
-                  onCategoryFilterChange={handleCategoryFilterChange}
-                  sortBy={sortBy}
-                  onSortChange={handleSortChange}
-                  timeFilter={timeFilter}
-                  onTimeFilterChange={handleTimeFilterChange}
-                />
-                <div className="space-y-4">
-                  {currentQuestions.map((question, index) => (
-                    <QuestionCard 
-                      key={question.id} 
-                      question={question} 
-                      index={index}
-                      onClick={() => onNavigatePost?.(question.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
+            <div className="space-y-6">
+              <ForumFilters
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+              />
+              <div className="space-y-4">
+                {currentQuestions.map((question, index) => (
+                  <QuestionCard 
+                    key={question.id} 
+                    question={question} 
+                    index={index}
+                    onClick={() => onNavigatePost?.(question.id)}
+                  />
+                ))}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="popular" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <ForumFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={handleSearchChange}
-                  categoryFilter={categoryFilter}
-                  onCategoryFilterChange={handleCategoryFilterChange}
-                  sortBy={sortBy}
-                  onSortChange={handleSortChange}
-                  timeFilter={timeFilter}
-                  onTimeFilterChange={handleTimeFilterChange}
-                />
-                <div className="space-y-4">
-                  {currentQuestions.map((question, index) => (
-                    <QuestionCard 
-                      key={question.id} 
-                      question={question} 
-                      index={index}
-                      onClick={() => onNavigatePost?.(question.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
+            <div className="space-y-6">
+              <ForumFilters
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+              />
+              <div className="space-y-4">
+                {currentQuestions.map((question, index) => (
+                  <QuestionCard 
+                    key={question.id} 
+                    question={question} 
+                    index={index}
+                    onClick={() => onNavigatePost?.(question.id)}
+                  />
+                ))}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="mine" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <ForumFilters
-                  searchQuery={searchQuery}
-                  onSearchChange={handleSearchChange}
-                  categoryFilter={categoryFilter}
-                  onCategoryFilterChange={handleCategoryFilterChange}
-                  sortBy={sortBy}
-                  onSortChange={handleSortChange}
-                  timeFilter={timeFilter}
-                  onTimeFilterChange={handleTimeFilterChange}
-                />
-                <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
-                  <div className="text-6xl">📭</div>
-                  <h3>אין לך שאלות עדיין</h3>
-                  <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
-                  <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
-                    <span className="text-xl ml-2">❓</span>
-                    שאל שאלה ראשונה
-                  </Button>
-                </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
+            <div className="space-y-6">
+              <ForumFilters
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+              />
+              <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
+                <div className="text-6xl">📭</div>
+                <h3>אין לך שאלות עדיין</h3>
+                <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
+                <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
+                  <span className="text-xl ml-2">❓</span>
+                  שאל שאלה ראשונה
+                </Button>
               </div>
             </div>
           </TabsContent>
