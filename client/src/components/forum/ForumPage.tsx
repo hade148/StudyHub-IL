@@ -439,7 +439,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
       const now = new Date();
       result = result.filter((q) => {
         // Skip time filtering if the question doesn't have a valid date
-        // Hardcoded data has Hebrew relative time strings ('לפני 2 שעות')
+        // Hardcoded data has relative time strings (e.g., 'before 2 hours')
         // API data has ISO timestamps in createdAt
         if (!q.createdAt) {
           // For hardcoded data without proper dates, keep it in results
