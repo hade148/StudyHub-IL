@@ -361,6 +361,10 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const [activeTab, setActiveTab] = useState('all');
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [timeFilter, setTimeFilter] = useState('all');
   const itemsPerPage = 10;
 
   // Fetch questions from API
@@ -383,15 +387,120 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
 
   const unansweredCount = questions.filter((q) => !q.isAnswered).length;
   
-  const filteredQuestions = activeTab === 'unanswered' 
-    ? questions.filter((q) => !q.isAnswered)
-    : questions;
+  // Apply filters and sorting
+  const getFilteredQuestions = () => {
+    let result = [...questions];
+
+    // Filter by tab
+    if (activeTab === 'unanswered') {
+      result = result.filter((q) => !q.isAnswered);
+    } else if (activeTab === 'popular') {
+      // Popular: questions with high engagement (votes, answers, views)
+      result = result.filter((q) => {
+        const totalEngagement = (q.stats?.votes || 0) + (q.stats?.answers || 0) + (q.stats?.views || 0) / 10;
+        return totalEngagement > 15;
+      });
+    } else if (activeTab === 'mine') {
+      // TODO: Filter by current user's questions when auth is implemented
+      result = [];
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      result = result.filter((q) => {
+        const inTitle = (q.title || '').toLowerCase().includes(query);
+        const inDescription = (q.description || '').toLowerCase().includes(query);
+        const inCategory = (q.category || '').toLowerCase().includes(query);
+        const inTags = (q.tags || []).join(' ').toLowerCase().includes(query);
+        const inAuthor = (q.author?.name || '').toLowerCase().includes(query);
+        return inTitle || inDescription || inCategory || inTags || inAuthor;
+      });
+    }
+
+    // Filter by category
+    if (categoryFilter !== 'all') {
+      result = result.filter((q) => q.category === categoryFilter);
+    }
+
+    // Filter by time
+    if (timeFilter !== 'all') {
+      const now = new Date();
+      result = result.filter((q) => {
+        const questionDate = new Date(q.createdAt || q.time);
+        const diffMs = now.getTime() - questionDate.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+        switch (timeFilter) {
+          case 'today':
+            return diffDays < 1;
+          case 'week':
+            return diffDays < 7;
+          case 'month':
+            return diffDays < 30;
+          case 'year':
+            return diffDays < 365;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'popular':
+        result.sort((a, b) => {
+          const aEngagement = (a.stats?.votes || 0) + (a.stats?.answers || 0);
+          const bEngagement = (b.stats?.votes || 0) + (b.stats?.answers || 0);
+          return bEngagement - aEngagement;
+        });
+        break;
+      case 'unanswered':
+        result.sort((a, b) => {
+          if (a.stats?.isAnswered === b.stats?.isAnswered) return 0;
+          return a.stats?.isAnswered ? 1 : -1;
+        });
+        break;
+      case 'votes':
+        result.sort((a, b) => (b.stats?.votes || 0) - (a.stats?.votes || 0));
+        break;
+      case 'newest':
+      default:
+        // Keep original order (assumed to be newest first from API)
+        break;
+    }
+
+    return result;
+  };
+
+  const filteredQuestions = getFilteredQuestions();
 
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
   const currentQuestions = filteredQuestions.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // Handler functions that reset to page 1 when filters change
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryFilterChange = (category: string) => {
+    setCategoryFilter(category);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+    setCurrentPage(1);
+  };
+
+  const handleTimeFilterChange = (time: string) => {
+    setTimeFilter(time);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -466,7 +575,16 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Filters */}
-                <ForumFilters />
+                <ForumFilters
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange}
+                  categoryFilter={categoryFilter}
+                  onCategoryFilterChange={handleCategoryFilterChange}
+                  sortBy={sortBy}
+                  onSortChange={handleSortChange}
+                  timeFilter={timeFilter}
+                  onTimeFilterChange={handleTimeFilterChange}
+                />
 
                 {/* Questions List */}
                 <div className="space-y-4">
@@ -554,7 +672,16 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           <TabsContent value="unanswered" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <ForumFilters />
+                <ForumFilters
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange}
+                  categoryFilter={categoryFilter}
+                  onCategoryFilterChange={handleCategoryFilterChange}
+                  sortBy={sortBy}
+                  onSortChange={handleSortChange}
+                  timeFilter={timeFilter}
+                  onTimeFilterChange={handleTimeFilterChange}
+                />
                 <div className="space-y-4">
                   {currentQuestions.map((question, index) => (
                     <QuestionCard 
@@ -575,7 +702,16 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           <TabsContent value="popular" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <ForumFilters />
+                <ForumFilters
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange}
+                  categoryFilter={categoryFilter}
+                  onCategoryFilterChange={handleCategoryFilterChange}
+                  sortBy={sortBy}
+                  onSortChange={handleSortChange}
+                  timeFilter={timeFilter}
+                  onTimeFilterChange={handleTimeFilterChange}
+                />
                 <div className="space-y-4">
                   {currentQuestions.map((question, index) => (
                     <QuestionCard 
@@ -596,7 +732,16 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           <TabsContent value="mine" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <ForumFilters />
+                <ForumFilters
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange}
+                  categoryFilter={categoryFilter}
+                  onCategoryFilterChange={handleCategoryFilterChange}
+                  sortBy={sortBy}
+                  onSortChange={handleSortChange}
+                  timeFilter={timeFilter}
+                  onTimeFilterChange={handleTimeFilterChange}
+                />
                 <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
                   <div className="text-6xl">📭</div>
                   <h3>אין לך שאלות עדיין</h3>
