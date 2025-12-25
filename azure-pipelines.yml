@@ -1,0 +1,382 @@
+# Azure DevOps Pipeline for StudyHub-IL
+# This pipeline implements a complete CI/CD workflow with Build, Test, and Deploy stages
+# מערכת Pipeline ב-Azure DevOps עבור StudyHub-IL
+
+# Trigger: הגדרת טריגרים - מתי ה-pipeline ירוץ
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - feature/*
+  paths:
+    exclude:
+      - README.md
+      - docs/*
+      - '*.md'
+
+# Pull Request Trigger
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - README.md
+      - docs/*
+      - '*.md'
+
+# Variables: משתנים לשימוש לאורך ה-pipeline
+variables:
+  # Build Configuration
+  # Note: Using '18.x' for flexibility. For production, consider pinning to specific version (e.g., '18.19.0')
+  nodeVersion: '18.x'
+  
+  # Application Versions
+  buildConfiguration: 'Release'
+  
+  # Artifact Names
+  backendArtifactName: 'backend-app'
+  frontendArtifactName: 'frontend-app'
+  
+  # Database Configuration (use Azure Key Vault for production)
+  databaseUrl: '$(DATABASE_URL)'
+  jwtSecret: '$(JWT_SECRET)'
+  
+  # Azure Storage Configuration
+  azureStorageConnectionString: '$(AZURE_STORAGE_CONNECTION_STRING)'
+  
+  # Deployment Targets
+  devEnvironment: 'Development'
+  stagingEnvironment: 'Staging'
+  productionEnvironment: 'Production'
+
+# Stages: שלבים עיקריים של ה-pipeline
+stages:
+  # ==========================================
+  # Stage 1: Build - שלב בנייה
+  # ==========================================
+  - stage: Build
+    displayName: 'Build Stage - שלב בנייה'
+    jobs:
+      # Backend Build Job
+      - job: BuildBackend
+        displayName: 'Build Backend - בניית Backend'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          - checkout: self
+            displayName: 'Checkout Repository - שליפת קוד מהמאגר'
+            clean: true
+          
+          - task: NodeTool@0
+            displayName: 'Install Node.js - התקנת Node.js'
+            inputs:
+              versionSpec: $(nodeVersion)
+          
+          - task: Cache@2
+            displayName: 'Cache Backend Dependencies - שמירת תלויות Backend במטמון'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | server/package-lock.json'
+              path: 'server/node_modules'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+          
+          - script: |
+              cd server
+              npm ci
+            displayName: 'Install Backend Dependencies - התקנת תלויות Backend'
+          
+          - script: |
+              cd server
+              npx prisma generate
+            displayName: 'Generate Prisma Client - יצירת Prisma Client'
+          
+          - script: |
+              cd server
+              npm run lint
+            displayName: 'Run Backend Linter - הרצת Linter ל-Backend'
+            continueOnError: false
+          
+          - task: CopyFiles@2
+            displayName: 'Copy Backend Files - העתקת קבצי Backend'
+            inputs:
+              SourceFolder: 'server'
+              Contents: |
+                **
+                !node_modules/**
+                !tests/**
+                !coverage/**
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/backend'
+          
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Backend Artifact - פרסום Artifact של Backend'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/backend'
+              ArtifactName: '$(backendArtifactName)'
+              publishLocation: 'Container'
+
+      # Frontend Build Job
+      - job: BuildFrontend
+        displayName: 'Build Frontend - בניית Frontend'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          - checkout: self
+            displayName: 'Checkout Repository - שליפת קוד מהמאגר'
+            clean: true
+          
+          - task: NodeTool@0
+            displayName: 'Install Node.js - התקנת Node.js'
+            inputs:
+              versionSpec: $(nodeVersion)
+          
+          - task: Cache@2
+            displayName: 'Cache Frontend Dependencies - שמירת תלויות Frontend במטמון'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | client/package-lock.json'
+              path: 'client/node_modules'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+          
+          - script: |
+              cd client
+              npm ci
+            displayName: 'Install Frontend Dependencies - התקנת תלויות Frontend'
+          
+          - script: |
+              cd client
+              npm run build
+            displayName: 'Build Frontend - בניית Frontend לייצור'
+          
+          - task: CopyFiles@2
+            displayName: 'Copy Frontend Build - העתקת Build של Frontend'
+            inputs:
+              SourceFolder: 'client/build'
+              Contents: '**'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/frontend'
+          
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Frontend Artifact - פרסום Artifact של Frontend'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend'
+              ArtifactName: '$(frontendArtifactName)'
+              publishLocation: 'Container'
+
+  # ==========================================
+  # Stage 2: Test - שלב בדיקות
+  # ==========================================
+  - stage: Test
+    displayName: 'Test Stage - שלב בדיקות'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      # Backend Tests Job
+      - job: TestBackend
+        displayName: 'Backend Tests - בדיקות Backend'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        services:
+          postgres:
+            image: postgres:15-alpine
+            env:
+              POSTGRES_USER: postgres
+              POSTGRES_PASSWORD: postgres
+              POSTGRES_DB: studyhub_test
+            ports:
+              - 5432:5432
+        
+        steps:
+          - checkout: self
+            displayName: 'Checkout Repository - שליפת קוד'
+          
+          - task: NodeTool@0
+            displayName: 'Install Node.js - התקנת Node.js'
+            inputs:
+              versionSpec: $(nodeVersion)
+          
+          - script: |
+              cd server
+              npm ci
+            displayName: 'Install Backend Dependencies - התקנת תלויות'
+          
+          - script: |
+              cd server
+              npx prisma generate
+            displayName: 'Generate Prisma Client - יצירת Prisma Client'
+          
+          - script: |
+              cd server
+              npm test
+            displayName: 'Run Backend Tests - הרצת בדיקות Backend'
+            env:
+              DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/studyhub_test'
+              JWT_SECRET: 'test-secret-key'
+          
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results - פרסום תוצאות בדיקות'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/junit.xml'
+              failTaskOnFailedTests: true
+          
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish Code Coverage - פרסום כיסוי קוד'
+            condition: succeededOrFailed()
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/server/coverage/cobertura-coverage.xml'
+              reportDirectory: '$(System.DefaultWorkingDirectory)/server/coverage'
+              failIfCoverageEmpty: false
+
+  # ==========================================
+  # Stage 3: Deploy to Development - פריסה לסביבת פיתוח
+  # ==========================================
+  - stage: DeployDevelopment
+    displayName: 'Deploy to Development - פריסה לפיתוח'
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeployToDev
+        displayName: 'Deploy to Dev Environment - פריסה לסביבת Dev'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: $(devEnvironment)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: $(backendArtifactName)
+                  displayName: 'Download Backend Artifact - הורדת Backend Artifact'
+                
+                - download: current
+                  artifact: $(frontendArtifactName)
+                  displayName: 'Download Frontend Artifact - הורדת Frontend Artifact'
+                
+                # Deploy Backend to Azure App Service
+                - task: AzureWebApp@1
+                  displayName: 'Deploy Backend to Azure App Service - פריסת Backend'
+                  inputs:
+                    azureSubscription: 'Azure-Subscription-Connection'
+                    appType: 'webAppLinux'
+                    appName: 'studyhub-backend-dev'
+                    package: '$(Pipeline.Workspace)/$(backendArtifactName)'
+                    runtimeStack: 'NODE|18-lts'
+                    startUpCommand: 'npm start'
+                
+                # Deploy Frontend to Azure Static Web Apps or App Service
+                - task: AzureStaticWebApp@0
+                  displayName: 'Deploy Frontend to Azure Static Web Apps - פריסת Frontend'
+                  inputs:
+                    app_location: '$(Pipeline.Workspace)/$(frontendArtifactName)'
+                    azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APPS_API_TOKEN_DEV)'
+
+  # ==========================================
+  # Stage 4: Deploy to Staging - פריסה לסביבת Staging
+  # ==========================================
+  - stage: DeployStaging
+    displayName: 'Deploy to Staging - פריסה ל-Staging'
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployToStaging
+        displayName: 'Deploy to Staging Environment - פריסה לסביבת Staging'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: $(stagingEnvironment)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: $(backendArtifactName)
+                  displayName: 'Download Backend Artifact - הורדת Backend Artifact'
+                
+                - download: current
+                  artifact: $(frontendArtifactName)
+                  displayName: 'Download Frontend Artifact - הורדת Frontend Artifact'
+                
+                # Deploy Backend to Azure App Service (Staging)
+                - task: AzureWebApp@1
+                  displayName: 'Deploy Backend to Staging - פריסת Backend ל-Staging'
+                  inputs:
+                    azureSubscription: 'Azure-Subscription-Connection'
+                    appType: 'webAppLinux'
+                    appName: 'studyhub-backend-staging'
+                    package: '$(Pipeline.Workspace)/$(backendArtifactName)'
+                    runtimeStack: 'NODE|18-lts'
+                    startUpCommand: 'npm start'
+                    appSettings: |
+                      -DATABASE_URL "$(DATABASE_URL_STAGING)"
+                      -JWT_SECRET "$(JWT_SECRET)"
+                      -AZURE_STORAGE_CONNECTION_STRING "$(AZURE_STORAGE_CONNECTION_STRING)"
+                
+                # Deploy Frontend to Azure Static Web Apps (Staging)
+                - task: AzureStaticWebApp@0
+                  displayName: 'Deploy Frontend to Staging - פריסת Frontend ל-Staging'
+                  inputs:
+                    app_location: '$(Pipeline.Workspace)/$(frontendArtifactName)'
+                    azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APPS_API_TOKEN_STAGING)'
+
+  # ==========================================
+  # Stage 5: Deploy to Production - פריסה לייצור
+  # ==========================================
+  - stage: DeployProduction
+    displayName: 'Deploy to Production - פריסה לייצור'
+    dependsOn: DeployStaging
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToProduction
+        displayName: 'Deploy to Production Environment - פריסה לסביבת ייצור'
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: $(productionEnvironment)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: $(backendArtifactName)
+                  displayName: 'Download Backend Artifact - הורדת Backend Artifact'
+                
+                - download: current
+                  artifact: $(frontendArtifactName)
+                  displayName: 'Download Frontend Artifact - הורדת Frontend Artifact'
+                
+                # Manual Approval is configured in Azure DevOps Environment settings
+                # אישור ידני מוגדר בהגדרות Environment ב-Azure DevOps
+                
+                # Deploy Backend to Azure App Service (Production)
+                - task: AzureWebApp@1
+                  displayName: 'Deploy Backend to Production - פריסת Backend לייצור'
+                  inputs:
+                    azureSubscription: 'Azure-Subscription-Connection'
+                    appType: 'webAppLinux'
+                    appName: 'studyhub-backend-prod'
+                    package: '$(Pipeline.Workspace)/$(backendArtifactName)'
+                    runtimeStack: 'NODE|18-lts'
+                    startUpCommand: 'npm start'
+                    appSettings: |
+                      -DATABASE_URL "$(DATABASE_URL_PRODUCTION)"
+                      -JWT_SECRET "$(JWT_SECRET)"
+                      -AZURE_STORAGE_CONNECTION_STRING "$(AZURE_STORAGE_CONNECTION_STRING)"
+                      -NODE_ENV "production"
+                
+                # Deploy Frontend to Azure Static Web Apps (Production)
+                - task: AzureStaticWebApp@0
+                  displayName: 'Deploy Frontend to Production - פריסת Frontend לייצור'
+                  inputs:
+                    app_location: '$(Pipeline.Workspace)/$(frontendArtifactName)'
+                    azure_static_web_apps_api_token: '$(AZURE_STATIC_WEB_APPS_API_TOKEN_PROD)'
+                
+                # Post-deployment verification
+                - script: |
+                    echo "Deployment to Production completed successfully"
+                    echo "פריסה לייצור הושלמה בהצלחה"
+                  displayName: 'Post-Deployment Message - הודעה לאחר פריסה'
