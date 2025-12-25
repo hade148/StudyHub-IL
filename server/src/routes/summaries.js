@@ -89,6 +89,25 @@ router.get('/', optionalAuth, async (req, res) => {
   }
 });
 
+// GET /api/summaries/my-content - Get current user's summaries
+router.get('/my-content', authenticate, async (req, res) => {
+  try {
+    const summaries = await prisma.summary.findMany({
+      where: { uploadedById: req.user.id },
+      orderBy: { uploadDate: 'desc' },
+      include: {
+        course: { select: { courseCode: true, courseName: true } },
+        _count: { select: { ratings: true, comments: true } }
+      }
+    });
+
+    res.json(summaries);
+  } catch (error) {
+    console.error('Get my summaries error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת הסיכומים שלי' });
+  }
+});
+
 // GET /api/summaries/:id - Get single summary
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -372,6 +391,48 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get summary ratings error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
+  }
+});
+
+// PUT /api/summaries/:id - Update summary metadata
+router.put('/:id', authenticate, summaryValidation, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, courseId } = req.body;
+
+    const summary = await prisma.summary.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
+
+    // Check ownership or admin
+    if (summary.uploadedById !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'אין לך הרשאה לערוך סיכום זה' });
+    }
+
+    const updatedSummary = await prisma.summary.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        description,
+        courseId: parseInt(courseId)
+      },
+      include: {
+        course: { select: { courseCode: true, courseName: true } },
+        uploadedBy: { select: { fullName: true } }
+      }
+    });
+
+    res.json({
+      message: 'סיכום עודכן בהצלחה',
+      summary: updatedSummary
+    });
+  } catch (error) {
+    console.error('Update summary error:', error);
+    res.status(500).json({ error: 'שגיאה בעדכון סיכום' });
   }
 });
 
