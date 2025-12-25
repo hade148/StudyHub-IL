@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
@@ -15,6 +16,16 @@ const calculateAverageRating = (ratings) => {
   if (ratings.length === 0) return null;
   return ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
 };
+
+// Rate limiter for summary updates - 30 updates per hour per user
+const updateSummaryLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30,
+  message: 'יותר מדי ניסיונות לעדכון סיכום. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
 
 // Multer configuration for file uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
@@ -86,6 +97,25 @@ router.get('/', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get summaries error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת סיכומים' });
+  }
+});
+
+// GET /api/summaries/my-content - Get current user's summaries
+router.get('/my-content', authenticate, async (req, res) => {
+  try {
+    const summaries = await prisma.summary.findMany({
+      where: { uploadedById: req.user.id },
+      orderBy: { uploadDate: 'desc' },
+      include: {
+        course: { select: { courseCode: true, courseName: true } },
+        _count: { select: { ratings: true, comments: true } }
+      }
+    });
+
+    res.json(summaries);
+  } catch (error) {
+    console.error('Get my summaries error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת הסיכומים שלי' });
   }
 });
 
@@ -372,6 +402,48 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get summary ratings error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
+  }
+});
+
+// PUT /api/summaries/:id - Update summary metadata
+router.put('/:id', authenticate, updateSummaryLimiter, summaryValidation, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, courseId } = req.body;
+
+    const summary = await prisma.summary.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
+
+    // Check ownership or admin
+    if (summary.uploadedById !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'אין לך הרשאה לערוך סיכום זה' });
+    }
+
+    const updatedSummary = await prisma.summary.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        description,
+        courseId: parseInt(courseId)
+      },
+      include: {
+        course: { select: { courseCode: true, courseName: true } },
+        uploadedBy: { select: { fullName: true } }
+      }
+    });
+
+    res.json({
+      message: 'סיכום עודכן בהצלחה',
+      summary: updatedSummary
+    });
+  } catch (error) {
+    console.error('Update summary error:', error);
+    res.status(500).json({ error: 'שגיאה בעדכון סיכום' });
   }
 });
 
