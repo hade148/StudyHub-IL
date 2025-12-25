@@ -27,6 +27,9 @@ StudyHub-IL is a comprehensive educational platform designed to facilitate learn
 3. Start the development server: `npm run dev`
 4. Build for production: `npm run build`
 
+npx prisma db push
+npx prisma generate
+
 ### Backend (Server)
 1. Navigate to the server directory: `cd server`
 2. Install dependencies: `npm install`
