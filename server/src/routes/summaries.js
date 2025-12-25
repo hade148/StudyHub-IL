@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
@@ -15,6 +16,16 @@ const calculateAverageRating = (ratings) => {
   if (ratings.length === 0) return null;
   return ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
 };
+
+// Rate limiter for summary updates - 30 updates per hour per user
+const updateSummaryLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30,
+  message: 'יותר מדי ניסיונות לעדכון סיכום. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
 
 // Multer configuration for file uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
@@ -395,7 +406,7 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
 });
 
 // PUT /api/summaries/:id - Update summary metadata
-router.put('/:id', authenticate, summaryValidation, async (req, res) => {
+router.put('/:id', authenticate, updateSummaryLimiter, summaryValidation, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, courseId } = req.body;

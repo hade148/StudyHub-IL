@@ -23,6 +23,16 @@ const createToolLimiter = rateLimit({
   keyGenerator: (req) => req.user?.id?.toString() || req.ip
 });
 
+// Rate limiter for tool updates - 20 updates per hour per user
+const updateToolLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,
+  message: 'יותר מדי ניסיונות לעדכון כלי. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
+
 // Rate limiter for tool deletion - 20 deletions per hour per user
 const deleteToolLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -270,7 +280,7 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
 });
 
 // PUT /api/tools/:id - Update tool
-router.put('/:id', authenticate, toolValidation, async (req, res) => {
+router.put('/:id', authenticate, updateToolLimiter, toolValidation, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, url, description, category } = req.body;

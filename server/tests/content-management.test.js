@@ -60,15 +60,15 @@ describe('Content Management API Tests', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data - delete in correct order to respect foreign key constraints
+    if (forumPostId) {
+      await prisma.forumPost.delete({ where: { id: forumPostId } }).catch(() => {});
+    }
     if (summaryId) {
       await prisma.summary.delete({ where: { id: summaryId } }).catch(() => {});
     }
     if (toolId) {
       await prisma.tool.delete({ where: { id: toolId } }).catch(() => {});
-    }
-    if (forumPostId) {
-      await prisma.forumPost.delete({ where: { id: forumPostId } }).catch(() => {});
     }
     if (courseId) {
       await prisma.course.delete({ where: { id: courseId } }).catch(() => {});

@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { forumPostValidation, forumRatingValidation, commentValidation } = require('../middleware/validation');
@@ -8,6 +9,16 @@ const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Rate limiter for forum post updates - 30 updates per hour per user
+const updatePostLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30,
+  message: 'יותר מדי ניסיונות לעדכון פוסט. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
 
 // Multer configuration for image uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
@@ -396,7 +407,7 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
 });
 
 // PUT /api/forum/:id - Update forum post
-router.put('/:id', authenticate, upload.array('images', 5), async (req, res) => {
+router.put('/:id', authenticate, updatePostLimiter, upload.array('images', 5), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content, category, tags, isUrgent, courseId } = req.body;
@@ -428,13 +439,24 @@ router.put('/:id', authenticate, upload.array('images', 5), async (req, res) => 
       }
     }
 
+    // Parse tags safely
+    let parsedTags = post.tags;
+    if (tags) {
+      try {
+        parsedTags = typeof tags === 'string' ? JSON.parse(tags) : tags;
+      } catch (error) {
+        console.error('Error parsing tags:', error);
+        parsedTags = post.tags; // Keep existing tags if parse fails
+      }
+    }
+
     const updatedPost = await prisma.forumPost.update({
       where: { id: parseInt(id) },
       data: {
         title,
         content,
         category,
-        tags: tags ? (typeof tags === 'string' ? JSON.parse(tags) : tags) : post.tags,
+        tags: parsedTags,
         isUrgent: isUrgent === 'true' || isUrgent === true,
         courseId: courseId ? parseInt(courseId) : post.courseId,
         images: imageUrls

@@ -114,10 +114,17 @@ export function MyContentPage() {
     if (!deletingItem) return;
 
     try {
-      const endpoint = 
-        deletingItem.type === 'summary' ? `/summaries/${deletingItem.id}` :
-        deletingItem.type === 'tool' ? `/tools/${deletingItem.id}` :
-        `/forum/${deletingItem.id}`;
+      const endpointMap: Record<string, string> = {
+        'summary': `/summaries/${deletingItem.id}`,
+        'tool': `/tools/${deletingItem.id}`,
+        'post': `/forum/${deletingItem.id}`
+      };
+      
+      const endpoint = endpointMap[deletingItem.type];
+      if (!endpoint) {
+        console.error('Unknown content type:', deletingItem.type);
+        return;
+      }
       
       await api.delete(endpoint);
       
