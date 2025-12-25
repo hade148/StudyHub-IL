@@ -92,7 +92,22 @@ The database consists of the following 8 tables:
 Run tests using Jest: `npm test`
 
 ## CI/CD Information
-The project uses GitHub Actions for continuous integration and deployment.
+The project uses both GitHub Actions and Azure DevOps for continuous integration and deployment.
+
+### GitHub Actions
+- See `.github/workflows/ci.yml` for the GitHub Actions workflow
+- Runs on push and pull requests
+- Includes backend tests and frontend build
+
+### Azure DevOps Pipeline
+- See `azure-pipelines.yml` for the Azure DevOps pipeline configuration
+- Complete CI/CD workflow with Build, Test, and Deploy stages
+- Multi-environment deployment (Development, Staging, Production)
+- For detailed setup instructions, see:
+  - [Azure Pipeline Guide (Hebrew)](AZURE_PIPELINE_GUIDE.md)
+  - [Azure Pipeline Quick Start (English)](AZURE_PIPELINE_QUICKSTART.md)
+  - [Azure Pipeline Architecture](AZURE_PIPELINE_ARCHITECTURE.md)
+  - [Implementation Summary](AZURE_PIPELINE_IMPLEMENTATION.md)
 
 ## Contribution Guidelines
 Contributions are welcome! Please submit a pull request with your changes.
