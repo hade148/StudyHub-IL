@@ -69,9 +69,31 @@ You'll need these Azure resources:
 
 #### Backend (App Services)
 ```bash
-az webapp create --name studyhub-backend-dev --resource-group StudyHub-RG --runtime "NODE|18-lts"
-az webapp create --name studyhub-backend-staging --resource-group StudyHub-RG --runtime "NODE|18-lts"
-az webapp create --name studyhub-backend-prod --resource-group StudyHub-RG --runtime "NODE|18-lts"
+# Create App Service Plan first
+az appservice plan create \
+  --name StudyHub-Plan \
+  --resource-group StudyHub-RG \
+  --sku B1 \
+  --is-linux
+
+# Create App Services
+az webapp create \
+  --name studyhub-backend-dev \
+  --resource-group StudyHub-RG \
+  --plan StudyHub-Plan \
+  --runtime "NODE|18-lts"
+
+az webapp create \
+  --name studyhub-backend-staging \
+  --resource-group StudyHub-RG \
+  --plan StudyHub-Plan \
+  --runtime "NODE|18-lts"
+
+az webapp create \
+  --name studyhub-backend-prod \
+  --resource-group StudyHub-RG \
+  --plan StudyHub-Plan \
+  --runtime "NODE|18-lts"
 ```
 
 #### Frontend (Static Web Apps)

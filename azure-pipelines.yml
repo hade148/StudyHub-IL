@@ -30,6 +30,7 @@ pr:
 # Variables: משתנים לשימוש לאורך ה-pipeline
 variables:
   # Build Configuration
+  # Note: Using '18.x' for flexibility. For production, consider pinning to specific version (e.g., '18.19.0')
   nodeVersion: '18.x'
   
   # Application Versions
@@ -154,7 +155,7 @@ stages:
           - task: CopyFiles@2
             displayName: 'Copy Frontend Build - העתקת Build של Frontend'
             inputs:
-              SourceFolder: 'client/dist'
+              SourceFolder: 'client/build'
               Contents: '**'
               TargetFolder: '$(Build.ArtifactStagingDirectory)/frontend'
           
@@ -221,7 +222,7 @@ stages:
             condition: succeededOrFailed()
             inputs:
               testResultsFormat: 'JUnit'
-              testResultsFiles: '**/test-results.xml'
+              testResultsFiles: '**/junit.xml'
               failTaskOnFailedTests: true
           
           - task: PublishCodeCoverageResults@1
@@ -230,6 +231,7 @@ stages:
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(System.DefaultWorkingDirectory)/server/coverage/cobertura-coverage.xml'
+              reportDirectory: '$(System.DefaultWorkingDirectory)/server/coverage'
               failIfCoverageEmpty: false
 
   # ==========================================
