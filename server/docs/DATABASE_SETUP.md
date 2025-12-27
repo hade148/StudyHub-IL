@@ -27,8 +27,8 @@ This guide covers database setup for both local development and Azure PostgreSQL
      # Ubuntu/Debian
      sudo apt-get install postgresql postgresql-contrib
      
-     # macOS
-     brew install postgresql@15
+     # macOS (installs latest stable version)
+     brew install postgresql
      
      # Windows
      # Download installer from postgresql.org

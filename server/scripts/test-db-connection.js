@@ -34,8 +34,13 @@ async function testConnection() {
     console.log('  Current user:', result[0].current_user);
     
     // Check if we're connected to Azure (SSL connection)
-    const sslInfo = await prisma.$queryRaw`SELECT ssl_is_used() as ssl_active`;
-    console.log('  SSL/TLS active:', sslInfo[0].ssl_active ? 'Yes ✅' : 'No');
+    try {
+      const sslInfo = await prisma.$queryRaw`SHOW ssl`;
+      console.log('  SSL/TLS active:', sslInfo[0].ssl === 'on' ? 'Yes ✅' : 'No');
+    } catch (sslError) {
+      // SSL check might not be available in all PostgreSQL versions
+      console.log('  SSL/TLS active:', 'Unable to determine');
+    }
     
     // Count tables to verify schema is accessible
     const tables = await prisma.$queryRaw`
