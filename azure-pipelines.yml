@@ -29,6 +29,7 @@ pr:
 
 # Variables: משתנים לשימוש לאורך ה-pipeline
 variables:
+- group: StudyHub-Secrets
   # Build Configuration
   # Note: Using '18.x' for flexibility. For production, consider pinning to specific version (e.g., '18.19.0')
   nodeVersion: '18.x'
