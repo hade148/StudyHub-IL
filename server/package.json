@@ -20,8 +20,6 @@
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio",
-    "db:seed": "node prisma/seed.js",
     "db:reset": "prisma migrate reset",
     "db:test-connection": "node scripts/test-db-connection.js"
   },
