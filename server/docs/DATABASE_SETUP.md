@@ -77,7 +77,7 @@ npm run prisma:generate
 npm run db:migrate:dev
 
 # (Optional) Seed the database
-npm run db:seed
+npm run seed
 ```
 
 ### Step 5: Verify Connection
@@ -221,7 +221,7 @@ The pipeline should include migration steps for each environment:
 npm run db:push
 
 # Open Prisma Studio (database GUI)
-npm run db:studio
+npm run prisma:studio
 
 # Reset database (WARNING: deletes all data)
 npm run db:reset
