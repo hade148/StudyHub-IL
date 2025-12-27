@@ -36,15 +36,31 @@ npx prisma generate
 3. Set up environment variables:
    - Copy `.env.example` to `.env`: `cp .env.example .env`
    - Update `DATABASE_URL` with your PostgreSQL connection string
+     - **Local:** `postgresql://postgres:password@localhost:5432/studyhub`
+     - **Azure:** `postgresql://dbadmin:PASSWORD@studyhub-db.postgres.database.azure.com:5432/studyhub_dev?sslmode=require`
    - Update `JWT_SECRET` with a secure secret key
+   - See [Database Setup Guide](server/docs/DATABASE_SETUP.md) for detailed configuration
 4. Generate Prisma client: `npx prisma generate`
 5. Run database migrations: 
-   - Development: `npx prisma migrate dev`
-   - Production: `npx prisma migrate deploy`
+   - Development: `npx prisma migrate dev` or `npm run db:migrate:dev`
+   - Production: `npx prisma migrate deploy` or `npm run db:migrate`
    - Quick sync (if encountering schema errors): Run `./sync-database.sh` (Linux/Mac) or `sync-database.bat` (Windows)
-6. Start the server: `npm start` (or `npm run dev` for development)
+6. Test database connection: `npm run db:test-connection`
+7. Start the server: `npm start` (or `npm run dev` for development)
 
 **Note:** If you encounter login errors about missing columns (e.g., "The column `users.bio` does not exist"), your database schema is out of sync. Run the sync script: `./sync-database.sh` (Linux/Mac) or `sync-database.bat` (Windows). See [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md) for details.
+
+### Azure PostgreSQL Setup
+
+The project supports both local PostgreSQL and Azure Database for PostgreSQL Flexible Server.
+
+**Azure Configuration:**
+- Server: `studyhub-db.postgres.database.azure.com`
+- Admin: `dbadmin`
+- Databases: `studyhub_dev`, `studyhub_staging`, `studyhub_prod`
+- **SSL Required:** All Azure connections must use `?sslmode=require`
+
+For detailed setup instructions, troubleshooting, and best practices, see the [Database Setup Guide](server/docs/DATABASE_SETUP.md).
 
 ### With Docker
 1. Clone the repository: `git clone <repository-url>`
