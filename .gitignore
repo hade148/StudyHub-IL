@@ -8,6 +8,9 @@ yarn-error.log*
 .env
 .env.local
 .env.production
+.env.*.local
+*.pem
+*.key
 
 # Build outputs
 dist/

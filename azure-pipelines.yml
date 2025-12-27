@@ -260,6 +260,21 @@ stages:
                   artifact: $(frontendArtifactName)
                   displayName: 'Download Frontend Artifact - הורדת Frontend Artifact'
                 
+                # Run Database Migrations for Development
+                - task: NodeTool@0
+                  displayName: 'Install Node.js for Migrations'
+                  inputs:
+                    versionSpec: $(nodeVersion)
+                
+                - script: |
+                    cd $(Pipeline.Workspace)/$(backendArtifactName)
+                    npm ci --only=production
+                    npx prisma generate
+                    npx prisma migrate deploy
+                  displayName: 'Run Prisma Migrations - Development'
+                  env:
+                    DATABASE_URL: $(DATABASE_URL)
+                
                 # Deploy Backend to Azure App Service
                 - task: AzureWebApp@1
                   displayName: 'Deploy Backend to Azure App Service - פריסת Backend'
@@ -302,6 +317,21 @@ stages:
                 - download: current
                   artifact: $(frontendArtifactName)
                   displayName: 'Download Frontend Artifact - הורדת Frontend Artifact'
+                
+                # Run Database Migrations for Staging
+                - task: NodeTool@0
+                  displayName: 'Install Node.js for Migrations'
+                  inputs:
+                    versionSpec: $(nodeVersion)
+                
+                - script: |
+                    cd $(Pipeline.Workspace)/$(backendArtifactName)
+                    npm ci --only=production
+                    npx prisma generate
+                    npx prisma migrate deploy
+                  displayName: 'Run Prisma Migrations - Staging'
+                  env:
+                    DATABASE_URL: $(DATABASE_URL_STAGING)
                 
                 # Deploy Backend to Azure App Service (Staging)
                 - task: AzureWebApp@1
@@ -352,6 +382,21 @@ stages:
                 
                 # Manual Approval is configured in Azure DevOps Environment settings
                 # אישור ידני מוגדר בהגדרות Environment ב-Azure DevOps
+                
+                # Run Database Migrations for Production
+                - task: NodeTool@0
+                  displayName: 'Install Node.js for Migrations'
+                  inputs:
+                    versionSpec: $(nodeVersion)
+                
+                - script: |
+                    cd $(Pipeline.Workspace)/$(backendArtifactName)
+                    npm ci --only=production
+                    npx prisma generate
+                    npx prisma migrate deploy
+                  displayName: 'Run Prisma Migrations - Production'
+                  env:
+                    DATABASE_URL: $(DATABASE_URL_PRODUCTION)
                 
                 # Deploy Backend to Azure App Service (Production)
                 - task: AzureWebApp@1

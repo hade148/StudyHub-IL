@@ -2,6 +2,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Database Configuration
+// Supports both local PostgreSQL and Azure Database for PostgreSQL Flexible Server
+// Azure connections require SSL/TLS (use ?sslmode=require in DATABASE_URL)
+// For local development: postgresql://user:password@localhost:5432/dbname
+// For Azure: postgresql://dbadmin:password@studyhub-db.postgres.database.azure.com:5432/dbname?sslmode=require
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
