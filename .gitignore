@@ -8,6 +8,13 @@ yarn-error.log*
 .env
 .env.local
 .env.production
+.env.*.local
+
+# SSL/TLS Certificates
+*.pem
+*.key
+*.cert
+*.crt
 
 # Build outputs
 dist/

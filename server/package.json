@@ -16,7 +16,12 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:reset": "prisma migrate reset",
+    "db:test-connection": "node scripts/test-db-connection.js"
   },
   "keywords": [
     "education",
