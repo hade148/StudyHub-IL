@@ -29,29 +29,45 @@ pr:
 
 # Variables: משתנים לשימוש לאורך ה-pipeline
 variables:
-- group: StudyHub-Secrets
+  # Variable Group for Secrets
+  - group: StudyHub-Secrets
+  
   # Build Configuration
   # Note: Using '18.x' for flexibility. For production, consider pinning to specific version (e.g., '18.19.0')
-  nodeVersion: '18.x'
+  - name: nodeVersion
+    value: '18.x'
   
   # Application Versions
-  buildConfiguration: 'Release'
+  - name: buildConfiguration
+    value: 'Release'
   
   # Artifact Names
-  backendArtifactName: 'backend-app'
-  frontendArtifactName: 'frontend-app'
+  - name: backendArtifactName
+    value: 'backend-app'
   
-  # Database Configuration (use Azure Key Vault for production)
-  databaseUrl: '$(DATABASE_URL)'
-  jwtSecret: '$(JWT_SECRET)'
+  - name: frontendArtifactName
+    value: 'frontend-app'
+  
+  # Database Configuration (references from Variable Group)
+  - name: databaseUrl
+    value: '$(DATABASE_URL)'
+  
+  - name: jwtSecret
+    value: '$(JWT_SECRET)'
   
   # Azure Storage Configuration
-  azureStorageConnectionString: '$(AZURE_STORAGE_CONNECTION_STRING)'
+  - name: azureStorageConnectionString
+    value: '$(AZURE_STORAGE_CONNECTION_STRING)'
   
   # Deployment Targets
-  devEnvironment: 'Development'
-  stagingEnvironment: 'Staging'
-  productionEnvironment: 'Production'
+  - name: devEnvironment
+    value: 'Development'
+  
+  - name: stagingEnvironment
+    value: 'Staging'
+  
+  - name: productionEnvironment
+    value: 'Production'
 
 # Stages: שלבים עיקריים של ה-pipeline
 stages:
