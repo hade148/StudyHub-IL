@@ -431,53 +431,59 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex justify-center">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full px-4 py-8 max-w-4xl"
-      >
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div className="space-y-2">
-            {/* Title */}
-            <div className="flex items-center gap-3">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-3 rounded-xl shadow-lg"
-              >
-                <MessageCircle className="w-6 h-6" />
-              </motion.div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">פורום שאלות ותשובות</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Full-width Header Section */}
+      <div className="w-full px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Page Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div className="space-y-2">
+              {/* Title */}
+              <div className="flex items-center gap-3">
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-3 rounded-xl shadow-lg"
+                >
+                  <MessageCircle className="w-6 h-6" />
+                </motion.div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">פורום שאלות ותשובות</h1>
+              </div>
+
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <button
+                  onClick={onNavigateHome}
+                  className="hover:text-blue-600 transition-colors flex items-center gap-1"
+                >
+                  <Home className="w-4 h-4" />
+                  דף הבית
+                </button>
+                <ChevronRight className="w-4 h-4" />
+                <span>פורום</span>
+              </div>
             </div>
 
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <button
-                onClick={onNavigateHome}
-                className="hover:text-blue-600 transition-colors flex items-center gap-1"
-              >
-                <Home className="w-4 h-4" />
-                דף הבית
-              </button>
-              <ChevronRight className="w-4 h-4" />
-              <span>פורום</span>
-            </div>
+            {/* Ask Question Button */}
+            <Button 
+              onClick={onNavigateNewQuestion}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              שאלה חדשה
+            </Button>
           </div>
+        </motion.div>
+      </div>
 
-          {/* Ask Question Button */}
-          <Button 
-            onClick={onNavigateNewQuestion}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            שאלה חדשה
-          </Button>
-        </div>
-
-        {/* Tabs Navigation */}
-        <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="bg-white border border-blue-100 rounded-lg p-1 w-full mb-6 shadow-sm">
+      {/* Centered Content Section */}
+      <div className="flex justify-center px-4">
+        <div className="w-full max-w-4xl">
+          {/* Tabs Navigation */}
+          <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+            <TabsList className="bg-white border border-blue-100 rounded-lg p-1 w-full mb-6 shadow-sm">
             <TabsTrigger value="all" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all">
               הכל
             </TabsTrigger>
@@ -641,7 +647,8 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
             </div>
           </TabsContent>
         </Tabs>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
