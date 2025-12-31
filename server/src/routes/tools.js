@@ -23,6 +23,16 @@ const createToolLimiter = rateLimit({
   keyGenerator: (req) => req.user?.id?.toString() || req.ip
 });
 
+// Rate limiter for tool updates - 20 updates per hour per user
+const updateToolLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,
+  message: 'יותר מדי ניסיונות לעדכון כלי. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
+
 // Rate limiter for tool deletion - 20 deletions per hour per user
 const deleteToolLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -81,6 +91,24 @@ router.get('/', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get tools error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת כלים' });
+  }
+});
+
+// GET /api/tools/my-content - Get current user's tools
+router.get('/my-content', authenticate, async (req, res) => {
+  try {
+    const tools = await prisma.tool.findMany({
+      where: { addedById: req.user.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: { select: { ratings: true, favorites: true } }
+      }
+    });
+
+    res.json(tools);
+  } catch (error) {
+    console.error('Get my tools error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת הכלים שלי' });
   }
 });
 
@@ -248,6 +276,48 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get tool ratings error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
+  }
+});
+
+// PUT /api/tools/:id - Update tool
+router.put('/:id', authenticate, updateToolLimiter, toolValidation, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, url, description, category } = req.body;
+
+    const tool = await prisma.tool.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!tool) {
+      return res.status(404).json({ error: 'כלי לא נמצא' });
+    }
+
+    // Check ownership or admin
+    if (tool.addedById !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'אין לך הרשאה לערוך כלי זה' });
+    }
+
+    const updatedTool = await prisma.tool.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        url,
+        description,
+        category
+      },
+      include: {
+        addedBy: { select: { fullName: true } }
+      }
+    });
+
+    res.json({
+      message: 'כלי עודכן בהצלחה',
+      tool: updatedTool
+    });
+  } catch (error) {
+    console.error('Update tool error:', error);
+    res.status(500).json({ error: 'שגיאה בעדכון כלי' });
   }
 });
 
