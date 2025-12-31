@@ -67,8 +67,8 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)" }}
-      className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-all duration-200 p-6 cursor-pointer"
+      whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)" }}
+      className="bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 p-6 cursor-pointer shadow-sm"
       onClick={onClick}
     >
       <div className="flex gap-6 overflow-hidden">

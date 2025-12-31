@@ -431,7 +431,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -442,7 +442,15 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="space-y-2">
             {/* Title */}
-            <h1 className="text-3xl font-bold text-gray-900">פורום שאלות ותשובות</h1>
+            <div className="flex items-center gap-3">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="bg-gradient-to-br from-gray-700 to-gray-900 text-white p-3 rounded-xl shadow-lg"
+              >
+                <MessageCircle className="w-6 h-6" />
+              </motion.div>
+              <h1 className="text-3xl font-bold text-gray-900">פורום שאלות ותשובות</h1>
+            </div>
 
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -461,7 +469,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           {/* Ask Question Button */}
           <Button 
             onClick={onNavigateNewQuestion}
-            className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg transition-all"
+            className="bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
           >
             שאלה חדשה
           </Button>
