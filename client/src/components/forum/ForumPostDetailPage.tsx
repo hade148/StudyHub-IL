@@ -217,16 +217,16 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8 space-y-6"
+        className="container mx-auto px-4 py-8 max-w-4xl"
       >
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-gray-600">
-          <button onClick={onNavigateHome} className="hover:text-purple-600 transition-colors flex items-center gap-1">
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
+          <button onClick={onNavigateHome} className="hover:text-gray-900 transition-colors flex items-center gap-1">
             <Home className="w-4 h-4" />
             דף הבית
           </button>
           <ChevronRight className="w-4 h-4" />
-          <button onClick={onNavigateForum} className="hover:text-purple-600 transition-colors">
+          <button onClick={onNavigateForum} className="hover:text-gray-900 transition-colors">
             פורום
           </button>
           <ChevronRight className="w-4 h-4" />
@@ -234,16 +234,16 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
         </div>
 
         {/* Question Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8 space-y-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-8 space-y-6 mb-6">
           {/* Header */}
           <div className="space-y-4">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3">
-                <Badge className="bg-purple-100 text-purple-700">
+                <Badge className="bg-gray-100 text-gray-700 border border-gray-300">
                   {post.course.courseCode}
                 </Badge>
                 {post.isAnswered && (
-                  <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
+                  <Badge className="bg-gray-50 text-gray-700 border border-gray-300 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
                     נענה
                   </Badge>
@@ -261,13 +261,13 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
               </div>
             </div>
             
-            <h1 className="text-2xl font-bold text-gray-900">{post.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 leading-tight">{post.title}</h1>
           </div>
 
           {/* Author Info */}
-          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+          <div className="flex items-center gap-3 border-b border-gray-200 pb-4">
             <Avatar className="w-10 h-10">
-              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white">
+              <AvatarFallback className="bg-gray-200 text-gray-700">
                 {getInitials(post.author.fullName)}
               </AvatarFallback>
             </Avatar>
@@ -278,7 +278,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
           </div>
 
           {/* Question Content */}
-          <div className="text-gray-700 whitespace-pre-wrap">
+          <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
             {post.content}
           </div>
 
@@ -329,7 +329,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                       <Star
                         className={`w-6 h-6 ${
                           (hoverRating !== null ? star <= hoverRating : (userRating !== null && star <= userRating))
-                            ? 'fill-yellow-400 text-yellow-400'
+                            ? 'fill-gray-400 text-gray-400'
                             : 'text-gray-300'
                         }`}
                       />
@@ -344,7 +344,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
               </div>
               {post.avgRating !== null && post.avgRating !== undefined && (
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-5 h-5 fill-gray-400 text-gray-400" />
                   <span className="font-medium">{post.avgRating.toFixed(1)}</span>
                   <span className="text-sm">
                     ({post._count?.ratings || 0} דירוגים)
@@ -356,9 +356,9 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
         </div>
 
         {/* Answers Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8 space-y-6">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-purple-600" />
+        <div className="bg-white border border-gray-200 rounded-lg p-8 space-y-6">
+          <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-900">
+            <MessageCircle className="w-5 h-5 text-gray-600" />
             תשובות ({post.comments.length})
           </h2>
 
@@ -376,13 +376,13 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="border border-gray-100 rounded-lg p-6 space-y-4 hover:border-purple-200 transition-colors"
+                  className="border border-gray-200 rounded-lg p-6 space-y-4 hover:border-gray-300 hover:shadow-md transition-all"
                 >
                   {/* Answer Header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar className="w-10 h-10">
-                        <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white">
+                        <AvatarFallback className="bg-gray-200 text-gray-700">
                           {getInitials(comment.author.fullName)}
                         </AvatarFallback>
                       </Avatar>
@@ -394,18 +394,18 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                     
                     {/* Voting (UI only for now) */}
                     <div className="flex items-center gap-2">
-                      <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-                        <ArrowUp className="w-5 h-5 text-gray-400 hover:text-green-600" />
+                      <button className="p-1 hover:bg-gray-50 rounded transition-colors">
+                        <ArrowUp className="w-5 h-5 text-gray-400 hover:text-gray-700" />
                       </button>
                       <span className="text-gray-600 font-medium">0</span>
-                      <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-                        <ArrowDown className="w-5 h-5 text-gray-400 hover:text-red-600" />
+                      <button className="p-1 hover:bg-gray-50 rounded transition-colors">
+                        <ArrowDown className="w-5 h-5 text-gray-400 hover:text-gray-700" />
                       </button>
                     </div>
                   </div>
                   
                   {/* Answer Content */}
-                  <p className="text-gray-700 whitespace-pre-wrap">{comment.text}</p>
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{comment.text}</p>
                 </motion.div>
               ))
             )}
@@ -417,7 +417,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
             <div className="border border-gray-200 rounded-lg p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white text-sm">
+                  <AvatarFallback className="bg-gray-200 text-gray-700 text-sm">
                     {user?.fullName ? getInitials(user.fullName) : <User className="w-4 h-4" />}
                   </AvatarFallback>
                 </Avatar>
@@ -434,7 +434,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                 <Button
                   onClick={handleAddComment}
                   disabled={!newComment.trim() || submitting}
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">
