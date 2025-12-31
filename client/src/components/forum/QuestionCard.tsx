@@ -81,7 +81,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
                 <Star className="w-5 h-5 fill-gray-400 stroke-gray-400" />
                 <span className="font-medium">{question.avgRating.toFixed(1)}</span>
               </div>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500" aria-label="מספר דירוגים">
                 {question._count?.ratings || 0}
               </span>
             </div>

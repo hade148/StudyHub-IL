@@ -4,7 +4,7 @@
 Successfully redesigned the Q&A Forum UI to be clean and minimalist, removing unnecessary colors and emojis while maintaining visual interest through subtle effects and symmetric layout.
 
 ## Problem Statement (Hebrew)
-> עכשיו אני רוצה לעצב את הUI של פרום שאלות ותשוובות רק אותו.
+> עכשיו אני רוצה לעצב את הUI של פרום שאלות ותשובות רק אותו.
 > אני רוצה שהעיצוב יהיה נקי ומינמליסטי בלי צבעים ואימוגים מיותרים אבל כן לא יזיק קצת אפקטים שזה לא יראה דף לבן משעמם שזה יראה כמו אתר ובנוסף גם שהכל יהיה סימטרי באמצע ממש לעבור על כל העיצוב נקי אבל מושך את העין
 
 **Translation:** "Now I want to design the UI of the Q&A forum only. I want the design to be clean and minimalist without unnecessary colors and emojis, but some subtle effects so it doesn't look like a boring white page and looks like a website, and also everything should be symmetric in the center, really go over all the design - clean but eye-catching."
