@@ -136,7 +136,37 @@ The database consists of the following 8 tables:
 - **POST /api/enroll:** Enroll a user in a course
 
 ## Testing Instructions
-Run tests using Jest: `npm test`
+
+### Backend API Tests
+Run backend tests using Jest: 
+```bash
+cd server
+npm test
+```
+
+### End-to-End Tests (Selenium)
+Run comprehensive E2E tests covering critical user flows:
+```bash
+cd selenium-tests
+pip install -r requirements.txt
+pytest -v
+```
+
+**Test Coverage:**
+- User authentication (registration, login, logout)
+- Summary upload and management
+- Forum interaction (posts, comments)
+- Educational tools usage
+- User profile management
+- Content rating and reviews
+
+**Documentation:**
+- [Quick Start Guide](selenium-tests/QUICKSTART.md) - Get started quickly
+- [Test Planning](TEST_PLANNING.md) - Detailed test planning
+- [Test Summary Wiki](WIKI_TEST_SUMMARY.md) - Comprehensive test documentation
+- [Bug Tracking](BUG_TRACKING.md) - Bug reporting and tracking
+
+For detailed instructions, see [selenium-tests/README.md](selenium-tests/README.md)
 
 ## CI/CD Information
 The project uses Azure DevOps Pipelines for continuous integration and deployment with:
