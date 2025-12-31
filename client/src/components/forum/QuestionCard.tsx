@@ -43,12 +43,12 @@ interface QuestionCardProps {
 }
 
 const categoryColors: Record<string, string> = {
-  'אלגוריתמים': 'bg-gray-50 text-gray-700 border-gray-300',
-  'מתמטיקה': 'bg-gray-50 text-gray-700 border-gray-300',
-  'פיזיקה': 'bg-gray-50 text-gray-700 border-gray-300',
-  'כימיה': 'bg-gray-50 text-gray-700 border-gray-300',
-  'משאבי לימוד': 'bg-gray-50 text-gray-700 border-gray-300',
-  'כללי': 'bg-gray-50 text-gray-700 border-gray-300',
+  'אלגוריתמים': 'bg-blue-50 text-blue-700 border-blue-200',
+  'מתמטיקה': 'bg-purple-50 text-purple-700 border-purple-200',
+  'פיזיקה': 'bg-green-50 text-green-700 border-green-200',
+  'כימיה': 'bg-orange-50 text-orange-700 border-orange-200',
+  'משאבי לימוד': 'bg-blue-50 text-blue-700 border-blue-200',
+  'כללי': 'bg-gray-50 text-gray-700 border-gray-200',
 };
 
 export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
@@ -67,8 +67,8 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)" }}
-      className="bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 p-6 cursor-pointer shadow-sm"
+      whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(59, 130, 246, 0.15)" }}
+      className="bg-white border border-gray-200 rounded-xl hover:border-blue-200 transition-all duration-200 p-6 cursor-pointer shadow-sm"
       onClick={onClick}
     >
       <div className="flex gap-6 overflow-hidden">
@@ -77,8 +77,8 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           {/* Rating */}
           {question.avgRating != null && (
             <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-1 text-gray-700">
-                <Star className="w-5 h-5 fill-gray-400 stroke-gray-400" />
+              <div className="flex items-center gap-1 text-blue-600">
+                <Star className="w-5 h-5 fill-blue-400 stroke-blue-400" />
                 <span className="font-semibold">{question.avgRating.toFixed(1)}</span>
               </div>
               <span className="text-xs text-gray-500" aria-label="מספר דירוגים">
@@ -91,12 +91,12 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           <div
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg border transition-colors ${
               isAnswered
-                ? 'bg-gray-50 text-gray-700 border-gray-300'
+                ? 'bg-blue-50 text-blue-700 border-blue-200'
                 : 'bg-white text-gray-600 border-gray-200'
             }`}
           >
             {isAnswered && (
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 text-blue-600" />
             )}
             <span className="font-semibold">{answers}</span>
             <span className="text-xs">תשובות</span>

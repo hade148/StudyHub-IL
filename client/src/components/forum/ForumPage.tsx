@@ -431,7 +431,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -445,18 +445,18 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
             <div className="flex items-center gap-3">
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="bg-gradient-to-br from-gray-700 to-gray-900 text-white p-3 rounded-xl shadow-lg"
+                className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-3 rounded-xl shadow-lg"
               >
                 <MessageCircle className="w-6 h-6" />
               </motion.div>
-              <h1 className="text-3xl font-bold text-gray-900">פורום שאלות ותשובות</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">פורום שאלות ותשובות</h1>
             </div>
 
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <button
                 onClick={onNavigateHome}
-                className="hover:text-gray-900 transition-colors flex items-center gap-1"
+                className="hover:text-blue-600 transition-colors flex items-center gap-1"
               >
                 <Home className="w-4 h-4" />
                 דף הבית
@@ -469,7 +469,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           {/* Ask Question Button */}
           <Button 
             onClick={onNavigateNewQuestion}
-            className="bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
           >
             שאלה חדשה
           </Button>
@@ -477,14 +477,14 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="bg-white border border-gray-200 rounded-lg p-1 w-full mb-6 shadow-sm">
-            <TabsTrigger value="all" className="flex-1 data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
+          <TabsList className="bg-white border border-blue-100 rounded-lg p-1 w-full mb-6 shadow-sm">
+            <TabsTrigger value="all" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all">
               הכל
             </TabsTrigger>
-            <TabsTrigger value="unanswered" className="flex-1 data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
+            <TabsTrigger value="unanswered" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all">
               ללא מענה
             </TabsTrigger>
-            <TabsTrigger value="mine" className="flex-1 data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
+            <TabsTrigger value="mine" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all">
               השאלות שלי
             </TabsTrigger>
           </TabsList>
