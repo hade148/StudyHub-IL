@@ -378,7 +378,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                 >
                   <div className="flex gap-6">
                     {/* Left side - Metadata */}
-                    <div className="flex flex-col items-center gap-3 min-w-[80px] border-l border-gray-100 pl-6">
+                    <div className="flex flex-col items-center gap-3 min-w-[80px] border-r border-gray-100 pr-6">
                       {/* Voting (UI only for now) */}
                       <div className="flex flex-col items-center gap-1">
                         <button className="p-1 hover:bg-gray-50 rounded-lg transition-colors">

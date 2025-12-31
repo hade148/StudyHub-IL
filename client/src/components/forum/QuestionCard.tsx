@@ -73,7 +73,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
     >
       <div className="flex gap-6">
         {/* Stats Section (Left) */}
-        <div className="flex flex-col gap-3 items-center min-w-[80px] border-l border-gray-100 pl-6">
+        <div className="flex flex-col gap-3 items-center min-w-[80px] border-r border-gray-100 pr-6">
           {/* Rating */}
           {question.avgRating != null && (
             <div className="flex flex-col items-center gap-1">
