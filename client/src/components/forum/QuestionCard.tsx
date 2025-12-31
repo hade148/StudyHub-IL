@@ -67,11 +67,11 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }}
-      className="bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 p-6 cursor-pointer shadow-sm"
+      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)" }}
+      className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-all duration-200 p-6 cursor-pointer"
       onClick={onClick}
     >
-      <div className="flex gap-6">
+      <div className="flex gap-6 overflow-hidden">
         {/* Stats Section (Left) */}
         <div className="flex flex-col gap-3 items-center min-w-[80px] border-r border-gray-100 pr-6">
           {/* Rating */}
@@ -106,7 +106,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
         </div>
 
         {/* Main Content (Right/Center) */}
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 space-y-3 min-w-0 overflow-hidden">
           {/* Category Badge */}
           {question.category && (
             <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]} transition-colors`}>
@@ -115,7 +115,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           )}
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors leading-snug">
+          <h3 className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors leading-snug break-words">
             {question.title}
           </h3>
 
