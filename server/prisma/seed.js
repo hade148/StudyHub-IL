@@ -35,59 +35,85 @@ async function main() {
   });
   console.log('✅ Created student user:', student.email);
 
-  // Create Courses
-  const courses = await Promise.all([
-    prisma.course.upsert({
-      where: { courseCode: 'CS101' },
-      update: {},
-      create: {
-        courseCode: 'CS101',
-        courseName: 'מבוא למדעי המחשב',
-        institution: 'אוניברסיטה עברית',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'CS202' },
-      update: {},
-      create: {
-        courseCode: 'CS202',
-        courseName: 'מבני נתונים',
-        institution: 'הטכניון',
-        semester: 'סמסטר ב 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'CS301' },
-      update: {},
-      create: {
-        courseCode: 'CS301',
-        courseName: 'אלגוריתמים',
-        institution: 'אוניברסיטת תל אביב',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'MATH101' },
-      update: {},
-      create: {
-        courseCode: 'MATH101',
-        courseName: 'חשבון אינפיניטסימלי 1',
-        institution: 'אוניברסיטת בן גוריון',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'PHYS101' },
-      update: {},
-      create: {
-        courseCode: 'PHYS101',
-        courseName: 'פיזיקה 1',
-        institution: 'אוניברסיטת בר אילן',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-  ]);
+  // List of institutions - Universities and Academic Colleges in Israel
+  const institutions = [
+    // Universities (recognized by CHE - Council for Higher Education)
+    'האוניברסיטה העברית בירושלים',
+    'אוניברסיטת תל אביב',
+    'אוניברסיטת בן־גוריון בנגב',
+    'הטכניון – מכון טכנולוגי לישראל',
+    'אוניברסיטת חיפה',
+    'אוניברסיטת בר־אילן',
+    'מכון ויצמן למדע',
+    'האוניברסיטה הפתוחה',
+    'אוניברסיטת רייכמן (המרכז הבינתחומי הרצליה)',
+    // Academic Colleges
+    'המרכז האקדמי לב (JCT – מכון לב)',
+    'המכללה האקדמית תל אביב–יפו',
+    'המכללה האקדמית ספיר',
+    'המכללה האקדמית עמק יזרעאל',
+    'המכללה האקדמית אחוה',
+    'המכללה האקדמית אשקלון',
+    'המכללה האקדמית נתניה',
+    'המכללה האקדמית כנרת',
+    'המכללה האקדמית להנדסה סמי שמעון (SCE)',
+    'מכללת HIT – מכון טכנולוגי חולון',
+    'מכללת אורט בראודה',
+    'הקריה האקדמית אונו',
+  ];
+
+  // List of CS courses - comprehensive list for Computer Science programs
+  const coursesList = [
+    // Foundation Courses (קורסי יסוד)
+    { code: 'CS101', name: 'מבוא למדעי המחשב' },
+    { code: 'CS102', name: 'תכנות מונחה עצמים' },
+    { code: 'CS201', name: 'מבני נתונים' },
+    { code: 'CS202', name: 'אלגוריתמים וניתוח סיבוכיות' },
+    { code: 'MATH101', name: 'מתמטיקה דיסקרטית' },
+    { code: 'MATH102', name: 'אלגברה לינארית' },
+    { code: 'MATH103', name: 'חדו"א / חשבון דיפרנציאלי ואינטגרלי' },
+    // Systems Courses (קורסי מערכות)
+    { code: 'CS301', name: 'מערכות הפעלה' },
+    { code: 'CS302', name: 'בסיסי נתונים' },
+    { code: 'CS303', name: 'רשתות מחשבים' },
+    { code: 'CS304', name: 'קומפיילרים' },
+    { code: 'CS305', name: 'הנדסת תוכנה' },
+    { code: 'CS306', name: 'אבטחת מידע' },
+    // Programming & Technology Courses (קורסי תכנות וטכנולוגיה)
+    { code: 'CS401', name: 'תכנות מתקדם' },
+    { code: 'CS402', name: 'פיתוח מערכות מבוזרות' },
+    { code: 'CS403', name: 'פיתוח Web' },
+    { code: 'CS404', name: 'פיתוח אפליקציות' },
+    { code: 'CS405', name: 'תכנות מקבילי' },
+    // Advanced/Enrichment Courses (קורסי העשרה / מתקדמים)
+    { code: 'CS501', name: 'בינה מלאכותית' },
+    { code: 'CS502', name: 'למידת מכונה' },
+    { code: 'CS503', name: 'מדעי הנתונים' },
+  ];
+
+  // Create courses for each institution
+  // Create courses for all institutions to ensure comprehensive coverage
+  const courses = [];
+  
+  for (const institution of institutions) {
+    for (const course of coursesList) {
+      // Create unique course code by combining course code and institution index
+      const institutionIndex = institutions.indexOf(institution);
+      const uniqueCourseCode = `${course.code}-INST${institutionIndex}`;
+      
+      const createdCourse = await prisma.course.upsert({
+        where: { courseCode: uniqueCourseCode },
+        update: {},
+        create: {
+          courseCode: uniqueCourseCode,
+          courseName: course.name,
+          institution: institution,
+          semester: 'סמסטר א 2024',
+        },
+      });
+      courses.push(createdCourse);
+    }
+  }
   console.log('✅ Created courses:', courses.length);
 
   // Create Summaries

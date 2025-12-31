@@ -38,6 +38,7 @@ interface Course {
   id: number;
   courseCode: string;
   courseName: string;
+  institution: string;
 }
 
 interface EditForumPostDialogProps {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Mail, Lock, User, Loader2, Check, X, AlertCircle } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 interface RegisterPageProps {
   onNavigateLogin: () => void;
@@ -31,22 +32,6 @@ interface PasswordStrength {
   color: string;
 }
 
-const institutions = [
-  'האוניברסיטה העברית',
-  'אוניברסיטת תל אביב',
-  'הטכניון',
-  'אוניברסיטת בן גוריון',
-  'אוניברסיטת בר אילן',
-  'אוניברסיטת חיפה',
-  'מכללת תל אביב יפו',
-  'המכללה האקדמית ספיר',
-  'המכללה האקדמית נתניה',
-  'המכללה האקדמית אשקלון',
-  'המכללה האקדמית אריאל',
-    'המרכז האקדמי לב',
-  'אחר',
-];
-
 const fieldsOfStudy = [
   'מדעי המחשב',
   'הנדסה',
@@ -66,8 +51,52 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [institutions, setInstitutions] = useState<string[]>([]);
+  const [loadingInstitutions, setLoadingInstitutions] = useState(true);
 
   const { register: registerUser } = useAuth();
+
+  // Fetch institutions from API
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      try {
+        const response = await api.get('/courses/institutions');
+        setInstitutions([...response.data, 'אחר']);
+      } catch (error) {
+        console.error('Error fetching institutions:', error);
+        // Fallback to comprehensive default list if API fails
+        setInstitutions([
+          // Universities
+          'האוניברסיטה העברית בירושלים',
+          'אוניברסיטת תל אביב',
+          'אוניברסיטת בן־גוריון בנגב',
+          'הטכניון – מכון טכנולוגי לישראל',
+          'אוניברסיטת חיפה',
+          'אוניברסיטת בר־אילן',
+          'מכון ויצמן למדע',
+          'האוניברסיטה הפתוחה',
+          'אוניברסיטת רייכמן (המרכז הבינתחומי הרצליה)',
+          // Academic Colleges
+          'המרכז האקדמי לב (JCT – מכון לב)',
+          'המכללה האקדמית תל אביב–יפו',
+          'המכללה האקדמית ספיר',
+          'המכללה האקדמית עמק יזרעאל',
+          'המכללה האקדמית אחוה',
+          'המכללה האקדמית אשקלון',
+          'המכללה האקדמית נתניה',
+          'המכללה האקדמית כנרת',
+          'המכללה האקדמית להנדסה סמי שמעון (SCE)',
+          'מכללת HIT – מכון טכנולוגי חולון',
+          'מכללת אורט בראודה',
+          'הקריה האקדמית אונו',
+          'אחר',
+        ]);
+      } finally {
+        setLoadingInstitutions(false);
+      }
+    };
+    fetchInstitutions();
+  }, []);
 
   const {
     register,
@@ -458,10 +487,12 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
               <select
                 id="institution"
                 {...register('institution')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-60"
+                disabled={isLoading || loadingInstitutions}
               >
-                <option value="">בחר מוסד לימודים</option>
+                <option value="">
+                  {loadingInstitutions ? 'טוען מוסדות...' : 'בחר מוסד לימודים'}
+                </option>
                 {institutions.map((inst) => (
                   <option key={inst} value={inst}>
                     {inst}
