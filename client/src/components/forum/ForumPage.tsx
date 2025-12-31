@@ -365,9 +365,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const itemsPerPage = 10;
   const { isAuthenticated } = useAuth();
 
-  // Constants for popular question threshold
-  const POPULAR_ENGAGEMENT_THRESHOLD = 15;
-  const VIEWS_WEIGHT = 0.1; // Views are weighted less than votes and answers
+
 
   // Fetch questions from API with filters
   useEffect(() => {
@@ -421,15 +419,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const filteredQuestions = useMemo(() => {
     let result = [...questions];
 
-    // Filter by tab (client-side only for 'popular' tab)
-    // 'unanswered' and 'mine' are handled by the backend via query parameters
-    if (activeTab === 'popular') {
-      // Popular: questions with high engagement (votes, answers, views)
-      result = result.filter((q) => {
-        const totalEngagement = (q.stats?.votes || 0) + (q.stats?.answers || 0) + (q.stats?.views || 0) * VIEWS_WEIGHT;
-        return totalEngagement > POPULAR_ENGAGEMENT_THRESHOLD;
-      });
-    }
+    // Filter by tab (server-side filtering for 'unanswered' and 'mine')
 
     // Search and 'mine' filtering are now handled server-side
 
@@ -449,7 +439,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -461,7 +451,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           <div className="space-y-2">
             {/* Title */}
             <div className="flex items-center gap-3">
-              <div className="bg-gray-900 text-white p-2.5 rounded-lg">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-2.5 rounded-xl shadow-md">
                 <MessageCircle className="w-5 h-5" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900">פורום שאלות ותשובות</h1>
@@ -484,7 +474,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           {/* Ask Question Button */}
           <Button 
             onClick={onNavigateNewQuestion}
-            className="bg-gray-900 hover:bg-gray-800 text-white px-6"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-6 shadow-md hover:shadow-lg transition-all"
           >
             שאלה חדשה
           </Button>
@@ -492,11 +482,11 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="bg-white border border-gray-200 rounded-lg p-1 w-full md:w-auto mb-6">
-            <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
+          <TabsList className="bg-white border border-gray-200 rounded-lg p-1 w-full md:w-auto mb-6 mx-auto shadow-sm">
+            <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
               הכל
             </TabsTrigger>
-            <TabsTrigger value="unanswered" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
+            <TabsTrigger value="unanswered" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
               <span className="flex items-center gap-2">
                 ללא מענה
                 <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100">
@@ -504,10 +494,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                 </Badge>
               </span>
             </TabsTrigger>
-            <TabsTrigger value="popular" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
-              פופולרי
-            </TabsTrigger>
-            <TabsTrigger value="mine" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
+            <TabsTrigger value="mine" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
               השאלות שלי
             </TabsTrigger>
           </TabsList>
@@ -618,24 +605,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
             </div>
           </TabsContent>
 
-          <TabsContent value="popular" className="space-y-6 mt-6">
-            <div className="space-y-6">
-              <ForumFilters
-                searchQuery={searchQuery}
-                onSearchChange={handleSearchChange}
-              />
-              <div className="space-y-4">
-                {currentQuestions.map((question, index) => (
-                  <QuestionCard 
-                    key={question.id} 
-                    question={question} 
-                    index={index}
-                    onClick={() => onNavigatePost?.(question.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          </TabsContent>
+
 
           <TabsContent value="mine" className="space-y-6 mt-6">
             <div className="space-y-6">
@@ -644,14 +614,18 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                 onSearchChange={handleSearchChange}
               />
               {!isAuthenticated ? (
-                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4">
-                  <div className="text-5xl text-gray-300">🔒</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4 shadow-sm">
+                  <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-8 h-8 text-gray-400" />
+                  </div>
                   <h3 className="text-lg font-semibold text-gray-900">נדרש כניסה למערכת</h3>
                   <p className="text-gray-600">התחבר כדי לראות את השאלות שלך</p>
                 </div>
               ) : currentQuestions.length === 0 ? (
-                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4">
-                  <div className="text-5xl text-gray-300">📭</div>
+                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4 shadow-sm">
+                  <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-8 h-8 text-gray-400" />
+                  </div>
                   <h3 className="text-lg font-semibold text-gray-900">אין לך שאלות עדיין</h3>
                   <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
                   {onNavigateNewQuestion && (

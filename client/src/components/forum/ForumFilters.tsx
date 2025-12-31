@@ -11,7 +11,7 @@ export function ForumFilters({
   onSearchChange,
 }: ForumFiltersProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search */}
         <div className="relative flex-1">
@@ -19,7 +19,7 @@ export function ForumFilters({
           <Input
             type="text"
             placeholder="חפש שאלות..."
-            className="pr-10 border-gray-300 focus:border-gray-400"
+            className="pr-10 border-gray-300 focus:border-gray-400 transition-colors"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />

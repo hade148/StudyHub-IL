@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Eye, MessageCircle, Star, CheckCircle2 } from 'lucide-react';
+import { MessageCircle, Star, CheckCircle2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
@@ -67,19 +67,19 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ y: -2 }}
-      className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-lg transition-all duration-200 p-6 cursor-pointer"
+      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }}
+      className="bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all duration-200 p-6 cursor-pointer shadow-sm"
       onClick={onClick}
     >
       <div className="flex gap-6">
-        {/* Stats Section (Right) */}
-        <div className="flex flex-col gap-3 items-center min-w-[80px]">
+        {/* Stats Section (Left) */}
+        <div className="flex flex-col gap-3 items-center min-w-[80px] border-r border-gray-100 pr-6">
           {/* Rating */}
           {question.avgRating != null && (
             <div className="flex flex-col items-center gap-1">
               <div className="flex items-center gap-1 text-gray-700">
                 <Star className="w-5 h-5 fill-gray-400 stroke-gray-400" />
-                <span className="font-medium">{question.avgRating.toFixed(1)}</span>
+                <span className="font-semibold">{question.avgRating.toFixed(1)}</span>
               </div>
               <span className="text-xs text-gray-500" aria-label="מספר דירוגים">
                 {question._count?.ratings || 0}
@@ -89,7 +89,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
 
           {/* Answers */}
           <div
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-md border ${
+            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg border transition-colors ${
               isAnswered
                 ? 'bg-gray-50 text-gray-700 border-gray-300'
                 : 'bg-white text-gray-600 border-gray-200'
@@ -98,22 +98,18 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
             {isAnswered && (
               <CheckCircle2 className="w-4 h-4" />
             )}
-            <span className="font-medium">{answers}</span>
+            <span className="font-semibold">{answers}</span>
             <span className="text-xs">תשובות</span>
           </div>
 
-          {/* Views */}
-          <div className="flex items-center gap-1 text-gray-600">
-            <Eye className="w-4 h-4" />
-            <span>{views}</span>
-          </div>
+          {/* Views - Hidden per requirements */}
         </div>
 
-        {/* Main Content */}
+        {/* Main Content (Right/Center) */}
         <div className="flex-1 space-y-3">
           {/* Category Badge */}
           {question.category && (
-            <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]}`}>
+            <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]} transition-colors`}>
               {question.category}
             </Badge>
           )}
@@ -125,7 +121,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
 
           {/* Description */}
           {description && (
-            <p className="text-gray-600 line-clamp-2">
+            <p className="text-gray-600 line-clamp-2 leading-relaxed">
               {description}
             </p>
           )}
@@ -137,7 +133,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   {tag}
                 </Badge>
@@ -146,30 +142,30 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           )}
 
           {/* Author and Activity */}
-          <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-2">
+          <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-2 border-t border-gray-100">
             <div className="flex items-center gap-2">
               <Avatar className="w-6 h-6">
                 <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
                   {displayAvatar}
                 </AvatarFallback>
               </Avatar>
-              <span>{displayName}</span>
+              <span className="text-sm">{displayName}</span>
               {question.author.reputation && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                   {question.author.reputation}
                 </span>
               )}
             </div>
             {displayTime && (
               <>
-                <span>•</span>
-                <span>נשאל {displayTime}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-sm">נשאל {displayTime}</span>
               </>
             )}
             {question.lastActivity && (
               <>
-                <span>•</span>
-                <span className="text-gray-600">
+                <span className="text-gray-400">•</span>
+                <span className="text-sm text-gray-600">
                   תשובה אחרונה מ- {question.lastActivity.user} {question.lastActivity.time}
                 </span>
               </>
