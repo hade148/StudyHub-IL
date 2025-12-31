@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, MessageCircle, Home } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import {
   Pagination,
@@ -405,6 +406,13 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     };
     fetchQuestions();
   }, [searchQuery, activeTab]);
+
+  const unansweredCount = questions.filter((q) => {
+    // A question is considered answered if it has comments or the isAnswered flag is true
+    const hasComments = (q._count?.comments || 0) > 0;
+    const isAnswered = q.isAnswered || q.stats?.isAnswered || hasComments;
+    return !isAnswered;
+  }).length;
   
   // Apply client-side filters with memoization for better performance
   // Note: Search filtering is now handled by the backend API
@@ -431,32 +439,29 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8 max-w-4xl"
+        className="container mx-auto px-4 py-8 max-w-5xl"
       >
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="space-y-2">
             {/* Title */}
             <div className="flex items-center gap-3">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-3 rounded-xl shadow-lg"
-              >
-                <MessageCircle className="w-6 h-6" />
-              </motion.div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">פורום שאלות ותשובות</h1>
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-2.5 rounded-xl shadow-md">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">פורום שאלות ותשובות</h1>
             </div>
 
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <button
                 onClick={onNavigateHome}
-                className="hover:text-blue-600 transition-colors flex items-center gap-1"
+                className="hover:text-gray-900 transition-colors flex items-center gap-1"
               >
                 <Home className="w-4 h-4" />
                 דף הבית
@@ -469,7 +474,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           {/* Ask Question Button */}
           <Button 
             onClick={onNavigateNewQuestion}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-6 shadow-md hover:shadow-lg transition-all"
           >
             שאלה חדשה
           </Button>
@@ -477,14 +482,19 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="bg-white border border-blue-100 rounded-lg p-1 w-full mb-6 shadow-sm">
-            <TabsTrigger value="all" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all">
+          <TabsList className="bg-white border border-gray-200 rounded-lg p-1 w-full md:w-auto mb-6 mx-auto shadow-sm">
+            <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
               הכל
             </TabsTrigger>
-            <TabsTrigger value="unanswered" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all">
-              ללא מענה
+            <TabsTrigger value="unanswered" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
+              <span className="flex items-center gap-2">
+                ללא מענה
+                <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100">
+                  {unansweredCount}
+                </Badge>
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="mine" className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white transition-all">
+            <TabsTrigger value="mine" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white transition-all">
               השאלות שלי
             </TabsTrigger>
           </TabsList>
