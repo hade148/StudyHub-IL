@@ -454,24 +454,24 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8 space-y-6"
+        className="container mx-auto px-4 py-8 max-w-5xl"
       >
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div className="space-y-2">
             {/* Title */}
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <MessageCircle className="w-6 h-6" />
+              <div className="bg-gray-900 text-white p-2.5 rounded-lg">
+                <MessageCircle className="w-5 h-5" />
               </div>
-              <h1 className="text-gray-900">פורום שאלות ותשובות</h1>
+              <h1 className="text-2xl font-bold text-gray-900">פורום שאלות ותשובות</h1>
             </div>
 
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
               <button
                 onClick={onNavigateHome}
-                className="hover:text-blue-600 transition-colors flex items-center gap-1"
+                className="hover:text-gray-900 transition-colors flex items-center gap-1"
               >
                 <Home className="w-4 h-4" />
                 דף הבית
@@ -484,34 +484,30 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           {/* Ask Question Button */}
           <Button 
             onClick={onNavigateNewQuestion}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-6"
           >
-            <span className="text-xl ml-2">❓</span>
             שאלה חדשה
           </Button>
         </div>
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="bg-white rounded-lg shadow-sm p-1 w-full md:w-auto">
-            <TabsTrigger value="all" className="flex-1 md:flex-none">
+          <TabsList className="bg-white border border-gray-200 rounded-lg p-1 w-full md:w-auto mb-6">
+            <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
               הכל
             </TabsTrigger>
-            <TabsTrigger value="unanswered" className="flex-1 md:flex-none">
+            <TabsTrigger value="unanswered" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
               <span className="flex items-center gap-2">
                 ללא מענה
-                <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">
+                <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100">
                   {unansweredCount}
                 </Badge>
               </span>
             </TabsTrigger>
-            <TabsTrigger value="popular" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
-                פופולרי
-                <span>🔥</span>
-              </span>
+            <TabsTrigger value="popular" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
+              פופולרי
             </TabsTrigger>
-            <TabsTrigger value="mine" className="flex-1 md:flex-none">
+            <TabsTrigger value="mine" className="flex-1 md:flex-none data-[state=active]:bg-gray-900 data-[state=active]:text-white">
               השאלות שלי
             </TabsTrigger>
           </TabsList>
@@ -547,8 +543,9 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
               </div>
 
               {/* Pagination */}
-              <div className="flex flex-col items-center gap-4 pt-4">
-                <div className="text-gray-600">
+              {totalPages > 1 && (
+              <div className="flex flex-col items-center gap-4 pt-8">
+                <div className="text-sm text-gray-600">
                   מציג {(currentPage - 1) * itemsPerPage + 1}-
                   {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך{' '}
                   {filteredQuestions.length} שאלות
@@ -598,6 +595,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                   </PaginationContent>
                 </Pagination>
               </div>
+              )}
             </div>
           </TabsContent>
 
@@ -646,21 +644,20 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                 onSearchChange={handleSearchChange}
               />
               {!isAuthenticated ? (
-                <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
-                  <div className="text-6xl">🔒</div>
-                  <h3>נדרש כניסה למערכת</h3>
+                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4">
+                  <div className="text-5xl text-gray-300">🔒</div>
+                  <h3 className="text-lg font-semibold text-gray-900">נדרש כניסה למערכת</h3>
                   <p className="text-gray-600">התחבר כדי לראות את השאלות שלך</p>
                 </div>
               ) : currentQuestions.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
-                  <div className="text-6xl">📭</div>
-                  <h3>אין לך שאלות עדיין</h3>
+                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4">
+                  <div className="text-5xl text-gray-300">📭</div>
+                  <h3 className="text-lg font-semibold text-gray-900">אין לך שאלות עדיין</h3>
                   <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
                   {onNavigateNewQuestion && (
                     <Button 
                       onClick={onNavigateNewQuestion}
-                      className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
-                      <span className="text-xl ml-2">❓</span>
+                      className="bg-gray-900 hover:bg-gray-800 text-white mt-4">
                       שאל שאלה ראשונה
                     </Button>
                   )}

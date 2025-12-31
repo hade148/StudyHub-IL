@@ -43,12 +43,12 @@ interface QuestionCardProps {
 }
 
 const categoryColors: Record<string, string> = {
-  'אלגוריתמים': 'bg-purple-100 text-purple-700 border-purple-300',
-  'מתמטיקה': 'bg-blue-100 text-blue-700 border-blue-300',
-  'פיזיקה': 'bg-orange-100 text-orange-700 border-orange-300',
-  'כימיה': 'bg-green-100 text-green-700 border-green-300',
-  'משאבי לימוד': 'bg-teal-100 text-teal-700 border-teal-300',
-  'כללי': 'bg-gray-100 text-gray-700 border-gray-300',
+  'אלגוריתמים': 'bg-gray-50 text-gray-700 border-gray-300',
+  'מתמטיקה': 'bg-gray-50 text-gray-700 border-gray-300',
+  'פיזיקה': 'bg-gray-50 text-gray-700 border-gray-300',
+  'כימיה': 'bg-gray-50 text-gray-700 border-gray-300',
+  'משאבי לימוד': 'bg-gray-50 text-gray-700 border-gray-300',
+  'כללי': 'bg-gray-50 text-gray-700 border-gray-300',
 };
 
 export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
@@ -64,11 +64,11 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
   
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ backgroundColor: '#F9FAFB', borderRightColor: '#3B82F6' }}
-      className="bg-white border-r-4 border-r-transparent rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6 cursor-pointer"
+      whileHover={{ y: -2 }}
+      className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-lg transition-all duration-200 p-6 cursor-pointer"
       onClick={onClick}
     >
       <div className="flex gap-6">
@@ -77,28 +77,28 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           {/* Rating */}
           {question.avgRating != null && (
             <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-1 text-yellow-500">
-                <Star className="w-5 h-5 fill-current" />
-                <span className="text-gray-900">{question.avgRating.toFixed(1)}</span>
+              <div className="flex items-center gap-1 text-gray-700">
+                <Star className="w-5 h-5 fill-gray-400 stroke-gray-400" />
+                <span className="font-medium">{question.avgRating.toFixed(1)}</span>
               </div>
               <span className="text-xs text-gray-500">
-                {question._count?.ratings || 0} דירוגים
+                {question._count?.ratings || 0}
               </span>
             </div>
           )}
 
           {/* Answers */}
           <div
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg ${
+            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-md border ${
               isAnswered
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-600'
+                ? 'bg-gray-50 text-gray-700 border-gray-300'
+                : 'bg-white text-gray-600 border-gray-200'
             }`}
           >
             {isAnswered && (
               <CheckCircle2 className="w-4 h-4" />
             )}
-            <span>{answers}</span>
+            <span className="font-medium">{answers}</span>
             <span className="text-xs">תשובות</span>
           </div>
 
@@ -119,7 +119,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           )}
 
           {/* Title */}
-          <h3 className="text-gray-900 hover:text-blue-600 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors leading-snug">
             {question.title}
           </h3>
 
@@ -149,13 +149,13 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-2">
             <div className="flex items-center gap-2">
               <Avatar className="w-6 h-6">
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+                <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
                   {displayAvatar}
                 </AvatarFallback>
               </Avatar>
               <span>{displayName}</span>
               {question.author.reputation && (
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                   {question.author.reputation}
                 </span>
               )}
@@ -169,7 +169,7 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
             {question.lastActivity && (
               <>
                 <span>•</span>
-                <span className="text-green-600">
+                <span className="text-gray-600">
                   תשובה אחרונה מ- {question.lastActivity.user} {question.lastActivity.time}
                 </span>
               </>
