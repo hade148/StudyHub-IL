@@ -9,6 +9,10 @@ const azureStorage = require('../utils/azureStorage');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Track post views to prevent double-counting
+const viewTracking = new Map();
+const VIEW_COOLDOWN = 60000; // 1 minute cooldown per user per post
+
 // Multer configuration for image uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
 
@@ -92,15 +96,35 @@ router.get('/', optionalAuth, async (req, res) => {
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const postId = parseInt(id);
 
-    // Increment views
-    await prisma.forumPost.update({
-      where: { id: parseInt(id) },
-      data: { views: { increment: 1 } }
-    });
+    // Create a unique key for view tracking (userId or IP + postId)
+    const userId = req.user?.id || req.ip || 'anonymous';
+    const viewKey = `${userId}-${postId}`;
+    const now = Date.now();
+
+    // Check if this user/IP already viewed this post recently
+    const lastView = viewTracking.get(viewKey);
+    const shouldIncrementView = !lastView || (now - lastView) > VIEW_COOLDOWN;
+
+    // Increment views only if cooldown period has passed
+    if (shouldIncrementView) {
+      await prisma.forumPost.update({
+        where: { id: postId },
+        data: { views: { increment: 1 } }
+      });
+      viewTracking.set(viewKey, now);
+      
+      // Clean up old entries (older than 2 minutes)
+      for (const [key, timestamp] of viewTracking.entries()) {
+        if (now - timestamp > VIEW_COOLDOWN * 2) {
+          viewTracking.delete(key);
+        }
+      }
+    }
 
     const post = await prisma.forumPost.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: postId },
       include: {
         author: { select: { id: true, fullName: true, email: true } },
         course: true,

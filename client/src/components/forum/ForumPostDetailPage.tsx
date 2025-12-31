@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronRight, Home, MessageCircle, Send, User, CheckCircle2, Star, Eye , ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -61,6 +61,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
   const [userRating, setUserRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const hasFetchedPost = useRef(false);
 
   // Helper to get initials from name
   const getInitials = (name: string) => {
@@ -83,24 +84,25 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
     });
   };
 
-  // Fetch post data and user rating
+  // Fetch post data (increments view count server-side). Depends only on postId to avoid double count when user state changes.
   useEffect(() => {
+    // Reset flag when postId changes
+    if (hasFetchedPost.current) {
+      hasFetchedPost.current = false;
+    }
+
+    // Prevent double fetch in React Strict Mode
+    if (hasFetchedPost.current) {
+      return;
+    }
+    
+    hasFetchedPost.current = true;
+
     const fetchPost = async () => {
       try {
         setLoading(true);
         const response = await api.get(`/forum/${postId}`);
         setPost(response.data);
-        
-        // Fetch user's rating if logged in
-        if (user) {
-          try {
-            const ratingsResponse = await api.get(`/forum/${postId}/ratings`);
-            setUserRating(ratingsResponse.data.userRating);
-          } catch (err) {
-            console.error('Error fetching rating:', err);
-          }
-        }
-        
         setError(null);
       } catch (err) {
         console.error('Error fetching post:', err);
@@ -111,6 +113,25 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
     };
 
     fetchPost();
+  }, [postId]);
+
+  // Fetch user's rating separately so post fetch does not re-run when auth state changes
+  useEffect(() => {
+    const fetchRating = async () => {
+      if (!user) {
+        setUserRating(null);
+        return;
+      }
+
+      try {
+        const ratingsResponse = await api.get(`/forum/${postId}/ratings`);
+        setUserRating(ratingsResponse.data.userRating);
+      } catch (err) {
+        console.error('Error fetching rating:', err);
+      }
+    };
+
+    fetchRating();
   }, [postId, user]);
 
   // Handle rating submission
