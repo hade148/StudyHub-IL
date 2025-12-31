@@ -35,6 +35,7 @@ interface Course {
   id: number;
   courseCode: string;
   courseName: string;
+  institution: string;
 }
 
 interface EditSummaryDialogProps {
@@ -139,7 +140,7 @@ export function EditSummaryDialog({ summary, open, onClose, onSave }: EditSummar
               <SelectContent>
                 {courses.map((course) => (
                   <SelectItem key={course.id} value={course.id.toString()}>
-                    {course.courseCode} - {course.courseName}
+                    {course.courseCode} - {course.courseName} ({course.institution})
                   </SelectItem>
                 ))}
               </SelectContent>

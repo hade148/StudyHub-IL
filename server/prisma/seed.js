@@ -35,8 +35,9 @@ async function main() {
   });
   console.log('✅ Created student user:', student.email);
 
-  // List of institutions
+  // List of institutions - Universities and Academic Colleges in Israel
   const institutions = [
+    // Universities (recognized by CHE - Council for Higher Education)
     'האוניברסיטה העברית בירושלים',
     'אוניברסיטת תל אביב',
     'אוניברסיטת בן־גוריון בנגב',
@@ -45,8 +46,9 @@ async function main() {
     'אוניברסיטת בר־אילן',
     'מכון ויצמן למדע',
     'האוניברסיטה הפתוחה',
-    'אוניברסיטת רייכמן',
-    'המרכז האקדמי לב (JCT)',
+    'אוניברסיטת רייכמן (המרכז הבינתחומי הרצליה)',
+    // Academic Colleges
+    'המרכז האקדמי לב (JCT – מכון לב)',
     'המכללה האקדמית תל אביב–יפו',
     'המכללה האקדמית ספיר',
     'המכללה האקדמית עמק יזרעאל',
@@ -60,41 +62,42 @@ async function main() {
     'הקריה האקדמית אונו',
   ];
 
-  // List of CS courses
+  // List of CS courses - comprehensive list for Computer Science programs
   const coursesList = [
+    // Foundation Courses (קורסי יסוד)
     { code: 'CS101', name: 'מבוא למדעי המחשב' },
     { code: 'CS102', name: 'תכנות מונחה עצמים' },
     { code: 'CS201', name: 'מבני נתונים' },
     { code: 'CS202', name: 'אלגוריתמים וניתוח סיבוכיות' },
-    { code: 'MATH101', name: 'מתמטיקה בדידה' },
+    { code: 'MATH101', name: 'מתמטיקה דיסקרטית' },
     { code: 'MATH102', name: 'אלגברה לינארית' },
-    { code: 'MATH103', name: 'חשבון דיפרנציאלי ואינטגרלי' },
+    { code: 'MATH103', name: 'חדו"א / חשבון דיפרנציאלי ואינטגרלי' },
+    // Systems Courses (קורסי מערכות)
     { code: 'CS301', name: 'מערכות הפעלה' },
     { code: 'CS302', name: 'בסיסי נתונים' },
     { code: 'CS303', name: 'רשתות מחשבים' },
     { code: 'CS304', name: 'קומפיילרים' },
     { code: 'CS305', name: 'הנדסת תוכנה' },
     { code: 'CS306', name: 'אבטחת מידע' },
+    // Programming & Technology Courses (קורסי תכנות וטכנולוגיה)
     { code: 'CS401', name: 'תכנות מתקדם' },
     { code: 'CS402', name: 'פיתוח מערכות מבוזרות' },
     { code: 'CS403', name: 'פיתוח Web' },
     { code: 'CS404', name: 'פיתוח אפליקציות' },
     { code: 'CS405', name: 'תכנות מקבילי' },
+    // Advanced/Enrichment Courses (קורסי העשרה / מתקדמים)
     { code: 'CS501', name: 'בינה מלאכותית' },
     { code: 'CS502', name: 'למידת מכונה' },
     { code: 'CS503', name: 'מדעי הנתונים' },
   ];
 
   // Create courses for each institution
-  // Note: For initial seeding, we create courses for the first 5 institutions to keep seed data manageable.
-  // In production, admins can add courses for specific institutions as needed through the admin interface.
-  const selectedInstitutions = institutions.slice(0, 5);
+  // Create courses for all institutions to ensure comprehensive coverage
   const courses = [];
   
-  for (const institution of selectedInstitutions) {
+  for (const institution of institutions) {
     for (const course of coursesList) {
-      // Create unique course code by combining course code and institution
-      // Using institution index to avoid collisions with similar institution names
+      // Create unique course code by combining course code and institution index
       const institutionIndex = institutions.indexOf(institution);
       const uniqueCourseCode = `${course.code}-INST${institutionIndex}`;
       

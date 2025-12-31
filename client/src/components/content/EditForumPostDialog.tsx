@@ -38,6 +38,7 @@ interface Course {
   id: number;
   courseCode: string;
   courseName: string;
+  institution: string;
 }
 
 interface EditForumPostDialogProps {
@@ -147,7 +148,7 @@ export function EditForumPostDialog({ post, open, onClose, onSave }: EditForumPo
               <SelectContent>
                 {courses.map((course) => (
                   <SelectItem key={course.id} value={course.id.toString()}>
-                    {course.courseCode} - {course.courseName}
+                    {course.courseCode} - {course.courseName} ({course.institution})
                   </SelectItem>
                 ))}
               </SelectContent>
