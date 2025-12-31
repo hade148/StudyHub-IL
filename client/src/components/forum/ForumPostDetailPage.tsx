@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect, useRef } from 'react';
-import { ChevronRight, Home, MessageCircle, Send, User, CheckCircle2, Star, Eye , ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronRight, Home, MessageCircle, Send, User, CheckCircle2, Star, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Textarea } from '../ui/textarea';
@@ -189,9 +189,9 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800 mx-auto"></div>
           <p className="mt-4 text-gray-600">טוען...</p>
         </div>
       </div>
@@ -200,10 +200,10 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600">{error || 'פוסט לא נמצא'}</p>
-          <Button onClick={onNavigateForum} className="mt-4">
+          <Button onClick={onNavigateForum} className="mt-4 bg-gray-900 hover:bg-gray-800">
             חזרה לפורום
           </Button>
         </div>
@@ -212,7 +212,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -234,26 +234,22 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
         </div>
 
         {/* Question Card */}
-        <div className="bg-white border border-gray-200 rounded-lg p-8 space-y-6 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 mb-6 shadow-sm">
           {/* Header */}
           <div className="space-y-4">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3">
-                <Badge className="bg-gray-100 text-gray-700 border border-gray-300">
+                <Badge className="bg-gray-100 text-gray-700 border border-gray-300 transition-colors">
                   {post.course.courseCode}
                 </Badge>
                 {post.isAnswered && (
-                  <Badge className="bg-gray-50 text-gray-700 border border-gray-300 flex items-center gap-1">
+                  <Badge className="bg-gray-50 text-gray-700 border border-gray-300 flex items-center gap-1 transition-colors">
                     <CheckCircle2 className="w-3 h-3" />
                     נענה
                   </Badge>
                 )}
               </div>
               <div className="flex items-center gap-3 text-gray-500 text-sm">
-                <div className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  <span>{post.views} צפיות</span>
-                </div>
                 <div className="flex items-center gap-1">
                   <MessageCircle className="w-4 h-4" />
                   <span>{post.comments.length} תשובות</span>
@@ -265,7 +261,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
           </div>
 
           {/* Author Info */}
-          <div className="flex items-center gap-3 border-b border-gray-200 pb-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
             <Avatar className="w-10 h-10">
               <AvatarFallback className="bg-gray-200 text-gray-700">
                 {getInitials(post.author.fullName)}
@@ -312,7 +308,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
           )}
 
           {/* Rating Section */}
-          <div className="border-t border-gray-200 pt-4 mt-4">
+          <div className="border-t border-gray-100 pt-4 mt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-gray-700 font-medium">דרג את השאלה:</span>
@@ -327,7 +323,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                       className="transition-transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Star
-                        className={`w-6 h-6 ${
+                        className={`w-6 h-6 transition-colors ${
                           (hoverRating !== null ? star <= hoverRating : (userRating !== null && star <= userRating))
                             ? 'fill-gray-400 text-gray-400'
                             : 'text-gray-300'
@@ -345,7 +341,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
               {post.avgRating !== null && post.avgRating !== undefined && (
                 <div className="flex items-center gap-2 text-gray-600">
                   <Star className="w-5 h-5 fill-gray-400 text-gray-400" />
-                  <span className="font-medium">{post.avgRating.toFixed(1)}</span>
+                  <span className="font-semibold">{post.avgRating.toFixed(1)}</span>
                   <span className="text-sm">
                     ({post._count?.ratings || 0} דירוגים)
                   </span>
@@ -356,7 +352,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
         </div>
 
         {/* Answers Section */}
-        <div className="bg-white border border-gray-200 rounded-lg p-8 space-y-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 space-y-6 shadow-sm">
           <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-900">
             <MessageCircle className="w-5 h-5 text-gray-600" />
             תשובות ({post.comments.length})
@@ -365,8 +361,10 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
           {/* Answers List */}
           <div className="space-y-4">
             {post.comments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <div className="text-center py-12 text-gray-500">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <MessageCircle className="w-8 h-8 text-gray-400" />
+                </div>
                 <p>אין תשובות עדיין. היה הראשון לענות!</p>
               </div>
             ) : (
@@ -376,36 +374,42 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="border border-gray-200 rounded-lg p-6 space-y-4 hover:border-gray-300 hover:shadow-md transition-all"
+                  className="border border-gray-200 rounded-xl p-6 hover:border-gray-300 hover:shadow-md transition-all"
                 >
-                  {/* Answer Header */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-10 h-10">
-                        <AvatarFallback className="bg-gray-200 text-gray-700">
-                          {getInitials(comment.author.fullName)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-gray-900">{comment.author.fullName}</p>
-                        <p className="text-sm text-gray-500">{formatDate(comment.createdAt)}</p>
+                  <div className="flex gap-6">
+                    {/* Left side - Metadata */}
+                    <div className="flex flex-col items-center gap-3 min-w-[80px] border-l border-gray-100 pl-6">
+                      {/* Voting (UI only for now) */}
+                      <div className="flex flex-col items-center gap-1">
+                        <button className="p-1 hover:bg-gray-50 rounded-lg transition-colors">
+                          <ArrowUp className="w-5 h-5 text-gray-400 hover:text-gray-700" />
+                        </button>
+                        <span className="text-gray-700 font-semibold">0</span>
+                        <button className="p-1 hover:bg-gray-50 rounded-lg transition-colors">
+                          <ArrowDown className="w-5 h-5 text-gray-400 hover:text-gray-700" />
+                        </button>
                       </div>
                     </div>
                     
-                    {/* Voting (UI only for now) */}
-                    <div className="flex items-center gap-2">
-                      <button className="p-1 hover:bg-gray-50 rounded transition-colors">
-                        <ArrowUp className="w-5 h-5 text-gray-400 hover:text-gray-700" />
-                      </button>
-                      <span className="text-gray-600 font-medium">0</span>
-                      <button className="p-1 hover:bg-gray-50 rounded transition-colors">
-                        <ArrowDown className="w-5 h-5 text-gray-400 hover:text-gray-700" />
-                      </button>
+                    {/* Right/Center side - Answer content */}
+                    <div className="flex-1 space-y-4">
+                      {/* Answer Header */}
+                      <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                        <Avatar className="w-10 h-10">
+                          <AvatarFallback className="bg-gray-200 text-gray-700">
+                            {getInitials(comment.author.fullName)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-gray-900">{comment.author.fullName}</p>
+                          <p className="text-sm text-gray-500">{formatDate(comment.createdAt)}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Answer Content */}
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{comment.text}</p>
                     </div>
                   </div>
-                  
-                  {/* Answer Content */}
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{comment.text}</p>
                 </motion.div>
               ))
             )}
@@ -414,7 +418,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
           {/* Add Answer Form */}
           <div className="border-t border-gray-100 pt-6">
             <h3 className="font-semibold text-gray-900 mb-4">הוסף תשובה</h3>
-            <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3 shadow-sm">
               <div className="flex items-center gap-2">
                 <Avatar className="w-8 h-8">
                   <AvatarFallback className="bg-gray-200 text-gray-700 text-sm">
@@ -427,14 +431,14 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="כתוב את התשובה שלך..."
-                className="resize-none"
+                className="resize-none border-gray-200 focus:border-gray-400"
                 rows={4}
               />
               <div className="flex justify-end">
                 <Button
                   onClick={handleAddComment}
                   disabled={!newComment.trim() || submitting}
-                  className="bg-gray-900 hover:bg-gray-800 text-white"
+                  className="bg-gray-900 hover:bg-gray-800 text-white shadow-md hover:shadow-lg transition-all"
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">
