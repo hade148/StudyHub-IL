@@ -53,11 +53,31 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, onAvatarUpload
         setInstitutions([...response.data, 'אחר']);
       } catch (error) {
         console.error('Error fetching institutions:', error);
-        // Fallback to default list if API fails
+        // Fallback to comprehensive default list if API fails
         setInstitutions([
+          // Universities
           'האוניברסיטה העברית בירושלים',
           'אוניברסיטת תל אביב',
+          'אוניברסיטת בן־גוריון בנגב',
           'הטכניון – מכון טכנולוגי לישראל',
+          'אוניברסיטת חיפה',
+          'אוניברסיטת בר־אילן',
+          'מכון ויצמן למדע',
+          'האוניברסיטה הפתוחה',
+          'אוניברסיטת רייכמן (המרכז הבינתחומי הרצליה)',
+          // Academic Colleges
+          'המרכז האקדמי לב (JCT – מכון לב)',
+          'המכללה האקדמית תל אביב–יפו',
+          'המכללה האקדמית ספיר',
+          'המכללה האקדמית עמק יזרעאל',
+          'המכללה האקדמית אחוה',
+          'המכללה האקדמית אשקלון',
+          'המכללה האקדמית נתניה',
+          'המכללה האקדמית כנרת',
+          'המכללה האקדמית להנדסה סמי שמעון (SCE)',
+          'מכללת HIT – מכון טכנולוגי חולון',
+          'מכללת אורט בראודה',
+          'הקריה האקדמית אונו',
           'אחר',
         ]);
       } finally {
