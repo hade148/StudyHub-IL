@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '../ui/badge';
+import api from '../../utils/api';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -41,6 +42,30 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, onAvatarUpload
   const [newInterest, setNewInterest] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string>(user.avatar || '');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [institutions, setInstitutions] = useState<string[]>([]);
+  const [loadingInstitutions, setLoadingInstitutions] = useState(true);
+
+  // Fetch institutions from API
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      try {
+        const response = await api.get('/courses/institutions');
+        setInstitutions([...response.data, 'אחר']);
+      } catch (error) {
+        console.error('Error fetching institutions:', error);
+        // Fallback to default list if API fails
+        setInstitutions([
+          'האוניברסיטה העברית בירושלים',
+          'אוניברסיטת תל אביב',
+          'הטכניון – מכון טכנולוגי לישראל',
+          'אחר',
+        ]);
+      } finally {
+        setLoadingInstitutions(false);
+      }
+    };
+    fetchInstitutions();
+  }, []);
 
   // Reinitialize form when user data changes or modal opens
   useEffect(() => {
@@ -253,13 +278,22 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, onAvatarUpload
               {/* Institution */}
               <div className="space-y-2">
                 <Label htmlFor="institution">מוסד לימודים</Label>
-                <Input
+                <select
                   id="institution"
                   value={formData.institution}
                   onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                  placeholder="האוניברסיטה העברית"
-                  className="text-right"
-                />
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-60"
+                  disabled={loadingInstitutions}
+                >
+                  <option value="">
+                    {loadingInstitutions ? 'טוען מוסדות...' : 'בחר מוסד לימודים'}
+                  </option>
+                  {institutions.map((inst) => (
+                    <option key={inst} value={inst}>
+                      {inst}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Field of Study */}

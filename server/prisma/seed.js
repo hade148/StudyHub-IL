@@ -35,59 +35,82 @@ async function main() {
   });
   console.log('✅ Created student user:', student.email);
 
-  // Create Courses
-  const courses = await Promise.all([
-    prisma.course.upsert({
-      where: { courseCode: 'CS101' },
-      update: {},
-      create: {
-        courseCode: 'CS101',
-        courseName: 'מבוא למדעי המחשב',
-        institution: 'אוניברסיטה עברית',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'CS202' },
-      update: {},
-      create: {
-        courseCode: 'CS202',
-        courseName: 'מבני נתונים',
-        institution: 'הטכניון',
-        semester: 'סמסטר ב 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'CS301' },
-      update: {},
-      create: {
-        courseCode: 'CS301',
-        courseName: 'אלגוריתמים',
-        institution: 'אוניברסיטת תל אביב',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'MATH101' },
-      update: {},
-      create: {
-        courseCode: 'MATH101',
-        courseName: 'חשבון אינפיניטסימלי 1',
-        institution: 'אוניברסיטת בן גוריון',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-    prisma.course.upsert({
-      where: { courseCode: 'PHYS101' },
-      update: {},
-      create: {
-        courseCode: 'PHYS101',
-        courseName: 'פיזיקה 1',
-        institution: 'אוניברסיטת בר אילן',
-        semester: 'סמסטר א 2024',
-      },
-    }),
-  ]);
+  // List of institutions
+  const institutions = [
+    'האוניברסיטה העברית בירושלים',
+    'אוניברסיטת תל אביב',
+    'אוניברסיטת בן־גוריון בנגב',
+    'הטכניון – מכון טכנולוגי לישראל',
+    'אוניברסיטת חיפה',
+    'אוניברסיטת בר־אילן',
+    'מכון ויצמן למדע',
+    'האוניברסיטה הפתוחה',
+    'אוניברסיטת רייכמן',
+    'המרכז האקדמי לב (JCT)',
+    'המכללה האקדמית תל אביב–יפו',
+    'המכללה האקדמית ספיר',
+    'המכללה האקדמית עמק יזרעאל',
+    'המכללה האקדמית אחוה',
+    'המכללה האקדמית אשקלון',
+    'המכללה האקדמית נתניה',
+    'המכללה האקדמית כנרת',
+    'המכללה האקדמית להנדסה סמי שמעון (SCE)',
+    'מכללת HIT – מכון טכנולוגי חולון',
+    'מכללת אורט בראודה',
+    'הקריה האקדמית אונו',
+  ];
+
+  // List of CS courses
+  const coursesList = [
+    { code: 'CS101', name: 'מבוא למדעי המחשב' },
+    { code: 'CS102', name: 'תכנות מונחה עצמים' },
+    { code: 'CS201', name: 'מבני נתונים' },
+    { code: 'CS202', name: 'אלגוריתמים וניתוח סיבוכיות' },
+    { code: 'MATH101', name: 'מתמטיקה בדידה' },
+    { code: 'MATH102', name: 'אלגברה לינארית' },
+    { code: 'MATH103', name: 'חשבון דיפרנציאלי ואינטגרלי' },
+    { code: 'CS301', name: 'מערכות הפעלה' },
+    { code: 'CS302', name: 'בסיסי נתונים' },
+    { code: 'CS303', name: 'רשתות מחשבים' },
+    { code: 'CS304', name: 'קומפיילרים' },
+    { code: 'CS305', name: 'הנדסת תוכנה' },
+    { code: 'CS306', name: 'אבטחת מידע' },
+    { code: 'CS401', name: 'תכנות מתקדם' },
+    { code: 'CS402', name: 'פיתוח מערכות מבוזרות' },
+    { code: 'CS403', name: 'פיתוח Web' },
+    { code: 'CS404', name: 'פיתוח אפליקציות' },
+    { code: 'CS405', name: 'תכנות מקבילי' },
+    { code: 'CS501', name: 'בינה מלאכותית' },
+    { code: 'CS502', name: 'למידת מכונה' },
+    { code: 'CS503', name: 'מדעי הנתונים' },
+  ];
+
+  // Create courses for each institution
+  // Note: For initial seeding, we create courses for the first 5 institutions to keep seed data manageable.
+  // In production, admins can add courses for specific institutions as needed through the admin interface.
+  const selectedInstitutions = institutions.slice(0, 5);
+  const courses = [];
+  
+  for (const institution of selectedInstitutions) {
+    for (const course of coursesList) {
+      // Create unique course code by combining course code and institution
+      // Using institution index to avoid collisions with similar institution names
+      const institutionIndex = institutions.indexOf(institution);
+      const uniqueCourseCode = `${course.code}-INST${institutionIndex}`;
+      
+      const createdCourse = await prisma.course.upsert({
+        where: { courseCode: uniqueCourseCode },
+        update: {},
+        create: {
+          courseCode: uniqueCourseCode,
+          courseName: course.name,
+          institution: institution,
+          semester: 'סמסטר א 2024',
+        },
+      });
+      courses.push(createdCourse);
+    }
+  }
   console.log('✅ Created courses:', courses.length);
 
   // Create Summaries

@@ -57,7 +57,10 @@ router.get('/', async (req, res) => {
           select: { summaries: true, forumPosts: true }
         }
       },
-      orderBy: { courseName: 'asc' }
+      orderBy: [
+        { institution: 'asc' },
+        { courseName: 'asc' }
+      ]
     });
     res.json(courses);
   } catch (error) {
