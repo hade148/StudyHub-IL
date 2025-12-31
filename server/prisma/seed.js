@@ -85,17 +85,24 @@ async function main() {
     { code: 'CS503', name: 'מדעי הנתונים' },
   ];
 
-  // Create courses for each institution (selecting a few institutions for seeding)
-  const selectedInstitutions = institutions.slice(0, 5); // Use first 5 institutions for seed
+  // Create courses for each institution
+  // Note: For initial seeding, we create courses for the first 5 institutions to keep seed data manageable.
+  // In production, admins can add courses for specific institutions as needed through the admin interface.
+  const selectedInstitutions = institutions.slice(0, 5);
   const courses = [];
   
   for (const institution of selectedInstitutions) {
     for (const course of coursesList) {
+      // Create unique course code by combining course code and institution
+      // Using institution index to avoid collisions with similar institution names
+      const institutionIndex = institutions.indexOf(institution);
+      const uniqueCourseCode = `${course.code}-INST${institutionIndex}`;
+      
       const createdCourse = await prisma.course.upsert({
-        where: { courseCode: `${course.code}-${institution.substring(0, 10)}` },
+        where: { courseCode: uniqueCourseCode },
         update: {},
         create: {
-          courseCode: `${course.code}-${institution.substring(0, 10)}`,
+          courseCode: uniqueCourseCode,
           courseName: course.name,
           institution: institution,
           semester: 'סמסטר א 2024',
