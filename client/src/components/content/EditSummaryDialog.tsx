@@ -140,7 +140,7 @@ export function EditSummaryDialog({ summary, open, onClose, onSave }: EditSummar
               <SelectContent>
                 {courses.map((course) => (
                   <SelectItem key={course.id} value={course.id.toString()}>
-                    {course.courseCode} - {course.courseName} ({course.institution})
+                    {course.courseCode} - {course.courseName}
                   </SelectItem>
                 ))}
               </SelectContent>

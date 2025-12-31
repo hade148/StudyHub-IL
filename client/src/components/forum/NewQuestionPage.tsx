@@ -430,7 +430,7 @@ export function NewQuestionPage() {
                       <option value="0">בחר קורס...</option>
                       {courses.map((course) => (
                         <option key={course.id} value={course.id}>
-                          {course.courseCode} - {course.courseName} ({course.institution})
+                          {course.courseCode} - {course.courseName}
                         </option>
                       ))}
                     </select>

@@ -532,7 +532,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         </option>
                         {courses.map((course) => (
                           <option key={course.id} value={course.id}>
-                            {course.courseCode} - {course.courseName} ({course.institution})
+                            {course.courseCode} - {course.courseName} 
                           </option>
                         ))}
                       </select>
