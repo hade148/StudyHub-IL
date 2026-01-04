@@ -38,3 +38,14 @@ server/uploads/*
 # Testing
 coverage/
 .nyc_output/
+
+# Selenium Tests
+selenium-tests/__pycache__/
+selenium-tests/.pytest_cache/
+selenium-tests/screenshots/
+selenium-tests/report.html
+selenium-tests/test-results.xml
+selenium-tests/.env
+selenium-tests/test_files/
+*.pyc
+__pycache__/
