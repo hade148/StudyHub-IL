@@ -2,41 +2,16 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, isAdmin } = require('../middleware/auth');
 const { courseValidation } = require('../middleware/validation');
+const { ISRAELI_INSTITUTIONS } = require('../constants/institutions');
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // GET /api/courses/institutions - Get list of unique institutions
-// Note: With the simplified course structure, this returns a generic list
+// Note: With the simplified course structure, this returns a predefined list
 router.get('/institutions', async (req, res) => {
   try {
-    // Return a predefined list of Israeli academic institutions
-    const institutions = [
-      'האוניברסיטה העברית בירושלים',
-      'אוניברסיטת תל אביב',
-      'אוניברסיטת בן־גוריון בנגב',
-      'הטכניון – מכון טכנולוגי לישראל',
-      'אוניברסיטת חיפה',
-      'אוניברסיטת בר־אילן',
-      'מכון ויצמן למדע',
-      'האוניברסיטה הפתוחה',
-      'אוניברסיטת רייכמן (המרכז הבינתחומי הרצליה)',
-      'המרכז האקדמי לב (JCT – מכון לב)',
-      'המכללה האקדמית תל אביב–יפו',
-      'המכללה האקדמית ספיר',
-      'המכללה האקדמית עמק יזרעאל',
-      'המכללה האקדמית אחוה',
-      'המכללה האקדמית אשקלון',
-      'המכללה האקדמית נתניה',
-      'המכללה האקדמית כנרת',
-      'המכללה האקדמית להנדסה סמי שמעון (SCE)',
-      'מכללת HIT – מכון טכנולוגי חולון',
-      'מכללת אורט בראודה',
-      'הקריה האקדמית אונו',
-      'אחר',
-    ];
-    
-    res.json(institutions);
+    res.json(ISRAELI_INSTITUTIONS);
   } catch (error) {
     console.error('Get institutions error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת מוסדות לימודים' });

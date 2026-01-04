@@ -54,7 +54,7 @@ async function main() {
   // Create courses from coursesList - one course per entry without duplication
   for (let i = 0; i < coursesList.length; i++) {
     const courseName = coursesList[i];
-    const courseCode = `COURSE${i + 1}`;
+    const courseCode = `COURSE${(i + 1).toString().padStart(2, '0')}`;
     
     await prisma.course.upsert({
       where: { courseCode: courseCode },
