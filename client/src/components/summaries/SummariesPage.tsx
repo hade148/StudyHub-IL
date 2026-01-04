@@ -110,7 +110,7 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
           return {
             id: summary.id,
             title: summary.title,
-            course: summary.course.courseCode,
+            course: summary.course.courseName,
             courseFullName: summary.course.courseName,
             institution: summary.course.institution,
             rating: summary.avgRating || 0,
