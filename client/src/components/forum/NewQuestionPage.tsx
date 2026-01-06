@@ -11,7 +11,8 @@ import {
   Eye,
   X as XIcon,
   Lightbulb,
-  Flame
+  Flame,
+  ChevronRight
 } from 'lucide-react';
 import { TagInput } from './TagInput';
 import { RichTextEditor } from './RichTextEditor';
@@ -221,7 +222,7 @@ export function NewQuestionPage() {
               <Home className="w-4 h-4" />
               דף הבית
             </button>
-            <span>/</span>
+            <ChevronRight className="w-4 h-4" />
             <button
               onClick={() => navigate('/forum')}
               className="hover:text-blue-600 transition-colors flex items-center gap-1"
@@ -229,7 +230,7 @@ export function NewQuestionPage() {
               <MessageSquare className="w-4 h-4" />
               פורום
             </button>
-            <span>/</span>
+            <ChevronRight className="w-4 h-4" />
             <span className="text-gray-900">שאלה חדשה</span>
           </div>
         </div>
