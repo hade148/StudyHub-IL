@@ -145,13 +145,13 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
           <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-2 border-t border-gray-100">
             <div className="flex items-center gap-2">
               <Avatar className="w-6 h-6">
-                <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
+                <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-xs">
                   {displayAvatar}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm">{displayName}</span>
               {question.author.reputation && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-200">
                   {question.author.reputation}
                 </span>
               )}

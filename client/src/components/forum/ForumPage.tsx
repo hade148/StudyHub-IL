@@ -479,7 +479,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
       </div>
 
       {/* Centered Content Section */}
-      <div className="flex justify-center px-4">
+      <div className="flex justify-center px-4 pb-12">
         <div className="w-full max-w-4xl">
           {/* Tabs Navigation */}
           <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
@@ -527,11 +527,9 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
 
               {/* Pagination */}
               {totalPages > 1 && (
-              <div className="flex flex-col items-center gap-4 pt-8">
-                <div className="text-sm text-gray-600">
-                  מציג {(currentPage - 1) * itemsPerPage + 1}-
-                  {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך{' '}
-                  {filteredQuestions.length} שאלות
+              <div className="flex flex-col items-center gap-4 pt-8 pb-12">
+                <div className="text-gray-600">
+                  מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך {filteredQuestions.length} תוצאות
                 </div>
 
                 <Pagination>
