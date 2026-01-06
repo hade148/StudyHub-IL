@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { 
+  Home,
   FileText, 
   MessageCircle, 
   Wrench, 
@@ -153,17 +155,30 @@ export function MyContentPage() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-50 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="container mx-auto px-4"
-      >
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">התכנים שלי</h1>
-          <p className="text-gray-600">נהל את כל התכנים שהעלית למערכת</p>
+    <div dir="rtl" className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Home className="w-4 h-4" />
+            <Link to="/" className="hover:text-blue-600 transition-colors">דף הבית</Link>
+            <span>/</span>
+            <span className="text-gray-900">התכנים שלי</span>
+          </div>
         </div>
+      </div>
+
+      <div className="py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="container mx-auto px-4"
+        >
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">התכנים שלי</h1>
+            <p className="text-gray-600">נהל את כל התכנים שהעלית למערכת</p>
+          </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -386,6 +401,7 @@ export function MyContentPage() {
           </TabsContent>
         </Tabs>
       </motion.div>
+      </div>
 
       {/* Edit Dialogs */}
       {editingSummary && (

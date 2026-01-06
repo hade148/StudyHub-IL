@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Home, 
@@ -251,10 +251,10 @@ export function NewQuestionPage() {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Home className="w-4 h-4" />
-            <span>דף הבית</span>
+            <Link to="/" className="hover:text-blue-600 transition-colors">דף הבית</Link>
             <span>/</span>
             <MessageSquare className="w-4 h-4" />
-            <span>פורום</span>
+            <Link to="/forum" className="hover:text-blue-600 transition-colors">פורום</Link>
             <span>/</span>
             <span className="text-gray-900">שאלה חדשה</span>
           </div>
