@@ -148,7 +148,7 @@ export function EditForumPostDialog({ post, open, onClose, onSave }: EditForumPo
               <SelectContent>
                 {courses.map((course) => (
                   <SelectItem key={course.id} value={course.id.toString()}>
-                    {course.courseCode} - {course.courseName}
+                    {course.courseName}
                   </SelectItem>
                 ))}
               </SelectContent>

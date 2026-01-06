@@ -240,7 +240,7 @@ export function SummaryDetailPage({ summaryId, onNavigateHome, onNavigateSummari
                 <h1 className="text-gray-900 text-2xl">{summary.title}</h1>
               </div>
               <Badge className="bg-blue-100 text-blue-700">
-                {summary.course.courseCode} - {summary.course.courseName}
+                {summary.course.courseName}
               </Badge>
             </div>
             
