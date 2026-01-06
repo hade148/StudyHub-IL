@@ -528,10 +528,8 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
               {/* Pagination */}
               {totalPages > 1 && (
               <div className="flex flex-col items-center gap-4 pt-8 pb-12">
-                <div className="text-sm text-gray-600">
-                  מציג {(currentPage - 1) * itemsPerPage + 1}-
-                  {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך{' '}
-                  {filteredQuestions.length} שאלות
+                <div className="text-gray-600">
+                  מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך {filteredQuestions.length} תוצאות
                 </div>
 
                 <Pagination>
