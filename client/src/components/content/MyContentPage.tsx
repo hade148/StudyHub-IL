@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -14,7 +15,9 @@ import {
   Eye,
   Download,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Home,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
@@ -75,6 +78,7 @@ interface ForumPost {
 }
 
 export function MyContentPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [tools, setTools] = useState<Tool[]>([]);
@@ -153,7 +157,26 @@ export function MyContentPage() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-50 py-8">
+    <div dir="rtl" className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="hover:text-blue-600 transition-colors flex items-center gap-1"
+            >
+              <Home className="w-4 h-4" />
+              דף הבית
+            </button>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-gray-900">התכנים שלי</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -434,6 +457,7 @@ export function MyContentPage() {
           onConfirm={handleDeleteItem}
         />
       )}
+      </div>
     </div>
   );
 }
