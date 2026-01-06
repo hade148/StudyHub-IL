@@ -6,12 +6,9 @@ import {
   Home, 
   MessageSquare, 
   CheckCircle, 
-  AlertCircle,
   Save,
   Eye,
-  X as XIcon,
-  Lightbulb,
-  Flame
+  X as XIcon
 } from 'lucide-react';
 import { TagInput } from './TagInput';
 import { RichTextEditor } from './RichTextEditor';
@@ -25,7 +22,6 @@ import { coursesList } from '../../constants/coursesList';
 
 interface CodeSnippet {
   id: string;
-  language: string;
   code: string;
 }
 
@@ -36,8 +32,6 @@ interface FormData {
   tags: string[];
   codeSnippets: CodeSnippet[];
   images: string[];
-  isUrgent: boolean;
-  followPost: boolean;
 }
 
 const POPULAR_TAGS = [
@@ -84,7 +78,6 @@ export function NewQuestionPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [createdPostId, setCreatedPostId] = useState<number | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [userPoints] = useState(45);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -104,8 +97,6 @@ export function NewQuestionPage() {
       tags: [],
       codeSnippets: [],
       images: [],
-      isUrgent: false,
-      followPost: true,
     },
   });
 
@@ -145,8 +136,6 @@ export function NewQuestionPage() {
       if (data.tags && data.tags.length > 0) {
         formData.append('tags', JSON.stringify(data.tags));
       }
-      
-      formData.append('isUrgent', data.isUrgent.toString());
 
       // Add image files
       imageFiles.forEach((file) => {
@@ -226,21 +215,23 @@ export function NewQuestionPage() {
       </div>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-2">
-            <MessageSquare className="w-8 h-8" />
-            <h1 className="text-3xl">שאול שאלה חדשה</h1>
+      <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 text-white shadow-lg">
+        <div className="max-w-5xl mx-auto px-4 py-10">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+              <MessageSquare className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold">שאלה חדשה</h1>
+              <p className="text-blue-50 mt-1 text-lg">קבל עזרה מהקהילה - תאר את השאלה שלך בפרטים</p>
+            </div>
           </div>
-          <p className="text-blue-100">תאר את השאלה שלך בפרטים כדי לקבל תשובות טובות</p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Form - Left/Main Column */}
-          <div className="lg:col-span-2 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="space-y-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Step 1 - Title */}
               <motion.div
@@ -420,183 +411,7 @@ export function NewQuestionPage() {
                   </div>
                 </div>
               </motion.div>
-
-              {/* Step 4 - Additional Options */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-              >
-                <h2 className="text-xl mb-4 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full">4</span>
-                  אפשרויות נוספות
-                </h2>
-
-                <div className="space-y-4">
-                  {/* Follow Post */}
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      {...register('followPost')}
-                      type="checkbox"
-                      className="mt-1 w-5 h-5 text-blue-500 rounded"
-                    />
-                    <div>
-                      <div className="group-hover:text-blue-600 transition-colors">
-                        הוסף למעקב - קבל התראות על תשובות חדשות
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">
-                        תקבל התראה בכל פעם שמישהו עונה על השאלה שלך
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Urgent */}
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      {...register('isUrgent')}
-                      type="checkbox"
-                      className="mt-1 w-5 h-5 text-red-500 rounded"
-                    />
-                    <div className="flex-1">
-                      <div className="group-hover:text-red-600 transition-colors flex items-center gap-2">
-                        <Flame className="w-5 h-5" />
-                        שאלה דחופה - הדגש את השאלה
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">
-                        השאלה תקבל עדיפות גבוהה בפורום
-                      </p>
-                      {watchedFields.isUrgent && (
-                        <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-orange-700">עלות: 10 נקודות</span>
-                            <span className="text-gray-600">יש לך {userPoints} נקודות</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </label>
-                </div>
-              </motion.div>
             </form>
-          </div>
-
-          {/* Guidelines Sidebar - Right Column */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-4 space-y-6">
-              {/* Validation Checklist */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-              >
-                <h3 className="flex items-center gap-2 mb-4">
-                  <CheckCircle className="w-5 h-5 text-blue-500" />
-                  סטטוס תקינות
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    {validationStatus.title ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className={validationStatus.title ? 'text-green-700' : 'text-gray-600'}>
-                      כותרת (10-150 תווים)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    {validationStatus.description ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className={validationStatus.description ? 'text-green-700' : 'text-gray-600'}>
-                      תיאור (50+ תווים)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    {validationStatus.course ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className={validationStatus.course ? 'text-green-700' : 'text-gray-600'}>
-                      קורס נבחר
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    {validationStatus.tags ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className={validationStatus.tags ? 'text-green-700' : 'text-gray-600'}>
-                      תג אחד לפחות
-                    </span>
-                  </div>
-                  {allValid && (
-                    <div className="pt-3 mt-3 border-t border-gray-200">
-                      <div className="flex items-center gap-2 text-green-600">
-                        <CheckCircle className="w-5 h-5" />
-                        <span>מוכן לפרסום!</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-
-              {/* Guidelines */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-blue-50 rounded-lg border border-blue-200 p-6"
-              >
-                <h3 className="flex items-center gap-2 mb-4 text-blue-900">
-                  <Lightbulb className="w-5 h-5" />
-                  טיפים לשאלה טובה
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-blue-900">כתוב כותרת ברורה וספציפית</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-blue-900">תאר את הבעיה בפרטים</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-blue-900">הוסף קוד רלוונטי</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-blue-900">ציין מה כבר ניסית</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-blue-900">תאר את התוצאה הרצויה</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-blue-900">הוסף תגיות רלוונטיות</span>
-                  </div>
-                  
-                  <div className="pt-3 mt-3 border-t border-blue-300 space-y-2">
-                    <div className="flex items-start gap-2">
-                      <XIcon className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-blue-900">אל תשאל שאלות כלליות מדי</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <XIcon className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-blue-900">אל תשאל כמה שאלות בפוסט אחד</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
         </div>
       </div>
 

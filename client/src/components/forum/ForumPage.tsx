@@ -15,7 +15,6 @@ import {
 } from '../ui/pagination';
 import { QuestionCard } from './QuestionCard';
 import { ForumFilters } from './ForumFilters';
-import { ForumSidebar } from './ForumSidebar';
 import api from '../../utils/api';
 
 const questionsData = [
@@ -462,9 +461,9 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
           </TabsList>
 
           <TabsContent value="all" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="max-w-5xl mx-auto">
               {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="space-y-6">
                 {/* Filters */}
                 <ForumFilters />
 
@@ -543,17 +542,12 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                   </Pagination>
                 </div>
               </div>
-
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
-                <ForumSidebar />
-              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="unanswered" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
+            <div className="max-w-5xl mx-auto">
+              <div className="space-y-6">
                 <ForumFilters />
                 <div className="space-y-4">
                   {currentQuestions.map((question, index) => (
@@ -565,16 +559,13 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                     />
                   ))}
                 </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="popular" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
+            <div className="max-w-5xl mx-auto">
+              <div className="space-y-6">
                 <ForumFilters />
                 <div className="space-y-4">
                   {currentQuestions.map((question, index) => (
@@ -587,15 +578,12 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                   ))}
                 </div>
               </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
-              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="mine" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
+            <div className="max-w-5xl mx-auto">
+              <div className="space-y-6">
                 <ForumFilters />
                 <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
                   <div className="text-6xl">📭</div>
@@ -606,9 +594,6 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                     שאל שאלה ראשונה
                   </Button>
                 </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
               </div>
             </div>
           </TabsContent>
