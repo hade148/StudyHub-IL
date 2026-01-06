@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Mail, Lock, User, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
@@ -20,9 +19,7 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  userType: string;
   institution?: string;
-  fieldOfStudy?: string;
   terms: boolean;
 }
 
@@ -31,19 +28,6 @@ interface PasswordStrength {
   label: string;
   color: string;
 }
-
-const fieldsOfStudy = [
-  'מדעי המחשב',
-  'הנדסה',
-  'מתמטיקה',
-  'פיזיקה',
-  'ביולוגיה',
-  'כימיה',
-  'כלכלה',
-  'משפטים',
-  'רפואה',
-  'אחר',
-];
 
 export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterPageProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,36 +45,10 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
     const fetchInstitutions = async () => {
       try {
         const response = await api.get('/courses/institutions');
-        setInstitutions([...response.data, 'אחר']);
+        setInstitutions(response.data);
       } catch (error) {
         console.error('Error fetching institutions:', error);
-        // Fallback to comprehensive default list if API fails
-        setInstitutions([
-          // Universities
-          'האוניברסיטה העברית בירושלים',
-          'אוניברסיטת תל אביב',
-          'אוניברסיטת בן־גוריון בנגב',
-          'הטכניון – מכון טכנולוגי לישראל',
-          'אוניברסיטת חיפה',
-          'אוניברסיטת בר־אילן',
-          'מכון ויצמן למדע',
-          'האוניברסיטה הפתוחה',
-          'אוניברסיטת רייכמן (המרכז הבינתחומי הרצליה)',
-          // Academic Colleges
-          'המרכז האקדמי לב (JCT – מכון לב)',
-          'המכללה האקדמית תל אביב–יפו',
-          'המכללה האקדמית ספיר',
-          'המכללה האקדמית עמק יזרעאל',
-          'המכללה האקדמית אחוה',
-          'המכללה האקדמית אשקלון',
-          'המכללה האקדמית נתניה',
-          'המכללה האקדמית כנרת',
-          'המכללה האקדמית להנדסה סמי שמעון (SCE)',
-          'מכללת HIT – מכון טכנולוגי חולון',
-          'מכללת אורט בראודה',
-          'הקריה האקדמית אונו',
-          'אחר',
-        ]);
+        setInstitutions(['אחר']);
       } finally {
         setLoadingInstitutions(false);
       }
@@ -106,14 +64,12 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
     setValue,
   } = useForm<RegisterFormData>({
     defaultValues: {
-      userType: 'student',
       terms: false,
     },
   });
 
   const watchPassword = watch('password', '');
   const watchConfirmPassword = watch('confirmPassword', '');
-  const watchUserType = watch('userType', 'student');
   const watchTerms = watch('terms', false);
 
   // Password strength calculation
@@ -439,46 +395,6 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
               )}
             </div>
 
-            {/* User Type */}
-            <div>
-              <Label className="mb-3 flex items-center gap-1">
-                סוג משתמש <span className="text-red-500">*</span>
-              </Label>
-              <RadioGroup
-                value={watchUserType}
-                onValueChange={(value) => setValue('userType', value)}
-                className="grid grid-cols-3 gap-3"
-              >
-                <label
-                  className={`relative flex flex-col items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    watchUserType === 'student' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <RadioGroupItem value="student" id="student" className="sr-only" />
-                  <span className="text-2xl">🎓</span>
-                  <span className="text-sm">סטודנט</span>
-                </label>
-                <label
-                  className={`relative flex flex-col items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    watchUserType === 'teacher' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <RadioGroupItem value="teacher" id="teacher" className="sr-only" />
-                  <span className="text-2xl">👨‍🏫</span>
-                  <span className="text-sm">מרצה</span>
-                </label>
-                <label
-                  className={`relative flex flex-col items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    watchUserType === 'learner' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <RadioGroupItem value="learner" id="learner" className="sr-only" />
-                  <span className="text-2xl">📚</span>
-                  <span className="text-sm">חובב למידה</span>
-                </label>
-              </RadioGroup>
-            </div>
-
             {/* Institution */}
             <div>
               <Label htmlFor="institution" className="mb-2">
@@ -496,26 +412,6 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
                 {institutions.map((inst) => (
                   <option key={inst} value={inst}>
                     {inst}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Field of Study */}
-            <div>
-              <Label htmlFor="fieldOfStudy" className="mb-2">
-                תחום לימודים (אופציונלי)
-              </Label>
-              <select
-                id="fieldOfStudy"
-                {...register('fieldOfStudy')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              >
-                <option value="">בחר תחום לימודים</option>
-                {fieldsOfStudy.map((field) => (
-                  <option key={field} value={field}>
-                    {field}
                   </option>
                 ))}
               </select>
