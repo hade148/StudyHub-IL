@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { 
   Home, 
   MessageSquare, 
@@ -21,6 +21,7 @@ import { SimilarQuestions } from './SimilarQuestions';
 import { QuestionPreviewModal } from './QuestionPreviewModal';
 import { SuccessModal } from './SuccessModal';
 import api from '../../utils/api';
+import { coursesList } from '../../constants/coursesList';
 
 interface CodeSnippet {
   id: string;
@@ -28,33 +29,16 @@ interface CodeSnippet {
   code: string;
 }
 
-interface Course {
-  id: number;
-  courseCode: string;
-  courseName: string;
-  institution: string;
-}
-
 interface FormData {
   title: string;
   description: string;
-  category: string;
   courseId: number;
   tags: string[];
   codeSnippets: CodeSnippet[];
-  images: File[];
+  images: string[];
   isUrgent: boolean;
   followPost: boolean;
 }
-
-const CATEGORIES = [
-  { value: 'computer-science', label: '💻 מדעי המחשב', icon: '💻' },
-  { value: 'mathematics', label: '📊 מתמטיקה', icon: '📊' },
-  { value: 'physics', label: '🔬 פיזיקה', icon: '🔬' },
-  { value: 'chemistry', label: '🧪 כימיה', icon: '🧪' },
-  { value: 'study-resources', label: '📚 משאבי לימוד', icon: '📚' },
-  { value: 'general', label: '🎯 כללי', icon: '🎯' },
-];
 
 const POPULAR_TAGS = [
   'Python',
@@ -101,7 +85,6 @@ export function NewQuestionPage() {
   const [createdPostId, setCreatedPostId] = useState<number | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [userPoints] = useState(45);
-  const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -111,13 +94,12 @@ export function NewQuestionPage() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<FormData>({
     mode: 'onChange',
     defaultValues: {
       title: '',
       description: '',
-      category: '',
       courseId: 0,
       tags: [],
       codeSnippets: [],
@@ -128,19 +110,6 @@ export function NewQuestionPage() {
   });
 
   const watchedFields = watch();
-
-  // Fetch courses on mount
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const response = await api.get('/courses');
-        setCourses(response.data);
-      } catch (err) {
-        console.error('Error fetching courses:', err);
-      }
-    };
-    fetchCourses();
-  }, []);
 
   // Auto-save functionality
   useEffect(() => {
@@ -172,10 +141,6 @@ export function NewQuestionPage() {
       formData.append('title', data.title);
       formData.append('content', data.description);
       formData.append('courseId', data.courseId.toString());
-      
-      if (data.category) {
-        formData.append('category', data.category);
-      }
       
       if (data.tags && data.tags.length > 0) {
         formData.append('tags', JSON.stringify(data.tags));
@@ -226,7 +191,6 @@ export function NewQuestionPage() {
     return {
       title: watchedFields.title.length >= 10 && watchedFields.title.length <= 150,
       description: watchedFields.description.length >= 50,
-      category: !!watchedFields.category,
       tags: watchedFields.tags.length >= 1,
       course: !!watchedFields.courseId && watchedFields.courseId > 0,
     };
@@ -402,7 +366,7 @@ export function NewQuestionPage() {
                 </div>
               </motion.div>
 
-              {/* Step 3 - Category & Tags */}
+              {/* Step 3 - Tags */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -428,45 +392,14 @@ export function NewQuestionPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                     >
                       <option value="0">בחר קורס...</option>
-                      {courses.map((course) => (
-                        <option key={course.id} value={course.id}>
-                          {course.courseName}
+                      {coursesList.map((courseName, index) => (
+                        <option key={index + 1} value={index + 1}>
+                          {courseName}
                         </option>
                       ))}
                     </select>
                     {errors.courseId && (
                       <p className="text-red-500 text-sm mt-2">{errors.courseId.message}</p>
-                    )}
-                  </div>
-
-                  {/* Category */}
-                  <div>
-                    <label className="block text-sm mb-3">
-                      קטגוריה <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {CATEGORIES.map((category) => (
-                        <label
-                          key={category.value}
-                          className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                            watchedFields.category === category.value
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <input
-                            {...register('category', { required: 'יש לבחור קטגוריה' })}
-                            type="radio"
-                            value={category.value}
-                            className="w-4 h-4 text-blue-500"
-                          />
-                          <span className="text-2xl">{category.icon}</span>
-                          <span>{category.label.replace(category.icon + ' ', '')}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {errors.category && (
-                      <p className="text-red-500 text-sm mt-2">{errors.category.message}</p>
                     )}
                   </div>
 
@@ -590,16 +523,6 @@ export function NewQuestionPage() {
                     )}
                     <span className={validationStatus.course ? 'text-green-700' : 'text-gray-600'}>
                       קורס נבחר
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    {validationStatus.category ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-gray-400" />
-                    )}
-                    <span className={validationStatus.category ? 'text-green-700' : 'text-gray-600'}>
-                      קטגוריה נבחרה
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">

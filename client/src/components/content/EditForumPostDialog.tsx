@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import api from '../../utils/api';
+import { coursesList } from '../../constants/coursesList';
 
 interface ForumPost {
   id: number;
@@ -31,14 +32,6 @@ interface ForumPost {
     courseCode: string;
     courseName: string;
   };
-  courseId?: number;
-}
-
-interface Course {
-  id: number;
-  courseCode: string;
-  courseName: string;
-  institution: string;
 }
 
 interface EditForumPostDialogProps {
@@ -54,33 +47,17 @@ export function EditForumPostDialog({ post, open, onClose, onSave }: EditForumPo
   const [category, setCategory] = useState(post.category || '');
   const [isUrgent, setIsUrgent] = useState(post.isUrgent);
   const [courseId, setCourseId] = useState<string>('');
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadCourses();
-  }, []);
-
-  const loadCourses = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get('/courses');
-      setCourses(response.data);
-      
-      // Find and set the current course ID
-      const currentCourse = response.data.find(
-        (c: Course) => c.courseCode === post.course.courseCode
-      );
-      if (currentCourse) {
-        setCourseId(currentCourse.id.toString());
-      }
-    } catch (error) {
-      console.error('Error loading courses:', error);
-    } finally {
-      setLoading(false);
+    // Find the course index in coursesList based on the course name
+    const courseIndex = coursesList.findIndex(
+      (courseName) => courseName === post.course.courseName
+    );
+    if (courseIndex !== -1) {
+      setCourseId((courseIndex + 1).toString());
     }
-  };
+  }, [post]);
 
   const handleSave = async () => {
     if (!title.trim() || !content.trim() || !courseId) {
@@ -141,14 +118,14 @@ export function EditForumPostDialog({ post, open, onClose, onSave }: EditForumPo
 
           <div className="grid gap-2">
             <Label htmlFor="course">קורס *</Label>
-            <Select value={courseId} onValueChange={setCourseId} disabled={loading}>
+            <Select value={courseId} onValueChange={setCourseId}>
               <SelectTrigger id="course">
-                <SelectValue placeholder={loading ? "טוען קורסים..." : "בחר קורס"} />
+                <SelectValue placeholder="בחר קורס" />
               </SelectTrigger>
               <SelectContent>
-                {courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id.toString()}>
-                    {course.courseName}
+                {coursesList.map((courseName, index) => (
+                  <SelectItem key={index + 1} value={(index + 1).toString()}>
+                    {courseName}
                   </SelectItem>
                 ))}
               </SelectContent>

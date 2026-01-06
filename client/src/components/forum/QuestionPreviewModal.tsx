@@ -10,7 +10,6 @@ interface CodeSnippet {
 interface QuestionPreview {
   title: string;
   description: string;
-  category: string;
   tags: string[];
   codeSnippets: CodeSnippet[];
   images: string[];
@@ -23,15 +22,6 @@ interface QuestionPreviewModalProps {
   onPublish: () => void;
   preview: QuestionPreview;
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  'computer-science': '💻 מדעי המחשב',
-  'mathematics': '📊 מתמטיקה',
-  'physics': '🔬 פיזיקה',
-  'chemistry': '🧪 כימיה',
-  'study-resources': '📚 משאבי לימוד',
-  'general': '🎯 כללי',
-};
 
 export function QuestionPreviewModal({ 
   isOpen, 
@@ -78,9 +68,6 @@ export function QuestionPreviewModal({
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                {CATEGORY_LABELS[preview.category] || preview.category}
-              </span>
               {preview.isUrgent && (
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
                   🔥 דחוף
