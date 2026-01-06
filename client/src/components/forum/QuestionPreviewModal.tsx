@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface CodeSnippet {
   id: string;
-  language: string;
   code: string;
 }
 
@@ -13,7 +12,6 @@ interface QuestionPreview {
   tags: string[];
   codeSnippets: CodeSnippet[];
   images: string[];
-  isUrgent: boolean;
 }
 
 interface QuestionPreviewModalProps {
@@ -100,7 +98,7 @@ export function QuestionPreviewModal({
             {preview.codeSnippets.map((snippet, index) => (
               <div key={snippet.id} className="mb-6">
                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-t-lg">
-                  <span className="text-sm text-gray-600">{snippet.language}</span>
+                  <span className="text-sm text-gray-600">קטע קוד {index + 1}</span>
                 </div>
                 <pre className="p-4 bg-gray-50 border border-gray-300 border-t-0 rounded-b-lg overflow-x-auto">
                   <code className="text-sm font-mono" dir="ltr">

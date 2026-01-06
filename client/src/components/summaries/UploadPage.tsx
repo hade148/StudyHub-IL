@@ -33,7 +33,6 @@ interface FormData {
   title: string;
   courseId: string;
   description: string;
-  language: string;
   tags: string[];
   terms: boolean;
 }
@@ -59,7 +58,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
     reset,
   } = useForm<FormData>({
     defaultValues: {
-      language: 'hebrew',
       terms: false,
     },
   });
@@ -67,7 +65,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   const watchTitle = watch('title', '');
   const watchDescription = watch('description', '');
   const watchCourseId = watch('courseId', '');
-  const watchLanguage = watch('language', 'hebrew');
   const watchTerms = watch('terms', false);
 
   const popularTags = [
@@ -528,31 +525,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       </p>
                     </div>
 
-                    {/* Language Toggle */}
-                    <div>
-                      <Label className="mb-3">שפת הסיכום</Label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="hebrew"
-                            {...register('language')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>עברית</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="english"
-                            {...register('language')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>אנגלית</span>
-                        </label>
-                      </div>
-                    </div>
-
                     <div className="flex justify-between mt-8">
                       <Button type="button" onClick={goToPreviousStep} variant="outline">
                         <ChevronLeft className="w-4 h-4 ml-2" />
@@ -701,12 +673,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                           {watchDescription}
                         </p>
                       )}
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <Badge variant="outline" className="border-purple-500 text-purple-700">
-                          {watchLanguage === 'hebrew' ? 'עברית' : 'אנגלית'}
-                        </Badge>
-                      </div>
 
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag) => (
