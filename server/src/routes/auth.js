@@ -49,7 +49,7 @@ const avatarUpload = multer({
 // POST /api/auth/register
 router.post('/register', registerValidation, async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, institution } = req.body;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -58,8 +58,14 @@ router.post('/register', registerValidation, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { fullName, email, passwordHash, role: 'USER' },
-      select: { id: true, fullName: true, email: true, role: true, createdAt: true }
+      data: { 
+        fullName, 
+        email, 
+        passwordHash, 
+        role: 'USER',
+        institution: institution || null  // Save institution if provided
+      },
+      select: { id: true, fullName: true, email: true, role: true, institution: true, createdAt: true }
     });
 
     // Send welcome email (non-blocking)

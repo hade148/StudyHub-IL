@@ -276,8 +276,9 @@ export function EditProfileModal({ isOpen, onClose, user, onSave, onAvatarUpload
                   id="institution"
                   value={formData.institution}
                   onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-60"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={loadingInstitutions}
+                  size={1}
                 >
                   <option value="">
                     {loadingInstitutions ? 'טוען מוסדות...' : 'בחר מוסד לימודים'}
