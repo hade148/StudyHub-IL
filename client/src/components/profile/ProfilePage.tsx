@@ -257,7 +257,7 @@ export function ProfilePage({ onNavigateHome }: ProfilePageProps) {
                                   {activity.answers}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  👁️ {activity.views}
+                                   {activity.views}
                                 </div>
                               </>
                             )}

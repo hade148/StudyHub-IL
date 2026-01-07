@@ -101,7 +101,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
             onClick={onNavigateNewQuestion}
             className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
           >
-            <span className="text-xl ml-2">❓</span>
+            <span className="text-xl ml-2"></span>
             שאלה חדשה
           </Button>
         </div>
@@ -261,7 +261,7 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                   <h3>אין לך שאלות עדיין</h3>
                   <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
                   <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
-                    <span className="text-xl ml-2">❓</span>
+                    <span className="text-xl ml-2"></span>
                     שאל שאלה ראשונה
                   </Button>
                 </div>

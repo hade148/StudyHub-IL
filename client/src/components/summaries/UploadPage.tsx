@@ -708,8 +708,12 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <Checkbox
                         id="terms"
+                        {...register('terms')}
                         checked={watchTerms}
-                        onCheckedChange={(checked) => setValue('terms', !!checked)}
+                        onCheckedChange={(checked) => {
+                          setValue('terms', !!checked);
+                          trigger('terms');
+                        }}
                         className="mt-1"
                       />
                       <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer flex-1">

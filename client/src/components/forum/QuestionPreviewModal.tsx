@@ -51,7 +51,7 @@ export function QuestionPreviewModal({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
             <div>
-              <h2 className="text-2xl">👁️ תצוגה מקדימה</h2>
+              <h2 className="text-2xl"> תצוגה מקדימה</h2>
               <p className="text-sm text-gray-600 mt-1">כך השאלה תיראה בפורום</p>
             </div>
             <button
