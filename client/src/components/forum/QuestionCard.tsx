@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { MessageCircle, Star, CheckCircle2 } from 'lucide-react';
+import { Star, CheckCircle2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
@@ -54,7 +54,6 @@ const categoryColors: Record<string, string> = {
 export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
   const displayName = question.author.fullName || question.author.name || 'אנונימי';
   const displayAvatar = question.author.avatar || displayName.substring(0, 2);
-  const views = question.views || question.stats?.views || 0;
   const answers = question._count?.comments || question.stats?.answers || 0;
   // A question is considered answered if it has comments or the isAnswered flag is true
   const hasComments = answers > 0;
