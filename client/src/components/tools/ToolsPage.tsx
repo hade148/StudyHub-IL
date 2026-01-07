@@ -101,29 +101,28 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
   const filteredTools = filterToolsByCategory(activeCategory);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+      
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8 space-y-8"
+        className="container mx-auto px-4 py-8 space-y-8 relative z-10"
       >
         {/* Page Header */}
         <div className="space-y-4">
           {/* Title */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <Wrench className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-gray-900">כלים אקדמיים</h1>
-                <p className="text-gray-600">כלים שימושיים לסטודנטים</p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">כלים אקדמיים</h1>
+              <p className="text-sm text-gray-600 mt-1">כלים שימושיים לסטודנטים</p>
             </div>
             <Button
               onClick={() => setIsAddDialogOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
               aria-label="הוסף כלי חדש"
             >
               <Plus className="w-4 h-4 ml-2" />
@@ -132,7 +131,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
           </div>
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
             <button
               onClick={onNavigateHome}
               className="hover:text-blue-600 transition-colors flex items-center gap-1"

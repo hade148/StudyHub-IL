@@ -45,45 +45,28 @@ export function ProfileHeader({ user, onEditProfile }: ProfileHeaderProps) {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-xl shadow-lg overflow-hidden"
+      className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 overflow-hidden"
     >
       {/* Cover Image */}
       <div
-        className="relative h-48 md:h-64"
+        className="relative h-40 md:h-48"
         style={
           user.coverPhoto
             ? { backgroundImage: `url(${user.coverPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
+            : { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)' }
         }
       >
         {/* Action Buttons - Top Right */}
         <div className="absolute top-4 left-4 flex gap-2">
           <Button
             variant="outline"
-            className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm"
+            className="bg-white/20 hover:bg-white/30 text-white border-white/40 backdrop-blur-md shadow-lg"
             onClick={onEditProfile}
           >
             <Edit className="w-4 h-4 ml-2" />
-            ערוך פרופיל
-          </Button>
-          <Button
-            variant="outline"
-            className="bg-white/10 hover:bg-white/20 text-white border-white/30 backdrop-blur-sm"
-          >
-            <Settings className="w-4 h-4 ml-2" />
-            הגדרות
+            ערוך
           </Button>
         </div>
-
-        {/* Upload Cover Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="absolute bottom-4 right-4 bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-sm rounded-lg px-4 py-2 transition-all duration-200 flex items-center gap-2"
-        >
-          <Camera className="w-4 h-4" />
-          שנה תמונת רקע
-        </motion.button>
       </div>
 
       {/* Profile Info */}
@@ -94,27 +77,19 @@ export function ProfileHeader({ user, onEditProfile }: ProfileHeaderProps) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.3 }}
-            className="relative -mt-16 md:-mt-20"
+            className="relative -mt-12 md:-mt-16"
           >
             <div className="relative group">
-              <Avatar className="w-32 h-32 md:w-40 md:h-40 border-4 border-white shadow-xl">
+              <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-white shadow-2xl ring-4 ring-blue-100">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-4xl">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 text-white text-3xl">
                   {user.name.split(' ').map((n) => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               {/* Online Status Indicator */}
               {user.isOnline && (
-                <div className="absolute bottom-2 left-2 w-6 h-6 bg-green-500 border-4 border-white rounded-full" />
+                <div className="absolute bottom-1 left-1 w-5 h-5 bg-green-500 border-3 border-white rounded-full shadow-lg" />
               )}
-              {/* Upload Avatar Button */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="absolute bottom-2 right-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              >
-                <Camera className="w-5 h-5" />
-              </motion.button>
             </div>
           </motion.div>
 
@@ -123,34 +98,36 @@ export function ProfileHeader({ user, onEditProfile }: ProfileHeaderProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.3 }}
-            className="flex-1 space-y-3 pt-4 md:pt-0"
+            className="flex-1 space-y-2 pt-4 md:pt-0"
           >
-            <div className="flex flex-col md:flex-row md:items-center gap-3">
-              <h1 className="text-gray-900">{user.name}</h1>
-              <Badge className={roleColors[user.role] || roleColors.student}>
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <h2 className="text-2xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">{user.name}</h2>
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200 w-fit">
                 {roleLabels[user.role] || roleLabels.student}
               </Badge>
             </div>
 
-            <p className="text-gray-600 max-w-2xl">{user.bio}</p>
+            {user.bio && <p className="text-sm text-gray-600 max-w-2xl">{user.bio}</p>}
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-500">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                <span>{user.location}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Building className="w-4 h-4" />
-                <span>{user.institution}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4" />
-                <span>{user.fieldOfStudy}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>📅</span>
-                <span>{formatJoinDate(user.joinDate)}</span>
-              </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 pt-1">
+              {user.institution && (
+                <div className="flex items-center gap-1.5">
+                  <Building className="w-4 h-4 text-blue-500" />
+                  <span>{user.institution}</span>
+                </div>
+              )}
+              {user.fieldOfStudy && (
+                <div className="flex items-center gap-1.5">
+                  <GraduationCap className="w-4 h-4 text-purple-500" />
+                  <span>{user.fieldOfStudy}</span>
+                </div>
+              )}
+              {user.location && (
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-pink-500" />
+                  <span>{user.location}</span>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
