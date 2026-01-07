@@ -9,126 +9,6 @@ import { ProfileStatsBar } from './ProfileStatsBar';
 import { ActivityTimeline } from './ActivityTimeline';
 import { ProfileSidebar } from './ProfileSidebar';
 
-// Sample user data
-const userData = {
-  id: 'user123',
-  name: 'יוסי כהן',
-  email: 'yossi@example.com',
-  avatar: '',
-  coverImage: '',
-  role: 'student',
-  bio: 'סטודנט שנה ג\' למדעי המחשב באוניברסיטה העברית. אוהב לשתף ידע ולעזור לאחרים.',
-  joinDate: '2023-10-15',
-  stats: {
-    uploads: 24,
-    downloads: 1234,
-    reputation: 456,
-    forumPosts: 89,
-    views: 3456,
-    averageRating: 4.7,
-    responseRate: 95,
-  },
-  badges: [
-    { id: 1, name: 'תרומה ראשונה', icon: '🏆', earned: true },
-    { id: 2, name: '100 הורדות', icon: '⭐', earned: true },
-    { id: 3, name: 'מומחה פורום', icon: '💬', earned: false, progress: 60 },
-    { id: 4, name: 'סופר תורם', icon: '🎯', earned: false, progress: 35 },
-  ],
-  recentActivity: [
-    {
-      type: 'upload',
-      title: 'העלה סיכום חדש',
-      description: 'מבוא למדעי המחשב - פרק 5: מבני נתונים',
-      time: 'לפני יומיים',
-    },
-    {
-      type: 'answer',
-      title: 'ענה על שאלה בפורום',
-      description: 'איך לפתור בעיית המיון בועות?',
-      time: 'לפני 3 ימים',
-    },
-    {
-      type: 'badge',
-      title: 'קיבל תג חדש',
-      description: '🏆 תרומה ראשונה - העלה את הסיכום הראשון',
-      time: 'לפני שבוע',
-    },
-    {
-      type: 'favorite',
-      title: 'הוסיף סיכום למועדפים',
-      description: 'אלגוריתמים מתקדמים - מבחן סיכום',
-      time: 'לפני שבוע',
-    },
-    {
-      type: 'comment',
-      title: 'הגיב על סיכום',
-      description: 'סיכום מעולה! עזר לי מאוד להבין את הנושא',
-      time: 'לפני שבועיים',
-    },
-  ],
-  mySummaries: [
-    {
-      id: 1,
-      title: 'מבוא למדעי המחשב - פרק 5',
-      subject: 'מדעי המחשב',
-      downloads: 234,
-      views: 456,
-      rating: 4.8,
-      uploadDate: 'לפני שבוע',
-    },
-    {
-      id: 2,
-      title: 'אלגוריתמים - מיון ומחלקות',
-      subject: 'מדעי המחשב',
-      downloads: 189,
-      views: 312,
-      rating: 4.6,
-      uploadDate: 'לפני שבועיים',
-    },
-    {
-      id: 3,
-      title: 'מבני נתונים - עצים ותורים',
-      subject: 'מדעי המחשב',
-      downloads: 167,
-      views: 289,
-      rating: 4.7,
-      uploadDate: 'לפני 3 שבועות',
-    },
-  ],
-  favorites: [
-    {
-      id: 101,
-      title: 'חשבון דיפרנציאלי - נגזרות',
-      author: 'שרה לוי',
-      subject: 'מתמטיקה',
-      rating: 4.9,
-    },
-    {
-      id: 102,
-      title: 'פיזיקה קוונטית - יסודות',
-      author: 'דני אברהם',
-      subject: 'פיזיקה',
-      rating: 4.7,
-    },
-  ],
-  forumActivity: [
-    {
-      type: 'question',
-      title: 'איך לפתור בעיית המיון בועות?',
-      answers: 12,
-      views: 145,
-      votes: 8,
-      time: 'לפני חודש',
-    },
-    {
-      type: 'answer',
-      title: 'שאלה לגבי נגזרת של פונקציה מורכבת',
-      accepted: true,
-      votes: 15,
-      time: 'לפני חודשיים',
-    },
-  ],
-};
 
 interface ProfilePageProps {
   onNavigateHome: () => void;
@@ -377,7 +257,7 @@ export function ProfilePage({ onNavigateHome }: ProfilePageProps) {
                                   {activity.answers}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  👁️ {activity.views}
+                                   {activity.views}
                                 </div>
                               </>
                             )}

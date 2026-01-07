@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Mail, Lock, User, Loader2, Check, X, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Checkbox } from '../ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 interface RegisterPageProps {
   onNavigateLogin: () => void;
@@ -19,9 +19,7 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  userType: string;
   institution?: string;
-  fieldOfStudy?: string;
   terms: boolean;
 }
 
@@ -31,43 +29,32 @@ interface PasswordStrength {
   color: string;
 }
 
-const institutions = [
-  'האוניברסיטה העברית',
-  'אוניברסיטת תל אביב',
-  'הטכניון',
-  'אוניברסיטת בן גוריון',
-  'אוניברסיטת בר אילן',
-  'אוניברסיטת חיפה',
-  'מכללת תל אביב יפו',
-  'המכללה האקדמית ספיר',
-  'המכללה האקדמית נתניה',
-  'המכללה האקדמית אשקלון',
-  'המכללה האקדמית אריאל',
-    'המרכז האקדמי לב',
-  'אחר',
-];
-
-const fieldsOfStudy = [
-  'מדעי המחשב',
-  'הנדסה',
-  'מתמטיקה',
-  'פיזיקה',
-  'ביולוגיה',
-  'כימיה',
-  'כלכלה',
-  'משפטים',
-  'רפואה',
-  'אחר',
-];
-
 export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [institutions, setInstitutions] = useState<string[]>([]);
+  const [loadingInstitutions, setLoadingInstitutions] = useState(true);
 
   const { register: registerUser } = useAuth();
+
+  // Fetch institutions from API
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      try {
+        const response = await api.get('/courses/institutions');
+        setInstitutions(response.data);
+      } catch (error) {
+        console.error('Error fetching institutions:', error);
+        setInstitutions(['אחר']);
+      } finally {
+        setLoadingInstitutions(false);
+      }
+    };
+    fetchInstitutions();
+  }, []);
 
   const {
     register,
@@ -77,14 +64,12 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
     setValue,
   } = useForm<RegisterFormData>({
     defaultValues: {
-      userType: 'student',
       terms: false,
     },
   });
 
   const watchPassword = watch('password', '');
   const watchConfirmPassword = watch('confirmPassword', '');
-  const watchUserType = watch('userType', 'student');
   const watchTerms = watch('terms', false);
 
   // Password strength calculation
@@ -133,11 +118,15 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
 
   if (success) {
     return (
-      <div dir="rtl" className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+      <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-8 relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+        
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
+          className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-8 max-w-md w-full text-center relative z-10"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -163,7 +152,7 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
           <div className="space-y-3">
             <Button
               onClick={onNavigateDashboard}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
             >
               עבור לדף הבית
             </Button>
@@ -177,50 +166,50 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-50 flex">
-      {/* Left Side - Form */}
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+      
+      {/* Form Container */}
       <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full lg:w-1/2 flex items-center justify-center p-8 overflow-y-auto"
+        className="w-full flex items-center justify-center p-8 overflow-y-auto relative z-10"
       >
-        <div className="w-full max-w-md space-y-6 py-8">
-          {/* Logo & Title */}
-          <div className="text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring' }}
-              className="inline-flex items-center gap-2 mb-6"
-            >
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <span className="text-3xl">🎓</span>
-              </div>
-              <span className="text-2xl">StudyHub-IL</span>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <h1 className="text-gray-900 mb-2">הצטרף ל-StudyHub-IL</h1>
-              <p className="text-gray-600">צור חשבון והתחל ללמוד היום</p>
-            </motion.div>
-          </div>
+        <div className="w-full max-w-md py-8">
+          {/* Card Container */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-8 space-y-6"
+          >
+            {/* Logo & Title */}
+            <div className="text-center mb-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: 'spring' }}
+                className="mb-6"
+              >
+                <h1 className="text-3xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">StudyHub-IL</h1>
+                <p className="text-sm text-gray-600">צור חשבון חדש</p>
+              </motion.div>
+            </div>
 
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2"
-            >
-              <AlertCircle className="w-5 h-5" />
-              {error}
-            </motion.div>
-          )}
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-xl p-3 flex items-center gap-2"
+              >
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                <span className="text-sm text-red-700">{error}</span>
+              </motion.div>
+            )}
 
           {/* Registration Form */}
           <motion.form
@@ -410,46 +399,6 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
               )}
             </div>
 
-            {/* User Type */}
-            <div>
-              <Label className="mb-3 flex items-center gap-1">
-                סוג משתמש <span className="text-red-500">*</span>
-              </Label>
-              <RadioGroup
-                value={watchUserType}
-                onValueChange={(value) => setValue('userType', value)}
-                className="grid grid-cols-3 gap-3"
-              >
-                <label
-                  className={`relative flex flex-col items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    watchUserType === 'student' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <RadioGroupItem value="student" id="student" className="sr-only" />
-                  <span className="text-2xl">🎓</span>
-                  <span className="text-sm">סטודנט</span>
-                </label>
-                <label
-                  className={`relative flex flex-col items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    watchUserType === 'teacher' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <RadioGroupItem value="teacher" id="teacher" className="sr-only" />
-                  <span className="text-2xl">👨‍🏫</span>
-                  <span className="text-sm">מרצה</span>
-                </label>
-                <label
-                  className={`relative flex flex-col items-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    watchUserType === 'learner' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <RadioGroupItem value="learner" id="learner" className="sr-only" />
-                  <span className="text-2xl">📚</span>
-                  <span className="text-sm">חובב למידה</span>
-                </label>
-              </RadioGroup>
-            </div>
-
             {/* Institution */}
             <div>
               <Label htmlFor="institution" className="mb-2">
@@ -458,33 +407,15 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
               <select
                 id="institution"
                 {...register('institution')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-60"
+                disabled={isLoading || loadingInstitutions}
               >
-                <option value="">בחר מוסד לימודים</option>
+                <option value="">
+                  {loadingInstitutions ? 'טוען מוסדות...' : 'בחר מוסד לימודים'}
+                </option>
                 {institutions.map((inst) => (
                   <option key={inst} value={inst}>
                     {inst}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Field of Study */}
-            <div>
-              <Label htmlFor="fieldOfStudy" className="mb-2">
-                תחום לימודים (אופציונלי)
-              </Label>
-              <select
-                id="fieldOfStudy"
-                {...register('fieldOfStudy')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              >
-                <option value="">בחר תחום לימודים</option>
-                {fieldsOfStudy.map((field) => (
-                  <option key={field} value={field}>
-                    {field}
                   </option>
                 ))}
               </select>
@@ -517,7 +448,7 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
             <Button
               type="submit"
               disabled={isLoading || !watchTerms}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
             >
               {isLoading ? (
                 <>
@@ -530,72 +461,27 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
             </Button>
           </motion.form>
 
-          {/* Login Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center"
-          >
-            <p className="text-gray-600">
-              כבר יש לך חשבון?{' '}
-              <button
-                onClick={onNavigateLogin}
-                className="text-blue-600 hover:text-blue-700 hover:underline"
-              >
-                התחבר
-              </button>
-            </p>
+            {/* Login Link */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-center pt-4 border-t border-gray-100"
+            >
+              <p className="text-sm text-gray-600">
+                כבר יש לך חשבון?{' '}
+                <button
+                  onClick={onNavigateLogin}
+                  className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                >
+                  התחבר
+                </button>
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Right Side - Benefits */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 p-12 items-center justify-center relative overflow-hidden"
-      >
-        <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-
-        <div className="relative z-10 text-white space-y-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: 'spring' }}
-            className="text-center mb-8"
-          >
-            <h2 className="text-white mb-4">הצטרף אלינו היום</h2>
-            <p className="text-xl text-white/90">וקבל גישה לכל היתרונות</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="space-y-4 text-right"
-          >
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">💾</span>
-              <span className="text-lg">שמור סיכומים</span>
-            </div>
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">📤</span>
-              <span className="text-lg">שתף תוכן</span>
-            </div>
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">💬</span>
-              <span className="text-lg">קהילה פעילה</span>
-            </div>
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">🏆</span>
-              <span className="text-lg">הישגים ונקודות</span>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
     </div>
   );
 }

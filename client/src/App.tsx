@@ -17,6 +17,7 @@ import { ForumPage } from './components/forum/ForumPage';
 import { ForumPostDetailPage } from './components/forum/ForumPostDetailPage';
 import { ToolsPage } from './components/tools/ToolsPage';
 import { ProfilePageNew } from './components/profile/ProfilePageNew';
+import { MyContentPage } from './components/content/MyContentPage';
 import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage';
@@ -134,6 +135,12 @@ function Dashboard() {
                   className="w-full text-right px-4 py-2 hover:bg-gray-50 rounded-t-lg"
                 >
                   הפרופיל שלי
+                </button>
+                <button
+                  onClick={() => navigate('/my-content')}
+                  className="w-full text-right px-4 py-2 hover:bg-gray-50"
+                >
+                  התכנים שלי
                 </button>
                 <button
                   onClick={handleLogout}
@@ -366,6 +373,14 @@ export default function App() {
             <div dir="rtl">
               <ProfilePageNew onNavigateHome={() => navigate('/dashboard')} />
             </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/my-content" 
+        element={
+          <ProtectedRoute>
+            <MyContentPage />
           </ProtectedRoute>
         } 
       />

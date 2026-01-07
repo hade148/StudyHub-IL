@@ -5,6 +5,9 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Azure PostgreSQL Flexible Server is fully compatible
+  // Ensure DATABASE_URL includes sslmode=require for Azure connections
+  // Example: postgresql://user:password@host:5432/database?sslmode=require
 }
 
 model User {

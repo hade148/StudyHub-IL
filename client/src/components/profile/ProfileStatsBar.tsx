@@ -59,21 +59,20 @@ export function ProfileStatsBar({ stats }: ProfileStatsBarProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 + index * 0.1, duration: 0.3 }}
-          whileHover={{ scale: 1.05, y: -5 }}
-          className={`bg-gradient-to-br ${stat.bgGradient} rounded-xl shadow-lg p-6 cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-opacity-50`}
+          whileHover={{ y: -4 }}
+          className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg p-5 border border-white/20 hover:shadow-xl transition-all duration-300"
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className={`bg-gradient-to-br ${stat.gradient} text-white p-3 rounded-xl`}>
-                <stat.icon className="w-6 h-6" />
+              <div className={`bg-gradient-to-br ${stat.gradient} text-white p-2.5 rounded-xl shadow-md`}>
+                <stat.icon className="w-5 h-5" />
               </div>
-              <span className="text-3xl">{stat.emoji}</span>
             </div>
             <div>
-              <div className={`bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent text-2xl md:text-3xl`}>
+              <div className={`bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent text-2xl md:text-3xl font-bold`}>
                 {stat.value}
               </div>
-              <p className="text-gray-600 text-sm">{stat.label}</p>
+              <p className="text-gray-600 text-sm font-medium">{stat.label}</p>
               {stat.subtext && (
                 <p className="text-xs text-gray-500 mt-1">{stat.subtext}</p>
               )}

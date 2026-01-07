@@ -4,7 +4,6 @@ import { motion } from 'motion/react';
 
 interface CodeSnippet {
   id: string;
-  language: string;
   code: string;
 }
 
@@ -13,38 +12,18 @@ interface CodeSnippetEditorProps {
   onChange: (snippets: CodeSnippet[]) => void;
 }
 
-const LANGUAGES = [
-  'Python',
-  'JavaScript',
-  'Java',
-  'C++',
-  'C#',
-  'C',
-  'HTML',
-  'CSS',
-  'SQL',
-  'PHP',
-  'Ruby',
-  'Go',
-  'Rust',
-  'TypeScript',
-  'Swift',
-  'Kotlin',
-];
-
 export function CodeSnippetEditor({ snippets, onChange }: CodeSnippetEditorProps) {
   const [copied, setCopied] = useState<string | null>(null);
 
   const addSnippet = () => {
     const newSnippet: CodeSnippet = {
       id: Date.now().toString(),
-      language: 'Python',
       code: '',
     };
     onChange([...snippets, newSnippet]);
   };
 
-  const updateSnippet = (id: string, field: 'language' | 'code', value: string) => {
+  const updateSnippet = (id: string, field: 'code', value: string) => {
     onChange(
       snippets.map((snippet) =>
         snippet.id === id ? { ...snippet, [field]: value } : snippet
@@ -75,18 +54,6 @@ export function CodeSnippetEditor({ snippets, onChange }: CodeSnippetEditorProps
           {/* Header */}
           <div className="flex items-center gap-3 p-3 bg-gray-50 border-b border-gray-300">
             <span className="text-sm text-gray-600">קטע קוד {index + 1}</span>
-            
-            <select
-              value={snippet.language}
-              onChange={(e) => updateSnippet(snippet.id, 'language', e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded bg-white text-sm"
-            >
-              {LANGUAGES.map((lang) => (
-                <option key={lang} value={lang}>
-                  {lang}
-                </option>
-              ))}
-            </select>
 
             <div className="flex-1" />
 
@@ -128,7 +95,7 @@ export function CodeSnippetEditor({ snippets, onChange }: CodeSnippetEditorProps
             <textarea
               value={snippet.code}
               onChange={(e) => updateSnippet(snippet.id, 'code', e.target.value)}
-              placeholder={`הכנס את קוד ה-${snippet.language} שלך כאן...`}
+              placeholder="הכנס את הקוד שלך כאן..."
               className="w-full pr-16 pl-4 py-3 min-h-[200px] font-mono text-sm resize-y outline-none bg-gray-50"
               dir="ltr"
               spellCheck={false}

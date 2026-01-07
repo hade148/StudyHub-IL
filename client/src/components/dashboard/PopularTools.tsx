@@ -2,35 +2,35 @@ import { motion } from 'motion/react';
 import { Calculator, Calendar, FileText } from 'lucide-react';
 import { Button } from '../ui/button';
 
-const tools = [
-  {
-    name: 'מחשבון ממוצע ציונים',
-    description: 'חשב את הממוצע שלך בקלות',
-    icon: Calculator,
-    gradient: 'from-blue-500 to-cyan-500',
-    emoji: '📊',
-  },
-  {
-    name: 'מתכנן לימודים',
-    description: 'תכנן את לוח הזמנים שלך',
-    icon: Calendar,
-    gradient: 'from-purple-500 to-pink-500',
-    emoji: '📅',
-  },
-  {
-    name: 'יצירת כרטיסיות למידה',
-    description: 'צור כרטיסיות ללמידה יעילה',
-    icon: FileText,
-    gradient: 'from-green-500 to-emerald-500',
-    emoji: '📝',
-  },
-];
+interface Tool {
+  name: string;
+  description: string;
+  icon?: any;
+  gradient?: string;
+  emoji: string;
+}
 
 interface PopularToolsProps {
+  tools?: Tool[];
   onViewAll?: () => void;
 }
 
-export function PopularTools({ onViewAll }: PopularToolsProps) {
+export function PopularTools({ tools = [], onViewAll }: PopularToolsProps) {
+  if (tools.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2>כלים פופולריים</h2>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
+          <div className="text-6xl">🔧</div>
+          <h3>אין כלים זמינים כרגע</h3>
+          <p className="text-gray-600">כלים חדשים יופיעו כאן</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

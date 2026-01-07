@@ -56,23 +56,23 @@ const sendWelcomeEmail = async (email, fullName) => {
             <h1>ברוכים הבאים ל-StudyHub-IL!</h1>
           </div>
           <div class="content">
-            <h2>שלום ${fullName}! 👋</h2>
+            <h2>שלום ${fullName}! </h2>
             <p>אנחנו שמחים שהצטרפת לקהילה האקדמית שלנו. כעת יש לך גישה לכל התכונות הבאות:</p>
             
             <div class="feature">
-              <span class="feature-icon">📚</span>
+              <span class="feature-icon"></span>
               <span>אלפי סיכומים איכותיים מכל המוסדות האקדמיים</span>
             </div>
             <div class="feature">
-              <span class="feature-icon">💬</span>
+              <span class="feature-icon"></span>
               <span>פורום קהילתי לשאלות ודיונים</span>
             </div>
             <div class="feature">
-              <span class="feature-icon">🛠️</span>
+              <span class="feature-icon"></span>
               <span>כלים חכמים ללמידה יעילה</span>
             </div>
             <div class="feature">
-              <span class="feature-icon">🏆</span>
+              <span class="feature-icon"></span>
               <span>מערכת הישגים ונקודות</span>
             </div>
 
@@ -145,7 +145,7 @@ const sendPasswordResetEmail = async (email, fullName, resetToken) => {
             <h1>איפוס סיסמה</h1>
           </div>
           <div class="content">
-            <h2>שלום ${fullName}! 👋</h2>
+            <h2>שלום ${fullName}!</h2>
             <p>קיבלנו בקשה לאיפוס הסיסמה שלך. לחץ על הכפתור למטה לאיפוס:</p>
             
             <a href="${resetUrl}" class="btn">איפוס סיסמה</a>

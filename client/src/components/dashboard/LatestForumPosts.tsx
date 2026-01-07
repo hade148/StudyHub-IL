@@ -3,44 +3,15 @@ import { MessageCircle, Eye } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 
-const posts = [
-  {
-    title: 'איך לפתור בעיית המיון בועות?',
-    category: 'אלגוריתמים',
-    author: 'יוסי כהן',
-    initials: 'יכ',
-    time: 'לפני 2 שעות',
-    replies: 12,
-    views: 145,
-  },
-  {
-    title: 'שאלה לגבי נגזרת של פונקציה מורכבת',
-    category: 'מתמטיקה',
-    author: 'שרה לevi',
-    initials: 'של',
-    time: 'לפני 4 שעות',
-    replies: 8,
-    views: 92,
-  },
-  {
-    title: 'המלצות על ספרים לקורס מבני נתונים?',
-    category: 'משאבי לימוד',
-    author: 'דני אברהם',
-    initials: 'דא',
-    time: 'לפני 5 שעות',
-    replies: 15,
-    views: 203,
-  },
-  {
-    title: 'עזרה בפתרון תרגיל בפיזיקה קוונטית',
-    category: 'פיזיקה',
-    author: 'מיכל רוזן',
-    initials: 'מר',
-    time: 'לפני 7 שעות',
-    replies: 6,
-    views: 78,
-  },
-];
+interface Post {
+  title: string;
+  category: string;
+  author: string;
+  initials: string;
+  time: string;
+  replies: number;
+  views: number;
+}
 
 const categoryColors: Record<string, string> = {
   'אלגוריתמים': 'bg-purple-100 text-purple-700',
@@ -50,10 +21,26 @@ const categoryColors: Record<string, string> = {
 };
 
 interface LatestForumPostsProps {
+  posts?: Post[];
   onViewAll?: () => void;
 }
 
-export function LatestForumPosts({ onViewAll }: LatestForumPostsProps) {
+export function LatestForumPosts({ posts = [], onViewAll }: LatestForumPostsProps) {
+  if (posts.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2>פוסטים אחרונים בפורום</h2>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
+          <div className="text-6xl">💬</div>
+          <h3>אין פוסטים בפורום</h3>
+          <p className="text-gray-600">פוסטים חדשים יופיעו כאן</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

@@ -13,5 +13,18 @@ module.exports = {
       lines: 50,
       statements: 50
     }
-  }
+  },
+  // Output formats for Azure DevOps Pipeline integration
+  reporters: [
+    'default',
+    ['jest-junit', {
+      outputDirectory: './coverage',
+      outputName: 'junit.xml',
+      classNameTemplate: '{classname}',
+      titleTemplate: '{title}',
+      ancestorSeparator: ' › ',
+      usePathForSuiteName: true
+    }]
+  ],
+  coverageReporters: ['text', 'lcov', 'cobertura', 'html']
 };

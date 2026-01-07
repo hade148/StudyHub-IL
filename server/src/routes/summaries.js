@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
@@ -15,6 +16,16 @@ const calculateAverageRating = (ratings) => {
   if (ratings.length === 0) return null;
   return ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
 };
+
+// Rate limiter for summary updates - 30 updates per hour per user
+const updateSummaryLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30,
+  message: 'יותר מדי ניסיונות לעדכון סיכום. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
 
 // Multer configuration for file uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
@@ -89,6 +100,25 @@ router.get('/', optionalAuth, async (req, res) => {
   }
 });
 
+// GET /api/summaries/my-content - Get current user's summaries
+router.get('/my-content', authenticate, async (req, res) => {
+  try {
+    const summaries = await prisma.summary.findMany({
+      where: { uploadedById: req.user.id },
+      orderBy: { uploadDate: 'desc' },
+      include: {
+        course: { select: { courseCode: true, courseName: true } },
+        _count: { select: { ratings: true, comments: true } }
+      }
+    });
+
+    res.json(summaries);
+  } catch (error) {
+    console.error('Get my summaries error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת הסיכומים שלי' });
+  }
+});
+
 // GET /api/summaries/:id - Get single summary
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -124,6 +154,58 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
 
     if (!req.file) {
       return res.status(400).json({ error: 'יש להעלות קובץ PDF או DOCX' });
+    }
+
+    // Get user's institution
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { institution: true }
+    });
+
+    // Get the selected course
+    const selectedCourse = await prisma.course.findUnique({
+      where: { id: parseInt(courseId) },
+      select: { courseCode: true, courseName: true, institution: true, semester: true }
+    });
+
+    if (!selectedCourse) {
+      return res.status(404).json({ error: 'קורס לא נמצא' });
+    }
+
+    let actualCourseId = parseInt(courseId);
+
+    // If user has institution and it doesn't match course institution, create/find correct course
+    if (user.institution && user.institution !== selectedCourse.institution) {
+      // Create a safe, unique institution identifier using first meaningful word
+      const institutionWords = user.institution.split(' ').filter(w => w.length > 2);
+      const institutionId = institutionWords.length > 0 
+        ? institutionWords[0].substring(0, 5).toUpperCase()
+        : user.institution.substring(0, 5).toUpperCase();
+      
+      // Create institution-specific course code
+      const newCourseCode = `${institutionId}-${selectedCourse.courseCode}`;
+      
+      // Try to find existing course with this institution-specific code
+      let matchingCourse = await prisma.course.findFirst({
+        where: {
+          courseCode: newCourseCode
+        }
+      });
+
+      // If doesn't exist, create it
+      if (!matchingCourse) {
+        matchingCourse = await prisma.course.create({
+          data: {
+            courseCode: newCourseCode,
+            courseName: selectedCourse.courseName,
+            institution: user.institution,
+            semester: selectedCourse.semester
+          }
+        });
+        console.log(`✅ Created course for ${user.institution}: ${newCourseCode}`);
+      }
+
+      actualCourseId = matchingCourse.id;
     }
 
     let filePath;
@@ -168,11 +250,11 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
         title,
         description,
         filePath,
-        courseId: parseInt(courseId),
+        courseId: actualCourseId,
         uploadedById: req.user.id
       },
       include: {
-        course: { select: { courseCode: true, courseName: true } },
+        course: { select: { courseCode: true, courseName: true, institution: true } },
         uploadedBy: { select: { fullName: true } }
       }
     });
@@ -372,6 +454,48 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get summary ratings error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
+  }
+});
+
+// PUT /api/summaries/:id - Update summary metadata
+router.put('/:id', authenticate, updateSummaryLimiter, summaryValidation, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, courseId } = req.body;
+
+    const summary = await prisma.summary.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!summary) {
+      return res.status(404).json({ error: 'סיכום לא נמצא' });
+    }
+
+    // Check ownership or admin
+    if (summary.uploadedById !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'אין לך הרשאה לערוך סיכום זה' });
+    }
+
+    const updatedSummary = await prisma.summary.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        description,
+        courseId: parseInt(courseId)
+      },
+      include: {
+        course: { select: { courseCode: true, courseName: true } },
+        uploadedBy: { select: { fullName: true } }
+      }
+    });
+
+    res.json({
+      message: 'סיכום עודכן בהצלחה',
+      summary: updatedSummary
+    });
+  } catch (error) {
+    console.error('Update summary error:', error);
+    res.status(500).json({ error: 'שגיאה בעדכון סיכום' });
   }
 });
 

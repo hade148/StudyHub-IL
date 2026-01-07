@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import {
@@ -17,10 +17,10 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import api from '../../utils/api';
+import { coursesList } from '../../constants/coursesList';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -33,17 +33,8 @@ interface FormData {
   title: string;
   courseId: string;
   description: string;
-  language: string;
-  category: string;
   tags: string[];
   terms: boolean;
-}
-
-interface Course {
-  id: number;
-  courseCode: string;
-  courseName: string;
-  institution: string;
 }
 
 export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSummary }: UploadPageProps) {
@@ -54,25 +45,8 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   const [tagInput, setTagInput] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(true);
   const [uploadedSummaryId, setUploadedSummaryId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Fetch courses from API
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const response = await api.get('/courses');
-        setCourses(response.data);
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      } finally {
-        setLoadingCourses(false);
-      }
-    };
-    fetchCourses();
-  }, []);
 
   const {
     register,
@@ -84,8 +58,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
     reset,
   } = useForm<FormData>({
     defaultValues: {
-      language: 'hebrew',
-      category: '',
       terms: false,
     },
   });
@@ -93,17 +65,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   const watchTitle = watch('title', '');
   const watchDescription = watch('description', '');
   const watchCourseId = watch('courseId', '');
-  const watchCategory = watch('category', '');
-  const watchLanguage = watch('language', 'hebrew');
   const watchTerms = watch('terms', false);
-
-  const categories = [
-    { id: 'math', label: 'מתמטיקה', icon: '📘' },
-    { id: 'cs', label: 'מדעי המחשב', icon: '💻' },
-    { id: 'science', label: 'מדעים', icon: '🔬' },
-    { id: 'humanities', label: 'הומניות', icon: '📚' },
-    { id: 'arts', label: 'אמנויות', icon: '🎨' },
-  ];
 
   const popularTags = [
     'בחינה',
@@ -201,7 +163,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
     } else if (currentStep === 2) {
       isValid = await trigger(['title', 'courseId']);
     } else if (currentStep === 3) {
-      isValid = !!watchCategory && tags.length > 0;
+      isValid = tags.length > 0;
     }
 
     if (isValid) {
@@ -270,28 +232,27 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   const steps = [
     { number: 1, label: 'העלאת קובץ', icon: '📄' },
     { number: 2, label: 'פרטי הסיכום', icon: '📝' },
-    { number: 3, label: 'תגיות וקטגוריה', icon: '🏷️' },
+    { number: 3, label: 'תגיות', icon: '🏷️' },
     { number: 4, label: 'תצוגה מקדימה', icon: '👀' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+      
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-6">
+      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-10 shadow-sm">
+        <div className="container mx-auto px-4 py-6 relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <span className="text-2xl">🎓</span>
-              </div>
-              <div>
-                <h1 className="text-gray-900">StudyHub-IL</h1>
-                <p className="text-gray-600">הפלטפורמה האקדמית שלך</p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">העלאת סיכום</h1>
+              <p className="text-sm text-gray-600 mt-1">שתף את הסיכומים שלך עם הקהילה</p>
             </div>
-            <Button onClick={onNavigateHome} variant="outline">
+            <Button onClick={onNavigateHome} variant="outline" className="hover:bg-white/80">
               <Home className="w-4 h-4 ml-2" />
-              חזרה לדף הבית
+              חזרה
             </Button>
           </div>
 
@@ -525,14 +486,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         className={`w-full rounded-md border ${
                           errors.courseId ? 'border-red-500' : 'border-gray-300'
                         } px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        disabled={loadingCourses}
                       >
-                        <option value="">
-                          {loadingCourses ? 'טוען קורסים...' : 'בחר קורס מהרשימה'}
-                        </option>
-                        {courses.map((course) => (
-                          <option key={course.id} value={course.id}>
-                            {course.courseCode} - {course.courseName} ({course.institution})
+                        <option value="">בחר קורס מהרשימה</option>
+                        {coursesList.map((courseName, index) => (
+                          <option key={index + 1} value={index + 1}>
+                            {courseName}
                           </option>
                         ))}
                       </select>
@@ -566,31 +524,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       </p>
                     </div>
 
-                    {/* Language Toggle */}
-                    <div>
-                      <Label className="mb-3">שפת הסיכום</Label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="hebrew"
-                            {...register('language')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>עברית</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="english"
-                            {...register('language')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>אנגלית</span>
-                        </label>
-                      </div>
-                    </div>
-
                     <div className="flex justify-between mt-8">
                       <Button type="button" onClick={goToPreviousStep} variant="outline">
                         <ChevronLeft className="w-4 h-4 ml-2" />
@@ -599,7 +532,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       <Button
                         type="button"
                         onClick={goToNextStep}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                        className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
                       >
                         המשך
                         <ChevronRight className="w-4 h-4 mr-2" />
@@ -608,7 +541,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                   </motion.div>
                 )}
 
-                {/* Step 3: Tags and Category */}
+                {/* Step 3: Tags */}
                 {currentStep === 3 && (
                   <motion.div
                     key="step3"
@@ -618,37 +551,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     transition={{ duration: 0.3 }}
                     className="space-y-6"
                   >
-                    <h3 className="text-gray-900 mb-6">תגיות וקטגוריה 🏷️</h3>
-
-                    {/* Category Selection */}
-                    <div>
-                      <Label className="mb-3 flex items-center gap-2">
-                        בחר קטגוריה <span className="text-red-500">*</span>
-                      </Label>
-                      <RadioGroup
-                        value={watchCategory}
-                        onValueChange={(value) => setValue('category', value)}
-                        className="grid grid-cols-2 md:grid-cols-3 gap-4"
-                      >
-                        {categories.map((category) => (
-                          <label
-                            key={category.id}
-                            className={`relative flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                              watchCategory === category.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-blue-300'
-                            }`}
-                          >
-                            <RadioGroupItem value={category.id} id={category.id} className="sr-only" />
-                            <span className="text-2xl">{category.icon}</span>
-                            <span>{category.label}</span>
-                          </label>
-                        ))}
-                      </RadioGroup>
-                      {!watchCategory && currentStep === 3 && (
-                        <p className="text-sm text-gray-500 mt-2">אנא בחר קטגוריה</p>
-                      )}
-                    </div>
+                    <h3 className="text-gray-900 mb-6">תגיות 🏷️</h3>
 
                     {/* Tags Input */}
                     <div>
@@ -732,7 +635,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       <Button
                         type="button"
                         onClick={goToNextStep}
-                        disabled={!watchCategory || tags.length === 0}
+                        disabled={tags.length === 0}
                         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                       >
                         המשך
@@ -770,15 +673,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         </p>
                       )}
 
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <Badge variant="outline" className="border-blue-500 text-blue-700">
-                          {categories.find((c) => c.id === watchCategory)?.label}
-                        </Badge>
-                        <Badge variant="outline" className="border-purple-500 text-purple-700">
-                          {watchLanguage === 'hebrew' ? 'עברית' : 'אנגלית'}
-                        </Badge>
-                      </div>
-
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag) => (
                           <Badge
@@ -814,8 +708,12 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <Checkbox
                         id="terms"
+                        {...register('terms')}
                         checked={watchTerms}
-                        onCheckedChange={(checked) => setValue('terms', !!checked)}
+                        onCheckedChange={(checked) => {
+                          setValue('terms', !!checked);
+                          trigger('terms');
+                        }}
                         className="mt-1"
                       />
                       <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer flex-1">

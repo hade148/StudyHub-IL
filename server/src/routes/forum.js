@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { forumPostValidation, forumRatingValidation, commentValidation } = require('../middleware/validation');
@@ -12,6 +13,16 @@ const prisma = new PrismaClient();
 // Track post views to prevent double-counting
 const viewTracking = new Map();
 const VIEW_COOLDOWN = 60000; // 1 minute cooldown per user per post
+
+// Rate limiter for forum post updates - 30 updates per hour per user
+const updatePostLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30,
+  message: 'יותר מדי ניסיונות לעדכון פוסט. נסה שוב בעוד שעה.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+});
 
 // Multer configuration for image uploads
 const storage = multer.memoryStorage(); // Use memory storage for Azure
@@ -89,6 +100,25 @@ router.get('/', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get forum posts error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת פוסטים' });
+  }
+});
+
+// GET /api/forum/my-posts - Get current user's forum posts
+router.get('/my-posts', authenticate, async (req, res) => {
+  try {
+    const posts = await prisma.forumPost.findMany({
+      where: { authorId: req.user.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        course: { select: { courseCode: true, courseName: true } },
+        _count: { select: { comments: true, ratings: true } }
+      }
+    });
+
+    res.json(posts);
+  } catch (error) {
+    console.error('Get my posts error:', error);
+    res.status(500).json({ error: 'שגיאה בטעינת הפוסטים שלי' });
   }
 });
 
@@ -420,6 +450,77 @@ router.get('/:id/ratings', optionalAuth, async (req, res) => {
   } catch (error) {
     console.error('Get forum post ratings error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת דירוגים' });
+  }
+});
+
+// PUT /api/forum/:id - Update forum post
+router.put('/:id', authenticate, updatePostLimiter, upload.array('images', 5), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, category, tags, isUrgent, courseId } = req.body;
+
+    const post = await prisma.forumPost.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: 'פוסט לא נמצא' });
+    }
+
+    // Check ownership or admin
+    if (post.authorId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'אין לך הרשאה לערוך פוסט זה' });
+    }
+
+    // Handle new images if uploaded
+    let imageUrls = post.images || [];
+    if (req.files && req.files.length > 0) {
+      if (azureStorage.isConfigured()) {
+        const uploadPromises = req.files.map(async (file) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+          const fileName = 'forum-' + uniqueSuffix + path.extname(file.originalname);
+          return await azureStorage.uploadFile(file.buffer, fileName, file.mimetype);
+        });
+        const newImageUrls = await Promise.all(uploadPromises);
+        imageUrls = [...imageUrls, ...newImageUrls];
+      }
+    }
+
+    // Parse tags safely
+    let parsedTags = post.tags;
+    if (tags) {
+      try {
+        parsedTags = typeof tags === 'string' ? JSON.parse(tags) : tags;
+      } catch (error) {
+        console.error('Error parsing tags:', error);
+        parsedTags = post.tags; // Keep existing tags if parse fails
+      }
+    }
+
+    const updatedPost = await prisma.forumPost.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        content,
+        category,
+        tags: parsedTags,
+        isUrgent: isUrgent === 'true' || isUrgent === true,
+        courseId: courseId ? parseInt(courseId) : post.courseId,
+        images: imageUrls
+      },
+      include: {
+        author: { select: { id: true, fullName: true } },
+        course: { select: { courseCode: true, courseName: true } }
+      }
+    });
+
+    res.json({
+      message: 'פוסט עודכן בהצלחה',
+      post: updatedPost
+    });
+  } catch (error) {
+    console.error('Update forum post error:', error);
+    res.status(500).json({ error: 'שגיאה בעדכון פוסט' });
   }
 });
 
