@@ -63,42 +63,49 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
   
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(59, 130, 246, 0.15)" }}
-      className="bg-white border border-gray-200 rounded-xl hover:border-blue-200 transition-all duration-200 p-6 cursor-pointer shadow-sm"
+      transition={{ delay: index * 0.05, duration: 0.4, ease: "easeOut" }}
+      whileHover={{ 
+        y: -4, 
+        boxShadow: "0 12px 32px rgba(59, 130, 246, 0.2)",
+        scale: 1.005
+      }}
+      className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl hover:border-blue-300 transition-all duration-300 p-6 cursor-pointer shadow-md hover:shadow-xl"
       onClick={onClick}
     >
       <div className="flex gap-6 overflow-hidden">
         {/* Stats Section (Left) */}
-        <div className="flex flex-col gap-3 items-center min-w-[80px] border-r border-gray-100 pr-6">
+        <div className="flex flex-col gap-4 items-center min-w-[90px] border-r-2 border-gray-200 pr-6">
           {/* Rating */}
           {question.avgRating != null && (
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-1 text-blue-600">
-                <Star className="w-5 h-5 fill-blue-400 stroke-blue-400" />
-                <span className="font-semibold">{question.avgRating.toFixed(1)}</span>
+            <motion.div 
+              className="flex flex-col items-center gap-1"
+              whileHover={{ scale: 1.1 }}
+            >
+              <div className="flex items-center gap-1.5 text-yellow-500">
+                <Star className="w-6 h-6 fill-yellow-400 stroke-yellow-500" />
+                <span className="font-bold text-lg">{question.avgRating.toFixed(1)}</span>
               </div>
-              <span className="text-xs text-gray-500" aria-label="מספר דירוגים">
-                {question._count?.ratings || 0}
+              <span className="text-xs text-gray-500 font-medium" aria-label="מספר דירוגים">
+                {question._count?.ratings || 0} דירוגים
               </span>
-            </div>
+            </motion.div>
           )}
 
           {/* Answers */}
           <div
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg border transition-colors ${
+            className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border-2 transition-all shadow-sm ${
               isAnswered
-                ? 'bg-blue-50 text-blue-700 border-blue-200'
-                : 'bg-white text-gray-600 border-gray-200'
+                ? 'bg-gradient-to-br from-blue-50 to-purple-50 text-blue-700 border-blue-300'
+                : 'bg-gray-50 text-gray-600 border-gray-300'
             }`}
           >
             {isAnswered && (
-              <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
             )}
-            <span className="font-semibold">{answers}</span>
-            <span className="text-xs">תשובות</span>
+            <span className="font-bold text-lg">{answers}</span>
+            <span className="text-xs font-medium">תשובות</span>
           </div>
 
           {/* Views - Hidden per requirements */}
@@ -108,19 +115,19 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
         <div className="flex-1 space-y-3 min-w-0 overflow-hidden">
           {/* Category Badge */}
           {question.category && (
-            <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]} transition-colors`}>
+            <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]} transition-all font-semibold px-3 py-1 text-sm shadow-sm`}>
               {question.category}
             </Badge>
           )}
 
           {/* Title */}
-          <h3 className="text-lg font-semibold text-gray-900 hover:text-gray-700 transition-colors leading-snug break-words">
+          <h3 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors leading-snug break-words">
             {question.title}
           </h3>
 
           {/* Description */}
           {description && (
-            <p className="text-gray-600 line-clamp-2 leading-relaxed">
+            <p className="text-gray-600 line-clamp-2 leading-relaxed text-base">
               {description}
             </p>
           )}
@@ -132,39 +139,39 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all font-medium px-3 py-1 rounded-lg"
                 >
-                  {tag}
+                  #{tag}
                 </Badge>
               ))}
             </div>
           )}
 
           {/* Author and Activity */}
-          <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <Avatar className="w-6 h-6">
-                <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-xs">
+          <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-3 border-t-2 border-gray-200">
+            <div className="flex items-center gap-2.5">
+              <Avatar className="w-7 h-7 border-2 border-white shadow-sm">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 text-white text-xs font-semibold">
                   {displayAvatar}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm">{displayName}</span>
+              <span className="text-sm font-semibold text-gray-800">{displayName}</span>
               {question.author.reputation && (
-                <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-200">
-                  {question.author.reputation}
+                <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2.5 py-1 rounded-full font-semibold shadow-sm">
+                  {question.author.reputation} ⭐
                 </span>
               )}
             </div>
             {displayTime && (
               <>
-                <span className="text-gray-400">•</span>
-                <span className="text-sm">נשאל {displayTime}</span>
+                <span className="text-gray-400 font-bold">•</span>
+                <span className="text-sm text-gray-600">נשאל {displayTime}</span>
               </>
             )}
             {question.lastActivity && (
               <>
-                <span className="text-gray-400">•</span>
-                <span className="text-sm text-gray-600">
+                <span className="text-gray-400 font-bold">•</span>
+                <span className="text-sm text-gray-600 font-medium">
                   תשובה אחרונה מ- {question.lastActivity.user} {question.lastActivity.time}
                 </span>
               </>
