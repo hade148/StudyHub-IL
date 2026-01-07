@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -14,7 +15,9 @@ import {
   Eye,
   Download,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Home,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
@@ -75,6 +78,7 @@ interface ForumPost {
 }
 
 export function MyContentPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [tools, setTools] = useState<Tool[]>([]);
@@ -161,6 +165,18 @@ export function MyContentPage() {
         className="container mx-auto px-4"
       >
         <div className="mb-8">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="hover:text-blue-600 transition-colors flex items-center gap-1"
+            >
+              <Home className="w-4 h-4" />
+              דף הבית
+            </button>
+            <ChevronRight className="w-4 h-4" />
+            <span>התכנים שלי</span>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">התכנים שלי</h1>
           <p className="text-gray-600">נהל את כל התכנים שהעלית למערכת</p>
         </div>

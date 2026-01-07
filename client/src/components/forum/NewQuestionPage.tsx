@@ -8,7 +8,8 @@ import {
   CheckCircle, 
   Save,
   Eye,
-  X as XIcon
+  X as XIcon,
+  ChevronRight
 } from 'lucide-react';
 import { TagInput } from './TagInput';
 import { RichTextEditor } from './RichTextEditor';
@@ -203,12 +204,21 @@ export function NewQuestionPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Home className="w-4 h-4" />
-            <span>דף הבית</span>
-            <span>/</span>
-            <MessageSquare className="w-4 h-4" />
-            <span>פורום</span>
-            <span>/</span>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="hover:text-blue-600 transition-colors flex items-center gap-1"
+            >
+              <Home className="w-4 h-4" />
+              דף הבית
+            </button>
+            <ChevronRight className="w-4 h-4" />
+            <button
+              onClick={() => navigate('/forum')}
+              className="hover:text-blue-600 transition-colors"
+            >
+              פורום
+            </button>
+            <ChevronRight className="w-4 h-4" />
             <span className="text-gray-900">שאלה חדשה</span>
           </div>
         </div>
