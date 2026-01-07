@@ -14,7 +14,6 @@ import { TagInput } from './TagInput';
 import { RichTextEditor } from './RichTextEditor';
 import { CodeSnippetEditor } from './CodeSnippetEditor';
 import { ImageUpload } from './ImageUpload';
-import { SimilarQuestions } from './SimilarQuestions';
 import { QuestionPreviewModal } from './QuestionPreviewModal';
 import { SuccessModal } from './SuccessModal';
 import api from '../../utils/api';
@@ -50,30 +49,8 @@ const POPULAR_TAGS = [
   'סטטיסטיקה',
 ];
 
-const SIMILAR_QUESTIONS = [
-  {
-    id: '1',
-    title: 'איך לממש מיון בועות ב-Python?',
-    answerCount: 12,
-    isSolved: true,
-  },
-  {
-    id: '2',
-    title: 'בעיות במימוש אלגוריתם מיון',
-    answerCount: 8,
-    isSolved: false,
-  },
-  {
-    id: '3',
-    title: 'השוואה בין אלגוריתמי מיון שונים',
-    answerCount: 15,
-    isSolved: true,
-  },
-];
-
 export function NewQuestionPage() {
   const navigate = useNavigate();
-  const [showSimilarQuestions, setShowSimilarQuestions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [createdPostId, setCreatedPostId] = useState<number | null>(null);
@@ -114,13 +91,6 @@ export function NewQuestionPage() {
 
     return () => clearTimeout(timer);
   }, [watchedFields]);
-
-  // Check for similar questions when typing title
-  useEffect(() => {
-    if (watchedFields.title && watchedFields.title.length > 10) {
-      setShowSimilarQuestions(true);
-    }
-  }, [watchedFields.title]);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -285,14 +255,6 @@ export function NewQuestionPage() {
                       <p className="text-orange-500 text-sm mt-1">כתוב כותרת ברורה וספציפית (לפחות 10 תווים)</p>
                     )}
                   </div>
-
-                  {/* Similar Questions */}
-                  {showSimilarQuestions && watchedFields.title.length > 10 && (
-                    <SimilarQuestions
-                      questions={SIMILAR_QUESTIONS}
-                      onClose={() => setShowSimilarQuestions(false)}
-                    />
-                  )}
                 </div>
               </motion.div>
 

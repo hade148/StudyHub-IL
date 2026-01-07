@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Mail, Lock, User, Loader2, Check, X, AlertCircle } from 'lucide-react';
+import { 
+  Eye, 
+  EyeOff, 
+  Mail, 
+  Lock, 
+  User, 
+  Loader2, 
+  Check, 
+  X, 
+  AlertCircle,
+  AlertTriangle,
+  UserPlus,
+  Sparkles,
+  Shield,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -35,6 +49,7 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [emailWarning, setEmailWarning] = useState(false);
   const [institutions, setInstitutions] = useState<string[]>([]);
   const [loadingInstitutions, setLoadingInstitutions] = useState(true);
 
@@ -100,12 +115,18 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     setError('');
+    setEmailWarning(false);
 
     try {
       // Use real register function from AuthContext
-      await registerUser(data.fullName, data.email, data.password);
+      const response = await registerUser(data.fullName, data.email, data.password);
 
       console.log('Registration data:', data);
+      
+      // Check if welcome email was sent
+      if (response && !response.emailSent) {
+        setEmailWarning(true);
+      }
       
       // Show success
       setSuccess(true);
@@ -118,45 +139,85 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
 
   if (success) {
     return (
-      <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-8 relative overflow-hidden">
+      <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white flex items-center justify-center p-8 relative overflow-hidden">
         {/* Decorative Elements */}
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-300/20 to-purple-300/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-purple-300/20 to-pink-300/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-8 max-w-md w-full text-center relative z-10"
+          className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-gray-200 p-10 max-w-md w-full text-center relative z-10"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: [0, 1.2, 1] }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center"
+            className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-2xl"
           >
-            <Check className="w-12 h-12 text-white" />
+            <Check className="w-14 h-14 text-white stroke-[3]" />
           </motion.div>
 
-          <h2 className="text-gray-900 mb-4">ההרשמה בוצעה בהצלחה! 🎉</h2>
+          {/* Sparkles Animation */}
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{
+                scale: [0, 1, 0],
+                opacity: [0, 1, 0],
+                x: Math.cos((i * Math.PI) / 3) * 100,
+                y: Math.sin((i * Math.PI) / 3) * 100,
+              }}
+              transition={{ delay: 0.3 + i * 0.1, duration: 1 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            >
+              <Sparkles className="w-6 h-6 text-yellow-500" />
+            </motion.div>
+          ))}
+
+          <h2 className="text-3xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
+            ההרשמה בוצעה בהצלחה!
+          </h2>
           
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-700 mb-2">
-              נשלח אימייל אימות ל-
-            </p>
-            <p className="text-blue-700">{watch('email')}</p>
-            <p className="text-sm text-gray-600 mt-2">
-              אנא בדוק את תיבת הדואר שלך
-            </p>
-          </div>
+          {emailWarning && (
+            <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-300 rounded-2xl p-5 mb-4 shadow-md">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+                <p className="text-sm font-semibold text-gray-700">
+                  לא ניתן לשלוח אימייל כרגע
+                </p>
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                שגיאה בשליחת המייל, אך החשבון נוצר בהצלחה ואתה יכול להמשיך
+              </p>
+            </div>
+          )}
+
+          {!emailWarning && (
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-300 rounded-2xl p-5 mb-6 shadow-md">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Mail className="w-5 h-5 text-blue-600" />
+                <p className="text-sm font-semibold text-gray-700">
+                  נשלח אימייל אימות
+                </p>
+              </div>
+              <p className="text-blue-700 font-bold text-lg mb-2">{watch('email')}</p>
+              <p className="text-sm text-gray-600">
+                אנא בדוק את תיבת הדואר שלך ואמת את החשבון
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Button
               onClick={onNavigateDashboard}
-              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 hover:from-blue-600 hover:via-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 text-white font-semibold py-6"
             >
+              <UserPlus className="w-5 h-5 ml-2" />
               עבור לדף הבית
             </Button>
-            <button className="text-sm text-blue-600 hover:text-blue-700">
+            <button className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">
               לא קיבלת? שלח שוב
             </button>
           </div>
@@ -166,10 +227,10 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex relative overflow-hidden">
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white flex relative overflow-hidden">
       {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-300/20 to-purple-300/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-purple-300/20 to-pink-300/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       
       {/* Form Container */}
       <motion.div
@@ -184,7 +245,7 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-8 space-y-6"
+            className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-gray-200 p-8 space-y-6"
           >
             {/* Logo & Title */}
             <div className="text-center mb-6">
@@ -194,8 +255,17 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
                 transition={{ delay: 0.3, type: 'spring' }}
                 className="mb-6"
               >
-                <h1 className="text-3xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">StudyHub-IL</h1>
-                <p className="text-sm text-gray-600">צור חשבון חדש</p>
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    className="bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 p-3 rounded-2xl shadow-lg"
+                  >
+                    <UserPlus className="w-8 h-8 text-white" />
+                  </motion.div>
+                </div>
+                <h1 className="text-4xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-purple-700 bg-clip-text text-transparent mb-2">StudyHub-IL</h1>
+                <p className="text-base text-gray-600 font-medium">צור חשבון חדש והצטרף לקהילה</p>
               </motion.div>
             </div>
 
@@ -204,10 +274,12 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-xl p-3 flex items-center gap-2"
+                className="bg-red-50/90 backdrop-blur-sm border-2 border-red-300 rounded-2xl p-4 flex items-center gap-3 shadow-md"
               >
-                <AlertCircle className="w-4 h-4 text-red-500" />
-                <span className="text-sm text-red-700">{error}</span>
+                <div className="bg-red-100 p-2 rounded-xl">
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                </div>
+                <span className="text-sm text-red-700 font-medium flex-1">{error}</span>
               </motion.div>
             )}
 
@@ -422,20 +494,21 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
             </div>
 
             {/* Terms & Privacy */}
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-2xl shadow-sm">
               <Checkbox
                 id="terms"
                 checked={watchTerms}
                 onCheckedChange={(checked) => setValue('terms', !!checked)}
                 className="mt-1"
               />
-              <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer flex-1">
+              <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer flex-1 leading-relaxed">
+                <Shield className="w-4 h-4 inline ml-1 text-blue-600" />
                 אני מסכים ל
-                <button type="button" className="text-blue-600 hover:underline mx-1">
+                <button type="button" className="text-blue-600 hover:underline mx-1 font-semibold">
                   תנאי השימוש
                 </button>
                 ו
-                <button type="button" className="text-blue-600 hover:underline mx-1">
+                <button type="button" className="text-blue-600 hover:underline mx-1 font-semibold">
                   מדיניות הפרטיות
                 </button>
               </label>
@@ -448,15 +521,18 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
             <Button
               type="submit"
               disabled={isLoading || !watchTerms}
-              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 hover:from-blue-600 hover:via-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 text-white font-semibold py-6"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 ml-2 animate-spin" />
                   יוצר חשבון...
                 </>
               ) : (
-                'צור חשבון'
+                <>
+                  <UserPlus className="w-5 h-5 ml-2" />
+                  צור חשבון
+                </>
               )}
             </Button>
           </motion.form>

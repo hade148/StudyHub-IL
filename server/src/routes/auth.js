@@ -68,13 +68,20 @@ router.post('/register', registerValidation, async (req, res) => {
       select: { id: true, fullName: true, email: true, role: true, institution: true, createdAt: true }
     });
 
-    // Send welcome email (non-blocking)
-    sendWelcomeEmail(email, fullName).catch(err => {
+    const token = generateToken(user.id, user.role);
+    
+    // Try to send welcome email
+    const emailSent = await sendWelcomeEmail(email, fullName).catch(err => {
       console.error('Failed to send welcome email:', err);
+      return false;
     });
 
-    const token = generateToken(user.id, user.role);
-    res.status(201).json({ message: 'משתמש נוצר בהצלחה', token, user });
+    res.status(201).json({ 
+      message: 'משתמש נוצר בהצלחה', 
+      token, 
+      user,
+      emailSent: emailSent || false
+    });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'שגיאה ביצירת משתמש' });
@@ -344,9 +351,12 @@ router.post('/forgot-password', forgotPasswordValidation, async (req, res) => {
       data: { resetToken, resetTokenExpiresAt }
     });
 
-    // Send password reset email
-    await sendPasswordResetEmail(email, user.fullName, resetToken);
+    // Try to send password reset email (non-blocking for security)
+    sendPasswordResetEmail(email, user.fullName, resetToken).catch(err => {
+      console.error('Failed to send reset email:', err);
+    });
 
+    // Always return success to prevent email enumeration
     res.json({ message: 'אם האימייל קיים במערכת, נשלח אליו קישור לאיפוס סיסמה' });
   } catch (error) {
     console.error('Forgot password error:', error);

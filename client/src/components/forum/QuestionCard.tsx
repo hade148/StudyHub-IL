@@ -62,42 +62,49 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
   
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ backgroundColor: '#F9FAFB', borderRightColor: '#3B82F6' }}
-      className="bg-white border-r-4 border-r-transparent rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-6 cursor-pointer"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.4, ease: "easeOut" }}
+      whileHover={{ 
+        y: -4, 
+        boxShadow: "0 12px 32px rgba(59, 130, 246, 0.2)",
+        scale: 1.005
+      }}
+      className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl hover:border-blue-300 transition-all duration-300 p-6 cursor-pointer shadow-md hover:shadow-xl"
       onClick={onClick}
     >
-      <div className="flex gap-6">
-        {/* Stats Section (Right) */}
-        <div className="flex flex-col gap-3 items-center min-w-[80px]">
+      <div className="flex gap-6 overflow-hidden">
+        {/* Stats Section (Left) */}
+        <div className="flex flex-col gap-4 items-center min-w-[90px] border-r-2 border-gray-200 pr-6">
           {/* Rating */}
           {question.avgRating != null && (
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-1 text-yellow-500">
-                <Star className="w-5 h-5 fill-current" />
-                <span className="text-gray-900">{question.avgRating.toFixed(1)}</span>
+            <motion.div 
+              className="flex flex-col items-center gap-1"
+              whileHover={{ scale: 1.1 }}
+            >
+              <div className="flex items-center gap-1.5 text-yellow-500">
+                <Star className="w-6 h-6 fill-yellow-400 stroke-yellow-500" />
+                <span className="font-bold text-lg">{question.avgRating.toFixed(1)}</span>
               </div>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 font-medium" aria-label="מספר דירוגים">
                 {question._count?.ratings || 0} דירוגים
               </span>
-            </div>
+            </motion.div>
           )}
 
           {/* Answers */}
           <div
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg ${
+            className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border-2 transition-all shadow-sm ${
               isAnswered
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-600'
+                ? 'bg-gradient-to-br from-blue-50 to-purple-50 text-blue-700 border-blue-300'
+                : 'bg-gray-50 text-gray-600 border-gray-300'
             }`}
           >
             {isAnswered && (
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
             )}
-            <span>{answers}</span>
-            <span className="text-xs">תשובות</span>
+            <span className="font-bold text-lg">{answers}</span>
+            <span className="text-xs font-medium">תשובות</span>
           </div>
 
           {/* Views */}
@@ -111,19 +118,19 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
         <div className="flex-1 space-y-3">
           {/* Category Badge */}
           {question.category && (
-            <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]}`}>
+            <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]} transition-all font-semibold px-3 py-1 text-sm shadow-sm`}>
               {question.category}
             </Badge>
           )}
 
           {/* Title */}
-          <h3 className="text-gray-900 hover:text-blue-600 transition-colors">
+          <h3 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors leading-snug break-words">
             {question.title}
           </h3>
 
           {/* Description */}
           {description && (
-            <p className="text-gray-600 line-clamp-2">
+            <p className="text-gray-600 line-clamp-2 leading-relaxed text-base">
               {description}
             </p>
           )}
@@ -135,39 +142,39 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all font-medium px-3 py-1 rounded-lg"
                 >
-                  {tag}
+                  #{tag}
                 </Badge>
               ))}
             </div>
           )}
 
           {/* Author and Activity */}
-          <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-2">
-            <div className="flex items-center gap-2">
-              <Avatar className="w-6 h-6">
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+          <div className="flex flex-wrap items-center gap-3 text-gray-600 pt-3 border-t-2 border-gray-200">
+            <div className="flex items-center gap-2.5">
+              <Avatar className="w-7 h-7 border-2 border-white shadow-sm">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 text-white text-xs font-semibold">
                   {displayAvatar}
                 </AvatarFallback>
               </Avatar>
-              <span>{displayName}</span>
+              <span className="text-sm font-semibold text-gray-800">{displayName}</span>
               {question.author.reputation && (
-                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                  {question.author.reputation}
+                <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2.5 py-1 rounded-full font-semibold shadow-sm">
+                  {question.author.reputation} ⭐
                 </span>
               )}
             </div>
             {displayTime && (
               <>
-                <span>•</span>
-                <span>נשאל {displayTime}</span>
+                <span className="text-gray-400 font-bold">•</span>
+                <span className="text-sm text-gray-600">נשאל {displayTime}</span>
               </>
             )}
             {question.lastActivity && (
               <>
-                <span>•</span>
-                <span className="text-green-600">
+                <span className="text-gray-400 font-bold">•</span>
+                <span className="text-sm text-gray-600 font-medium">
                   תשובה אחרונה מ- {question.lastActivity.user} {question.lastActivity.time}
                 </span>
               </>
