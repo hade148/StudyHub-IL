@@ -56,9 +56,9 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   }, []);
   
   const filteredQuestions = activeTab === 'unanswered' 
-    ? questions.filter((q) => !q.isAnswered)
+    ? questions.filter((q) => !q.isAnswered && q._count.comments === 0)
     : activeTab === 'mine'
-    ? questions.filter((q) => q.userId === user?.id)
+    ? questions.filter((q) => q.authorId === user?.id || q.author?.id === user?.id)
     : questions;
 
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
@@ -152,6 +152,9 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                 השאלות שלי
               </TabsTrigger>
             </TabsList>
+
+          <TabsContent value="all" className="space-y-6 mt-6">
+            <div className="space-y-6">
               {/* Questions List */}
               <div className="space-y-4">
                 {isLoading ? (
