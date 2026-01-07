@@ -445,7 +445,7 @@ export function NewQuestionPage() {
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                💾 שמור טיוטה
+                 שמור טיוטה
               </button>
               {lastSaved && (
                 <span className="text-sm text-gray-500">
@@ -463,7 +463,7 @@ export function NewQuestionPage() {
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Eye className="w-4 h-4" />
-                👁️ תצוגה מקדימה
+                 תצוגה מקדימה
               </button>
               <button
                 type="button"

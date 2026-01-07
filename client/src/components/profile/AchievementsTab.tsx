@@ -54,10 +54,10 @@ const rarityLabels = {
 };
 
 const categoryLabels = {
-  general: '🏆 כלליים',
-  summaries: '📚 סיכומים',
-  forum: '💬 פורום',
-  special: '🎯 מיוחדים',
+  general: 'כלליים',
+  summaries: 'סיכומים',
+  forum: 'פורום',
+  special: 'מיוחדים',
 };
 
 interface AchievementCardProps {

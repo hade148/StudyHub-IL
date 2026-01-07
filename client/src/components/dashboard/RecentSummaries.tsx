@@ -27,7 +27,7 @@ export function RecentSummaries({ summaries = [], onViewAll }: RecentSummariesPr
           <h2>סיכומים אחרונים</h2>
         </div>
         <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
-          <div className="text-6xl">📚</div>
+          <div className="text-6xl"></div>
           <h3>אין סיכומים זמינים כרגע</h3>
           <p className="text-gray-600">סיכומים חדשים יופיעו כאן</p>
         </div>

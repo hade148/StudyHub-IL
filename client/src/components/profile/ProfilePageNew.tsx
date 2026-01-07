@@ -180,11 +180,11 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
             <Tabs defaultValue="overview" onValueChange={setActiveTab} className="w-full">
               <TabsList className="bg-white rounded-lg shadow-sm p-1 w-full flex-wrap h-auto gap-1">
                 <TabsTrigger value="overview" className="flex-1 md:flex-none text-sm md:text-base">
-                  📊 סקירה כללית
+                   סקירה כללית
                 </TabsTrigger>
                 <TabsTrigger value="summaries" className="flex-1 md:flex-none text-sm md:text-base">
                   <span className="flex items-center gap-1">
-                    📚 סיכומים שלי
+                     סיכומים שלי
                     <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
                       {userData.mySummaries.length}
                     </Badge>
@@ -192,7 +192,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                 </TabsTrigger>
                 <TabsTrigger value="favorites" className="flex-1 md:flex-none text-sm md:text-base">
                   <span className="flex items-center gap-1">
-                    ⭐ מועדפים
+                     מועדפים
                     <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 text-xs">
                       {userData.favorites.length}
                     </Badge>
@@ -200,17 +200,17 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                 </TabsTrigger>
                 <TabsTrigger value="forum" className="flex-1 md:flex-none text-sm md:text-base">
                   <span className="flex items-center gap-1">
-                    💬 פעילות בפורום
+                     פעילות בפורום
                     <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 text-xs">
                       {userData.forumQuestions.length + userData.forumAnswers.length}
                     </Badge>
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="achievements" className="flex-1 md:flex-none text-sm md:text-base">
-                  🏆 הישגים
+                   הישגים
                 </TabsTrigger>
                 <TabsTrigger value="statistics" className="flex-1 md:flex-none text-sm md:text-base">
-                  📈 סטטיסטיקות
+                   סטטיסטיקות
                 </TabsTrigger>
               </TabsList>
 
@@ -248,7 +248,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                               {summary.downloads}
                             </div>
                             <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                              ⭐ {summary.rating}
+                               {summary.rating}
                             </Badge>
                           </div>
                         </motion.div>
@@ -360,8 +360,8 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                   {/* Sub-tabs */}
                   <Tabs defaultValue="summaries" onValueChange={setFavoritesTab}>
                     <TabsList className="bg-gray-100">
-                      <TabsTrigger value="summaries">📚 סיכומים</TabsTrigger>
-                      <TabsTrigger value="posts">💬 פוסטים</TabsTrigger>
+                      <TabsTrigger value="summaries">סיכומים</TabsTrigger>
+                      <TabsTrigger value="posts">פוסטים</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="summaries" className="mt-4">
@@ -387,7 +387,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                               </div>
                               <div className="flex items-center gap-2">
                                 <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                                  ⭐ {fav.rating}
+                                   {fav.rating}
                                 </Badge>
                                 <Button variant="outline" size="sm" className="text-pink-600 hover:text-pink-700">
                                   <Heart className="w-4 h-4 fill-pink-500 text-pink-500" />
@@ -401,7 +401,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
 
                     <TabsContent value="posts" className="mt-4">
                       <div className="text-center py-12">
-                        <div className="text-6xl mb-4">⭐</div>
+                        <div className="text-6xl mb-4"></div>
                         <h4 className="text-gray-900 mb-2">אין פוסטים מועדפים</h4>
                         <p className="text-gray-600">פוסטים שתשמור יופיעו כאן</p>
                       </div>
@@ -416,10 +416,10 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                   <Tabs defaultValue="questions" onValueChange={setForumTab}>
                     <TabsList className="bg-gray-100">
                       <TabsTrigger value="questions">
-                        ❓ שאלות שלי ({userData.forumQuestions.length})
+                         שאלות שלי ({userData.forumQuestions.length})
                       </TabsTrigger>
                       <TabsTrigger value="answers">
-                        💬 תשובות שלי ({userData.forumAnswers.length})
+                         תשובות שלי ({userData.forumAnswers.length})
                       </TabsTrigger>
                     </TabsList>
 
