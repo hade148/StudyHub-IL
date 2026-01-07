@@ -118,11 +118,15 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
 
   if (success) {
     return (
-      <div dir="rtl" className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+      <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-8 relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+        
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
+          className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-8 max-w-md w-full text-center relative z-10"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -148,7 +152,7 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
           <div className="space-y-3">
             <Button
               onClick={onNavigateDashboard}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
             >
               עבור לדף הבית
             </Button>
@@ -162,50 +166,50 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-50 flex">
-      {/* Left Side - Form */}
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+      
+      {/* Form Container */}
       <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full lg:w-1/2 flex items-center justify-center p-8 overflow-y-auto"
+        className="w-full flex items-center justify-center p-8 overflow-y-auto relative z-10"
       >
-        <div className="w-full max-w-md space-y-6 py-8">
-          {/* Logo & Title */}
-          <div className="text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring' }}
-              className="inline-flex items-center gap-2 mb-6"
-            >
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <span className="text-3xl">🎓</span>
-              </div>
-              <span className="text-2xl">StudyHub-IL</span>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <h1 className="text-gray-900 mb-2">הצטרף ל-StudyHub-IL</h1>
-              <p className="text-gray-600">צור חשבון והתחל ללמוד היום</p>
-            </motion.div>
-          </div>
+        <div className="w-full max-w-md py-8">
+          {/* Card Container */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 p-8 space-y-6"
+          >
+            {/* Logo & Title */}
+            <div className="text-center mb-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: 'spring' }}
+                className="mb-6"
+              >
+                <h1 className="text-3xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">StudyHub-IL</h1>
+                <p className="text-sm text-gray-600">צור חשבון חדש</p>
+              </motion.div>
+            </div>
 
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2"
-            >
-              <AlertCircle className="w-5 h-5" />
-              {error}
-            </motion.div>
-          )}
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-xl p-3 flex items-center gap-2"
+              >
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                <span className="text-sm text-red-700">{error}</span>
+              </motion.div>
+            )}
 
           {/* Registration Form */}
           <motion.form
@@ -444,7 +448,7 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
             <Button
               type="submit"
               disabled={isLoading || !watchTerms}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+              className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
             >
               {isLoading ? (
                 <>
@@ -457,72 +461,27 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
             </Button>
           </motion.form>
 
-          {/* Login Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center"
-          >
-            <p className="text-gray-600">
-              כבר יש לך חשבון?{' '}
-              <button
-                onClick={onNavigateLogin}
-                className="text-blue-600 hover:text-blue-700 hover:underline"
-              >
-                התחבר
-              </button>
-            </p>
+            {/* Login Link */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-center pt-4 border-t border-gray-100"
+            >
+              <p className="text-sm text-gray-600">
+                כבר יש לך חשבון?{' '}
+                <button
+                  onClick={onNavigateLogin}
+                  className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                >
+                  התחבר
+                </button>
+              </p>
+            </motion.div>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Right Side - Benefits */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 p-12 items-center justify-center relative overflow-hidden"
-      >
-        <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-
-        <div className="relative z-10 text-white space-y-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: 'spring' }}
-            className="text-center mb-8"
-          >
-            <h2 className="text-white mb-4">הצטרף אלינו היום</h2>
-            <p className="text-xl text-white/90">וקבל גישה לכל היתרונות</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="space-y-4 text-right"
-          >
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">💾</span>
-              <span className="text-lg">שמור סיכומים</span>
-            </div>
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">📤</span>
-              <span className="text-lg">שתף תוכן</span>
-            </div>
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">💬</span>
-              <span className="text-lg">קהילה פעילה</span>
-            </div>
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <span className="text-3xl">🏆</span>
-              <span className="text-lg">הישגים ונקודות</span>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
     </div>
   );
 }

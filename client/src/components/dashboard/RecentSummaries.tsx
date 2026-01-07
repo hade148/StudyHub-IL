@@ -3,44 +3,38 @@ import { Eye, Download, Heart, Star } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
-const summaries = [
-  {
-    title: 'מבוא למדעי המחשב - פרקים 1-5',
-    course: 'CS101',
-    rating: 4.8,
-    views: 234,
-    downloads: 89,
-    fileType: 'PDF',
-    description: 'סיכום מקיף של הפרקים הראשונים בקורס מבוא למדעי המחשב, כולל דוגמאות קוד ותרגילים',
-    uploadDate: 'לפני 3 ימים',
-  },
-  {
-    title: 'אלגוריתמים ומבני נתונים - מיון',
-    course: 'CS202',
-    rating: 4.9,
-    views: 456,
-    downloads: 167,
-    fileType: 'PDF',
-    description: 'סיכום מפורט של אלגוריתמי מיון: בועות, מהיר, מיזוג ועוד. כולל ניתוח זמן ריצה',
-    uploadDate: 'לפני שבוע',
-  },
-  {
-    title: 'חשבון אינפיניטסימלי - נגזרות',
-    course: 'MATH101',
-    rating: 4.7,
-    views: 189,
-    downloads: 72,
-    fileType: 'DOCX',
-    description: 'סיכום של כללי גזירה, נגזרות של פונקציות מורכבות ושימושים בנגזרות',
-    uploadDate: 'לפני יומיים',
-  },
-];
+interface Summary {
+  title: string;
+  course: string;
+  rating: number;
+  views: number;
+  downloads: number;
+  fileType: string;
+  description: string;
+  uploadDate: string;
+}
 
 interface RecentSummariesProps {
+  summaries?: Summary[];
   onViewAll?: () => void;
 }
 
-export function RecentSummaries({ onViewAll }: RecentSummariesProps) {
+export function RecentSummaries({ summaries = [], onViewAll }: RecentSummariesProps) {
+  if (summaries.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2>סיכומים אחרונים</h2>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
+          <div className="text-6xl">📚</div>
+          <h3>אין סיכומים זמינים כרגע</h3>
+          <p className="text-gray-600">סיכומים חדשים יופיעו כאן</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

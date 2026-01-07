@@ -2,48 +2,12 @@ import { motion } from 'motion/react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Eye, Download, Star, TrendingUp } from 'lucide-react';
 
-// Sample data for charts
-const viewsData = [
-  { day: '1', views: 45 },
-  { day: '5', views: 67 },
-  { day: '10', views: 89 },
-  { day: '15', views: 125 },
-  { day: '20', views: 156 },
-  { day: '25', views: 189 },
-  { day: '30', views: 234 },
-];
-
-const downloadsData = [
-  { name: 'מבוא למדעי המחשב', downloads: 234 },
-  { name: 'אלגוריתמים', downloads: 189 },
-  { name: 'מבני נתונים', downloads: 167 },
-  { name: 'בסיסי נתונים', downloads: 145 },
-  { name: 'רשתות מחשבים', downloads: 123 },
-];
-
-const forumActivityData = [
-  { week: 'שבוע 1', questions: 3, answers: 8 },
-  { week: 'שבוע 2', questions: 2, answers: 10 },
-  { week: 'שבוע 3', questions: 4, answers: 12 },
-  { week: 'שבוע 4', questions: 3, answers: 15 },
-];
-
-const reputationData = [
-  { month: 'ינואר', reputation: 120 },
-  { month: 'פברואר', reputation: 180 },
-  { month: 'מרץ', reputation: 250 },
-  { month: 'אפריל', reputation: 320 },
-  { month: 'מאי', reputation: 390 },
-  { month: 'יוני', reputation: 456 },
-];
-
-const uploadsStats = [
-  { name: 'מבוא למדעי המחשב - פרק 5', views: 456, downloads: 234, rating: 4.8 },
-  { name: 'אלגוריתמים - מיון ומחלקות', views: 312, downloads: 189, rating: 4.6 },
-  { name: 'מבני נתונים - עצים ותורים', views: 289, downloads: 167, rating: 4.7 },
-  { name: 'בסיסי נתונים - SQL מתקדם', views: 245, downloads: 145, rating: 4.5 },
-  { name: 'רשתות מחשבים - פרוטוקולים', views: 198, downloads: 123, rating: 4.4 },
-];
+// Empty data arrays - to be filled from database
+const viewsData: any[] = [];
+const downloadsData: any[] = [];
+const forumActivityData: any[] = [];
+const reputationData: any[] = [];
+const uploadsStats: any[] = [];
 
 export function StatisticsTab() {
   return (

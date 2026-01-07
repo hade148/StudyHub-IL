@@ -237,23 +237,22 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+      
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-6">
+      <div className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-10 shadow-sm">
+        <div className="container mx-auto px-4 py-6 relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <span className="text-2xl">🎓</span>
-              </div>
-              <div>
-                <h1 className="text-gray-900">StudyHub-IL</h1>
-                <p className="text-gray-600">הפלטפורמה האקדמית שלך</p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">העלאת סיכום</h1>
+              <p className="text-sm text-gray-600 mt-1">שתף את הסיכומים שלך עם הקהילה</p>
             </div>
-            <Button onClick={onNavigateHome} variant="outline">
+            <Button onClick={onNavigateHome} variant="outline" className="hover:bg-white/80">
               <Home className="w-4 h-4 ml-2" />
-              חזרה לדף הבית
+              חזרה
             </Button>
           </div>
 
@@ -533,7 +532,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       <Button
                         type="button"
                         onClick={goToNextStep}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                        className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
                       >
                         המשך
                         <ChevronRight className="w-4 h-4 mr-2" />
