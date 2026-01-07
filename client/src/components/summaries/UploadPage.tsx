@@ -67,17 +67,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   const watchCourseId = watch('courseId', '');
   const watchTerms = watch('terms', false);
 
-  const popularTags = [
-    'בחינה',
-    'מועד א',
-    'תרגילים',
-    'הרצאות',
-    'נוסחאות',
-    'דוגמאות',
-    'חומר מלא',
-    'סמסטר א',
-  ];
-
   // Handle file drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -145,14 +134,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
     const newTags = tags.filter((tag) => tag !== tagToRemove);
     setTags(newTags);
     setValue('tags', newTags);
-  };
-
-  const addPopularTag = (tag: string) => {
-    if (!tags.includes(tag) && tags.length < 10) {
-      const newTags = [...tags, tag];
-      setTags(newTags);
-      setValue('tags', newTags);
-    }
   };
 
   const goToNextStep = async () => {
@@ -603,24 +584,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                           ))}
                         </div>
                       )}
-
-                      {/* Popular Tags */}
-                      <div className="mt-4">
-                        <p className="text-sm text-gray-600 mb-2">תגיות פופולריות:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {popularTags.map((tag) => (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => addPopularTag(tag)}
-                              disabled={tags.includes(tag) || tags.length >= 10}
-                              className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:border-blue-500 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {tag}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
 
                       {tags.length === 0 && currentStep === 3 && (
                         <p className="text-sm text-gray-500 mt-2">אנא הוסף לפחות תגית אחת</p>

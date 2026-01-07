@@ -122,25 +122,6 @@ export function TagInput({
           </div>
         </motion.div>
       )}
-
-      {/* Popular Tags */}
-      {tags.length === 0 && !showSuggestions && suggestions.length > 0 && (
-        <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-          <div className="text-sm text-gray-700 mb-2">💡 תגיות פופולריות:</div>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.slice(0, 7).map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => addSuggestion(suggestion)}
-                className="px-3 py-1 text-sm bg-white hover:bg-blue-100 rounded-full transition-colors border border-blue-200"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

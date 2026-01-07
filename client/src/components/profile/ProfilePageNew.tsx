@@ -221,40 +221,6 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <ActivityTimeline activities={userData.recentActivity} />
                   </div>
-
-                  {/* Popular Uploads */}
-                  <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
-                    <h3 className="text-gray-900">הסיכומים הפופולריים ביותר 🔥</h3>
-                    <div className="grid gap-4">
-                      {userData.topSummaries.map((summary, index) => (
-                        <motion.div
-                          key={summary.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg hover:from-blue-100 hover:to-purple-100 transition-all duration-300 border border-blue-200"
-                        >
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white text-xl">
-                              #{index + 1}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-gray-900">{summary.title}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Download className="w-4 h-4" />
-                              {summary.downloads}
-                            </div>
-                            <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                               {summary.rating}
-                            </Badge>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
 
@@ -278,7 +244,6 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="recent">אחרונים</SelectItem>
-                        <SelectItem value="popular">פופולריים</SelectItem>
                         <SelectItem value="rating">דירוג</SelectItem>
                       </SelectContent>
                     </Select>

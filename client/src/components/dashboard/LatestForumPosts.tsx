@@ -33,7 +33,7 @@ export function LatestForumPosts({ posts = [], onViewAll }: LatestForumPostsProp
           <h2>פוסטים אחרונים בפורום</h2>
         </div>
         <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
-          <div className="text-6xl">💬</div>
+          <div className="text-6xl"></div>
           <h3>אין פוסטים בפורום</h3>
           <p className="text-gray-600">פוסטים חדשים יופיעו כאן</p>
         </div>

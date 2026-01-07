@@ -68,7 +68,7 @@ export function QuestionPreviewModal({
             <div className="flex flex-wrap items-center gap-2 mb-4">
               {preview.isUrgent && (
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
-                  🔥 דחוף
+                 דחוף
                 </span>
               )}
             </div>
