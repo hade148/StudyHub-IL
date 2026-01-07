@@ -145,6 +145,8 @@ npm test
 ```
 
 ### End-to-End Tests (Selenium)
+
+#### 🚀 Quick Start
 Run comprehensive E2E tests covering critical user flows:
 ```bash
 cd selenium-tests
@@ -152,7 +154,35 @@ pip install -r requirements.txt
 pytest -v
 ```
 
-**Test Coverage:**
+#### 📚 Comprehensive Testing Documentation
+
+**Main Guides (Hebrew):**
+- **[מדריך מקיף לבדיקות Selenium](SELENIUM_TESTING_GUIDE_HE.md)** - מדריך שלב-אחר-שלב מלא
+  - מבוא ל-Selenium ויתרונותיו
+  - התקנה והכנת סביבת עבודה
+  - תכנון בדיקות (Test Planning)
+  - כתיבת בדיקות Selenium בפועל
+  - הרצת בדיקות ופתרון בעיות
+  - תיעוד באגים ב-Azure DevOps
+  - סיכום בדיקות ב-Wiki
+  - הגשה סופית
+
+- **[מדריך ייחוס מהיר](SELENIUM_QUICK_REFERENCE.md)** - ייחוס מהיר לפקודות נפוצות
+  - דוגמאות קוד לפעולות נפוצות
+  - חיפוש אלמנטים (ID, XPath, CSS)
+  - המתנות (Waits) ו-Timeouts
+  - תבניות Pytest
+  - טיפול בשגיאות
+  - Best Practices
+
+**Existing Documentation:**
+- [Quick Start Guide](selenium-tests/QUICKSTART.md) - Get started quickly
+- [Detailed README](selenium-tests/README.md) - Full test suite documentation
+- [Test Planning](TEST_PLANNING.md) - Detailed test planning methodology
+- [Test Summary Wiki](WIKI_TEST_SUMMARY.md) - Comprehensive test results and documentation
+- [Bug Tracking](BUG_TRACKING.md) - Bug reporting and tracking process
+
+#### ✅ Test Coverage
 - User authentication (registration, login, logout)
 - Summary upload and management
 - Forum interaction (posts, comments)
@@ -160,13 +190,13 @@ pytest -v
 - User profile management
 - Content rating and reviews
 
-**Documentation:**
-- [Quick Start Guide](selenium-tests/QUICKSTART.md) - Get started quickly
-- [Test Planning](TEST_PLANNING.md) - Detailed test planning
-- [Test Summary Wiki](WIKI_TEST_SUMMARY.md) - Comprehensive test documentation
-- [Bug Tracking](BUG_TRACKING.md) - Bug reporting and tracking
-
-For detailed instructions, see [selenium-tests/README.md](selenium-tests/README.md)
+#### 🎓 For Students (Phase 5)
+The comprehensive guides above are designed specifically for completing **Phase 5: System Testing and Bug Management** of the software engineering course. They include:
+- Step-by-step instructions based on lecture content
+- Practical examples tailored to StudyHub-IL
+- Bug tracking templates for Azure DevOps
+- Wiki documentation templates
+- Final submission checklist
 
 ## CI/CD Information
 The project uses Azure DevOps Pipelines for continuous integration and deployment with:
