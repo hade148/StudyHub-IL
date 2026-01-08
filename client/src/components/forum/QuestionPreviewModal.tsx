@@ -3,18 +3,15 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface CodeSnippet {
   id: string;
-  language: string;
   code: string;
 }
 
 interface QuestionPreview {
   title: string;
   description: string;
-  category: string;
   tags: string[];
   codeSnippets: CodeSnippet[];
   images: string[];
-  isUrgent: boolean;
 }
 
 interface QuestionPreviewModalProps {
@@ -23,15 +20,6 @@ interface QuestionPreviewModalProps {
   onPublish: () => void;
   preview: QuestionPreview;
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  'computer-science': '💻 מדעי המחשב',
-  'mathematics': '📊 מתמטיקה',
-  'physics': '🔬 פיזיקה',
-  'chemistry': '🧪 כימיה',
-  'study-resources': '📚 משאבי לימוד',
-  'general': '🎯 כללי',
-};
 
 export function QuestionPreviewModal({ 
   isOpen, 
@@ -63,7 +51,7 @@ export function QuestionPreviewModal({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
             <div>
-              <h2 className="text-2xl">👁️ תצוגה מקדימה</h2>
+              <h2 className="text-2xl"> תצוגה מקדימה</h2>
               <p className="text-sm text-gray-600 mt-1">כך השאלה תיראה בפורום</p>
             </div>
             <button
@@ -78,12 +66,9 @@ export function QuestionPreviewModal({
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                {CATEGORY_LABELS[preview.category] || preview.category}
-              </span>
               {preview.isUrgent && (
                 <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
-                  🔥 דחוף
+                 דחוף
                 </span>
               )}
             </div>
@@ -113,7 +98,7 @@ export function QuestionPreviewModal({
             {preview.codeSnippets.map((snippet, index) => (
               <div key={snippet.id} className="mb-6">
                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-t-lg">
-                  <span className="text-sm text-gray-600">{snippet.language}</span>
+                  <span className="text-sm text-gray-600">קטע קוד {index + 1}</span>
                 </div>
                 <pre className="p-4 bg-gray-50 border border-gray-300 border-t-0 rounded-b-lg overflow-x-auto">
                   <code className="text-sm font-mono" dir="ltr">

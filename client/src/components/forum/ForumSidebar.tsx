@@ -1,30 +1,20 @@
 import { motion } from 'motion/react';
-import { TrendingUp } from 'lucide-react';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Badge } from '../ui/badge';
 
-const popularTags = [
-  { name: 'Python', count: 234 },
-  { name: 'Java', count: 189 },
-  { name: 'אלגוריתמים', count: 156 },
-  { name: 'מתמטיקה', count: 145 },
-  { name: 'C++', count: 123 },
-  { name: 'מבני נתונים', count: 98 },
-  { name: 'פיזיקה', count: 87 },
-  { name: 'SQL', count: 76 },
-  { name: 'חשבון', count: 65 },
-  { name: 'רשתות', count: 54 },
-];
+interface ForumSidebarProps {
+  stats?: {
+    totalQuestions: number;
+    todayQuestions: number;
+    avgResponseTime: string;
+  };
+  topContributors?: Array<{ name: string; avatar: string; answers: number; reputation: number }>;
+}
 
-const topContributors = [
-  { name: 'שרה לוי', avatar: 'של', answers: 342, reputation: 4520 },
-  { name: 'יוסי כהן', avatar: 'יכ', answers: 289, reputation: 3890 },
-  { name: 'דני אברהם', avatar: 'דא', answers: 256, reputation: 3450 },
-  { name: 'מיכל רוזן', avatar: 'מר', answers: 198, reputation: 2980 },
-  { name: 'אלון ברק', avatar: 'אב', answers: 167, reputation: 2340 },
-];
-
-export function ForumSidebar() {
+export function ForumSidebar({ 
+  stats = { totalQuestions: 0, todayQuestions: 0, avgResponseTime: '0' },
+  topContributors = []
+}: ForumSidebarProps) {
   return (
     <div className="space-y-6">
       {/* Statistics Widget */}
@@ -41,44 +31,16 @@ export function ForumSidebar() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-gray-600">סה״כ שאלות</span>
-            <span className="text-blue-600">1,247</span>
+            <span className="text-blue-600">{stats.totalQuestions}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-600">שאלות היום</span>
-            <span className="text-green-600">23</span>
+            <span className="text-green-600">{stats.todayQuestions}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-600">זמן מענה ממוצע</span>
-            <span className="text-purple-600">2.5 שעות</span>
+            <span className="text-purple-600">{stats.avgResponseTime}</span>
           </div>
-        </div>
-      </motion.div>
-
-      {/* Popular Tags */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="bg-white rounded-xl shadow-lg p-6 space-y-4"
-      >
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-blue-600" />
-          <h3>תגיות פופולריות</h3>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {popularTags.map((tag, index) => (
-            <Badge
-              key={tag.name}
-              variant="outline"
-              className="border-gray-300 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-colors"
-              style={{
-                fontSize: Math.max(0.75, Math.min(1, tag.count / 200)) + 'rem',
-              }}
-            >
-              {tag.name}
-              <span className="mr-1 text-gray-500">({tag.count})</span>
-            </Badge>
-          ))}
         </div>
       </motion.div>
 

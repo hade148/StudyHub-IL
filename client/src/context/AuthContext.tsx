@@ -34,7 +34,7 @@ interface ProfileUpdateData {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<User>;
-  register: (fullName: string, email: string, password: string) => Promise<User>;
+  register: (fullName: string, email: string, password: string) => Promise<{ user: User; emailSent?: boolean }>;
   logout: () => void;
   updateProfile: (data: ProfileUpdateData) => Promise<User>;
   uploadAvatar: (file: File) => Promise<User>;
@@ -80,13 +80,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return user;
   };
 
-  const register = async (fullName: string, email: string, password: string): Promise<User> => {
+  const register = async (fullName: string, email: string, password: string): Promise<{ user: User; emailSent?: boolean }> => {
     const res = await api.post('/auth/register', { fullName, email, password });
-    const { token, user } = res.data;
+    const { token, user, emailSent } = res.data;
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     setUser(user);
-    return user;
+    return { user, emailSent };
   };
 
   const logout = () => {

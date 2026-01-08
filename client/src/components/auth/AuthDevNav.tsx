@@ -18,7 +18,7 @@ export function AuthDevNav({ currentPage, onNavigate }: AuthDevNavProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 z-50">
       <div className="container mx-auto">
-        <p className="text-xs text-gray-400 mb-2 text-center">🔧 Dev Navigation - Remove in production</p>
+        <p className="text-xs text-gray-400 mb-2 text-center"> Dev Navigation - Remove in production</p>
         <div className="flex flex-wrap gap-2 justify-center">
           {pages.map((page) => (
             <button

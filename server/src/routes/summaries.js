@@ -156,6 +156,58 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
       return res.status(400).json({ error: 'יש להעלות קובץ PDF או DOCX' });
     }
 
+    // Get user's institution
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { institution: true }
+    });
+
+    // Get the selected course
+    const selectedCourse = await prisma.course.findUnique({
+      where: { id: parseInt(courseId) },
+      select: { courseCode: true, courseName: true, institution: true, semester: true }
+    });
+
+    if (!selectedCourse) {
+      return res.status(404).json({ error: 'קורס לא נמצא' });
+    }
+
+    let actualCourseId = parseInt(courseId);
+
+    // If user has institution and it doesn't match course institution, create/find correct course
+    if (user.institution && user.institution !== selectedCourse.institution) {
+      // Create a safe, unique institution identifier using first meaningful word
+      const institutionWords = user.institution.split(' ').filter(w => w.length > 2);
+      const institutionId = institutionWords.length > 0 
+        ? institutionWords[0].substring(0, 5).toUpperCase()
+        : user.institution.substring(0, 5).toUpperCase();
+      
+      // Create institution-specific course code
+      const newCourseCode = `${institutionId}-${selectedCourse.courseCode}`;
+      
+      // Try to find existing course with this institution-specific code
+      let matchingCourse = await prisma.course.findFirst({
+        where: {
+          courseCode: newCourseCode
+        }
+      });
+
+      // If doesn't exist, create it
+      if (!matchingCourse) {
+        matchingCourse = await prisma.course.create({
+          data: {
+            courseCode: newCourseCode,
+            courseName: selectedCourse.courseName,
+            institution: user.institution,
+            semester: selectedCourse.semester
+          }
+        });
+        console.log(`✅ Created course for ${user.institution}: ${newCourseCode}`);
+      }
+
+      actualCourseId = matchingCourse.id;
+    }
+
     let filePath;
     let fileUrl;
 
@@ -198,11 +250,11 @@ router.post('/', authenticate, upload.single('file'), summaryValidation, async (
         title,
         description,
         filePath,
-        courseId: parseInt(courseId),
+        courseId: actualCourseId,
         uploadedById: req.user.id
       },
       include: {
-        course: { select: { courseCode: true, courseName: true } },
+        course: { select: { courseCode: true, courseName: true, institution: true } },
         uploadedBy: { select: { fullName: true } }
       }
     });

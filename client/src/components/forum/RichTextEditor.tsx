@@ -103,7 +103,7 @@ export function RichTextEditor({
             showPreview ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-200'
           }`}
         >
-          👁️ {showPreview ? 'עריכה' : 'תצוגה מקדימה'}
+           {showPreview ? 'עריכה' : 'תצוגה מקדימה'}
         </button>
       </div>
 

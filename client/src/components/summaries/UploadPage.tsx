@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useForm } from 'react-hook-form';
 import {
@@ -12,15 +12,20 @@ import {
   BookOpen,
   AlertCircle,
   Sparkles,
+  FileUp,
+  Tag,
+  Eye,
+  Info,
+  FilePlus,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import api from '../../utils/api';
+import { coursesList } from '../../constants/coursesList';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -33,17 +38,8 @@ interface FormData {
   title: string;
   courseId: string;
   description: string;
-  language: string;
-  category: string;
   tags: string[];
   terms: boolean;
-}
-
-interface Course {
-  id: number;
-  courseCode: string;
-  courseName: string;
-  institution: string;
 }
 
 export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSummary }: UploadPageProps) {
@@ -54,25 +50,8 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   const [tagInput, setTagInput] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(true);
   const [uploadedSummaryId, setUploadedSummaryId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Fetch courses from API
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const response = await api.get('/courses');
-        setCourses(response.data);
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      } finally {
-        setLoadingCourses(false);
-      }
-    };
-    fetchCourses();
-  }, []);
 
   const {
     register,
@@ -84,8 +63,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
     reset,
   } = useForm<FormData>({
     defaultValues: {
-      language: 'hebrew',
-      category: '',
       terms: false,
     },
   });
@@ -93,28 +70,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
   const watchTitle = watch('title', '');
   const watchDescription = watch('description', '');
   const watchCourseId = watch('courseId', '');
-  const watchCategory = watch('category', '');
-  const watchLanguage = watch('language', 'hebrew');
   const watchTerms = watch('terms', false);
-
-  const categories = [
-    { id: 'math', label: 'מתמטיקה', icon: '📘' },
-    { id: 'cs', label: 'מדעי המחשב', icon: '💻' },
-    { id: 'science', label: 'מדעים', icon: '🔬' },
-    { id: 'humanities', label: 'הומניות', icon: '📚' },
-    { id: 'arts', label: 'אמנויות', icon: '🎨' },
-  ];
-
-  const popularTags = [
-    'בחינה',
-    'מועד א',
-    'תרגילים',
-    'הרצאות',
-    'נוסחאות',
-    'דוגמאות',
-    'חומר מלא',
-    'סמסטר א',
-  ];
 
   // Handle file drop
   const handleDrop = (e: React.DragEvent) => {
@@ -185,14 +141,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
     setValue('tags', newTags);
   };
 
-  const addPopularTag = (tag: string) => {
-    if (!tags.includes(tag) && tags.length < 10) {
-      const newTags = [...tags, tag];
-      setTags(newTags);
-      setValue('tags', newTags);
-    }
-  };
-
   const goToNextStep = async () => {
     let isValid = false;
 
@@ -201,7 +149,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
     } else if (currentStep === 2) {
       isValid = await trigger(['title', 'courseId']);
     } else if (currentStep === 3) {
-      isValid = !!watchCategory && tags.length > 0;
+      isValid = tags.length > 0;
     }
 
     if (isValid) {
@@ -261,64 +209,79 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
 
   const getFileIcon = (filename: string) => {
     const ext = filename.split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') return '📕';
-    if (ext === 'docx') return '📘';
-    if (ext === 'ppt' || ext === 'pptx') return '📊';
-    return '📄';
+    if (ext === 'pdf') return <FileText className="w-8 h-8 text-red-500" />;
+    if (ext === 'docx') return <FileText className="w-8 h-8 text-blue-500" />;
+    return <FileText className="w-8 h-8 text-gray-500" />;
   };
 
   const steps = [
-    { number: 1, label: 'העלאת קובץ', icon: '📄' },
-    { number: 2, label: 'פרטי הסיכום', icon: '📝' },
-    { number: 3, label: 'תגיות וקטגוריה', icon: '🏷️' },
-    { number: 4, label: 'תצוגה מקדימה', icon: '👀' },
+    { number: 1, label: 'העלאת קובץ', icon: Upload },
+    { number: 2, label: 'פרטי הסיכום', icon: Info },
+    { number: 3, label: 'תגיות', icon: Tag },
+    { number: 4, label: 'תצוגה מקדימה', icon: Eye },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-300/20 to-purple-300/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-purple-300/20 to-pink-300/20 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-6">
+      <div className="bg-white/80 backdrop-blur-xl border-b-2 border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <span className="text-2xl">🎓</span>
-              </div>
+            <div className="flex items-center gap-4">
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 text-white p-3 rounded-2xl shadow-lg"
+              >
+                <FileUp className="w-7 h-7" />
+              </motion.div>
               <div>
-                <h1 className="text-gray-900">StudyHub-IL</h1>
-                <p className="text-gray-600">הפלטפורמה האקדמית שלך</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-purple-700 bg-clip-text text-transparent">העלאת סיכום</h1>
+                <p className="text-sm text-gray-600 mt-1">שתף את הסיכומים שלך עם הקהילה</p>
               </div>
             </div>
-            <Button onClick={onNavigateHome} variant="outline">
+            <Button onClick={onNavigateHome} variant="outline" className="hover:bg-white shadow-sm">
               <Home className="w-4 h-4 ml-2" />
-              חזרה לדף הבית
+              חזרה
             </Button>
           </div>
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <button onClick={onNavigateHome} className="hover:text-blue-600 transition-colors">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <button onClick={onNavigateHome} className="hover:text-blue-600 transition-colors font-medium">
               דף הבית
             </button>
             <ChevronLeft className="w-4 h-4" />
-            <button onClick={onNavigateSummaries} className="hover:text-blue-600 transition-colors">
+            <button onClick={onNavigateSummaries} className="hover:text-blue-600 transition-colors font-medium">
               סיכומים
             </button>
             <ChevronLeft className="w-4 h-4" />
-            <span className="text-gray-900">העלאה</span>
+            <span className="text-gray-900 font-semibold">העלאה</span>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Title */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-10"
         >
-          <h2 className="text-gray-900 mb-2">העלאת סיכום חדש 📤</h2>
-          <p className="text-gray-600">שתף את הסיכום שלך עם הקהילה</p>
+          <div className="inline-flex items-center gap-3 mb-3">
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <FilePlus className="w-12 h-12 text-blue-600" />
+            </motion.div>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">העלאת סיכום חדש</h2>
+          <p className="text-gray-600 text-lg">שתף את הסיכום שלך עם הקהילה וצבור נקודות מוניטין</p>
         </motion.div>
 
         {/* Progress Steps */}
@@ -339,29 +302,36 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
 
             {/* Steps */}
             <div className="relative flex justify-between">
-              {steps.map((step) => (
-                <div key={step.number} className="flex flex-col items-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: step.number * 0.1 }}
-                    className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-2 border-4 ${
-                      currentStep >= step.number
-                        ? 'bg-gradient-to-br from-blue-500 to-purple-600 border-white shadow-lg'
-                        : 'bg-white border-gray-300'
-                    }`}
-                  >
-                    {step.icon}
-                  </motion.div>
-                  <p
-                    className={`text-sm ${
-                      currentStep >= step.number ? 'text-gray-900' : 'text-gray-500'
-                    }`}
-                  >
-                    {step.label}
-                  </p>
-                </div>
-              ))}
+              {steps.map((step) => {
+                const IconComponent = step.icon;
+                return (
+                  <div key={step.number} className="flex flex-col items-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: step.number * 0.1, type: "spring" }}
+                      className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-3 border-4 transition-all duration-300 ${
+                        currentStep >= step.number
+                          ? 'bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 border-white shadow-xl'
+                          : 'bg-white border-gray-300 shadow-md'
+                      }`}
+                    >
+                      <IconComponent 
+                        className={`w-7 h-7 ${
+                          currentStep >= step.number ? 'text-white' : 'text-gray-400'
+                        }`} 
+                      />
+                    </motion.div>
+                    <p
+                      className={`text-sm font-medium ${
+                        currentStep >= step.number ? 'text-gray-900' : 'text-gray-500'
+                      }`}
+                    >
+                      {step.label}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </motion.div>
@@ -373,7 +343,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
           transition={{ delay: 0.2 }}
           className="max-w-3xl mx-auto"
         >
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border-2 border-gray-200 p-8">
             <form onSubmit={handleSubmit(onSubmit)}>
               <AnimatePresence mode="wait">
                 {/* Step 1: File Upload */}
@@ -385,7 +355,12 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     exit={{ opacity: 0, x: -50 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <h3 className="text-gray-900 mb-6">העלאת קובץ 📁</h3>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-xl">
+                        <Upload className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900">העלאת קובץ</h3>
+                    </div>
 
                     {!uploadedFile ? (
                       <>
@@ -395,14 +370,19 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                           onDragOver={handleDragOver}
                           onDragLeave={handleDragLeave}
                           onClick={() => fileInputRef.current?.click()}
-                          className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
+                          className={`border-3 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 ${
                             isDragging
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                              ? 'border-blue-500 bg-blue-50 scale-105'
+                              : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50 hover:shadow-lg'
                           }`}
                         >
-                          <Upload className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                          <p className="text-gray-900 mb-2">גרור קובץ לכאן או לחץ לבחירה</p>
+                          <motion.div
+                            animate={isDragging ? { scale: [1, 1.1, 1] } : {}}
+                            transition={{ duration: 0.3, repeat: isDragging ? Infinity : 0 }}
+                          >
+                            <Upload className="w-20 h-20 mx-auto mb-4 text-blue-500" />
+                          </motion.div>
+                          <p className="text-xl font-semibold text-gray-900 mb-2">גרור קובץ לכאן או לחץ לבחירה</p>
                           <p className="text-sm text-gray-500">PDF או DOCX - עד 10MB</p>
                         </div>
 
@@ -439,14 +419,19 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="border-2 border-green-500 rounded-xl p-6 bg-green-50"
+                        className="border-3 border-green-400 rounded-2xl p-6 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="text-4xl">{getFileIcon(uploadedFile.name)}</div>
+                            <div className="bg-white p-3 rounded-xl shadow-md">
+                              {getFileIcon(uploadedFile.name)}
+                            </div>
                             <div>
-                              <p className="text-gray-900">{uploadedFile.name}</p>
-                              <p className="text-sm text-gray-600">{formatFileSize(uploadedFile.size)}</p>
+                              <p className="font-semibold text-gray-900">{uploadedFile.name}</p>
+                              <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
+                                <Check className="w-4 h-4 text-green-600" />
+                                {formatFileSize(uploadedFile.size)}
+                              </p>
                             </div>
                           </div>
                           <Button
@@ -454,7 +439,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                             onClick={removeFile}
                             variant="ghost"
                             size="icon"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-100"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-100 rounded-xl"
                           >
                             <X className="w-5 h-5" />
                           </Button>
@@ -467,10 +452,10 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         type="button"
                         onClick={goToNextStep}
                         disabled={!uploadedFile}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                        className="bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 hover:from-blue-600 hover:via-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         המשך
-                        <ChevronRight className="w-4 h-4 mr-2" />
+                        <ChevronRight className="w-5 h-5 mr-2" />
                       </Button>
                     </div>
                   </motion.div>
@@ -486,7 +471,12 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     transition={{ duration: 0.3 }}
                     className="space-y-6"
                   >
-                    <h3 className="text-gray-900 mb-6">פרטי הסיכום 📝</h3>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-xl">
+                        <Info className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900">פרטי הסיכום</h3>
+                    </div>
 
                     {/* Title */}
                     <div>
@@ -525,14 +515,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         className={`w-full rounded-md border ${
                           errors.courseId ? 'border-red-500' : 'border-gray-300'
                         } px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        disabled={loadingCourses}
                       >
-                        <option value="">
-                          {loadingCourses ? 'טוען קורסים...' : 'בחר קורס מהרשימה'}
-                        </option>
-                        {courses.map((course) => (
-                          <option key={course.id} value={course.id}>
-                            {course.courseCode} - {course.courseName} ({course.institution})
+                        <option value="">בחר קורס מהרשימה</option>
+                        {coursesList.map((courseName, index) => (
+                          <option key={index + 1} value={index + 1}>
+                            {courseName}
                           </option>
                         ))}
                       </select>
@@ -566,31 +553,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       </p>
                     </div>
 
-                    {/* Language Toggle */}
-                    <div>
-                      <Label className="mb-3">שפת הסיכום</Label>
-                      <div className="flex gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="hebrew"
-                            {...register('language')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>עברית</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            value="english"
-                            {...register('language')}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>אנגלית</span>
-                        </label>
-                      </div>
-                    </div>
-
                     <div className="flex justify-between mt-8">
                       <Button type="button" onClick={goToPreviousStep} variant="outline">
                         <ChevronLeft className="w-4 h-4 ml-2" />
@@ -599,7 +561,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       <Button
                         type="button"
                         onClick={goToNextStep}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                        className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
                       >
                         המשך
                         <ChevronRight className="w-4 h-4 mr-2" />
@@ -608,7 +570,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                   </motion.div>
                 )}
 
-                {/* Step 3: Tags and Category */}
+                {/* Step 3: Tags */}
                 {currentStep === 3 && (
                   <motion.div
                     key="step3"
@@ -618,36 +580,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     transition={{ duration: 0.3 }}
                     className="space-y-6"
                   >
-                    <h3 className="text-gray-900 mb-6">תגיות וקטגוריה 🏷️</h3>
-
-                    {/* Category Selection */}
-                    <div>
-                      <Label className="mb-3 flex items-center gap-2">
-                        בחר קטגוריה <span className="text-red-500">*</span>
-                      </Label>
-                      <RadioGroup
-                        value={watchCategory}
-                        onValueChange={(value) => setValue('category', value)}
-                        className="grid grid-cols-2 md:grid-cols-3 gap-4"
-                      >
-                        {categories.map((category) => (
-                          <label
-                            key={category.id}
-                            className={`relative flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                              watchCategory === category.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-blue-300'
-                            }`}
-                          >
-                            <RadioGroupItem value={category.id} id={category.id} className="sr-only" />
-                            <span className="text-2xl">{category.icon}</span>
-                            <span>{category.label}</span>
-                          </label>
-                        ))}
-                      </RadioGroup>
-                      {!watchCategory && currentStep === 3 && (
-                        <p className="text-sm text-gray-500 mt-2">אנא בחר קטגוריה</p>
-                      )}
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-xl">
+                        <Tag className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900">תגיות</h3>
                     </div>
 
                     {/* Tags Input */}
@@ -701,24 +638,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         </div>
                       )}
 
-                      {/* Popular Tags */}
-                      <div className="mt-4">
-                        <p className="text-sm text-gray-600 mb-2">תגיות פופולריות:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {popularTags.map((tag) => (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => addPopularTag(tag)}
-                              disabled={tags.includes(tag) || tags.length >= 10}
-                              className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:border-blue-500 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {tag}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
                       {tags.length === 0 && currentStep === 3 && (
                         <p className="text-sm text-gray-500 mt-2">אנא הוסף לפחות תגית אחת</p>
                       )}
@@ -732,7 +651,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                       <Button
                         type="button"
                         onClick={goToNextStep}
-                        disabled={!watchCategory || tags.length === 0}
+                        disabled={tags.length === 0}
                         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                       >
                         המשך
@@ -752,16 +671,26 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     transition={{ duration: 0.3 }}
                     className="space-y-6"
                   >
-                    <h3 className="text-gray-900 mb-6">תצוגה מקדימה 👀</h3>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-xl">
+                        <Eye className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900">תצוגה מקדימה</h3>
+                    </div>
 
                     {/* Preview Card */}
-                    <div className="border-2 border-gray-200 rounded-xl p-6 bg-gradient-to-br from-blue-50 to-purple-50">
+                    <div className="border-3 border-blue-300 rounded-2xl p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 shadow-lg">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h4 className="text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
-                          <p className="text-gray-600">{watchCourseId || 'שם הקורס'}</p>
+                          <h4 className="text-2xl font-bold text-gray-900 mb-2">{watchTitle || 'כותרת הסיכום'}</h4>
+                          <p className="text-gray-600 font-medium flex items-center gap-2">
+                            <BookOpen className="w-4 h-4" />
+                            {coursesList[parseInt(watchCourseId) - 1] || 'שם הקורס'}
+                          </p>
                         </div>
-                        <div className="text-3xl">{getFileIcon(uploadedFile?.name || '')}</div>
+                        <div className="bg-white p-3 rounded-xl shadow-md">
+                          {getFileIcon(uploadedFile?.name || '')}
+                        </div>
                       </div>
 
                       {watchDescription && (
@@ -769,15 +698,6 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                           {watchDescription}
                         </p>
                       )}
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <Badge variant="outline" className="border-blue-500 text-blue-700">
-                          {categories.find((c) => c.id === watchCategory)?.label}
-                        </Badge>
-                        <Badge variant="outline" className="border-purple-500 text-purple-700">
-                          {watchLanguage === 'hebrew' ? 'עברית' : 'אנגלית'}
-                        </Badge>
-                      </div>
 
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag) => (
@@ -814,8 +734,12 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                     <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <Checkbox
                         id="terms"
+                        {...register('terms')}
                         checked={watchTerms}
-                        onCheckedChange={(checked) => setValue('terms', !!checked)}
+                        onCheckedChange={(checked) => {
+                          setValue('terms', !!checked);
+                          trigger('terms');
+                        }}
                         className="mt-1"
                       />
                       <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer flex-1">
@@ -869,9 +793,9 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                 initial={{ scale: 0 }}
                 animate={{ scale: [0, 1.2, 1] }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center"
+                className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-2xl"
               >
-                <Check className="w-12 h-12 text-white" />
+                <Check className="w-14 h-14 text-white stroke-[3]" />
               </motion.div>
 
               {/* Sparkles */}
@@ -892,8 +816,11 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                 </motion.div>
               ))}
 
-              <h3 className="text-gray-900 mb-2">הסיכום הועלה בהצלחה! 🎉</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-3xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
+                הסיכום הועלה בהצלחה!
+                <Sparkles className="w-8 h-8 text-yellow-500" />
+              </h3>
+              <p className="text-gray-600 text-lg mb-8">
                 הסיכום שלך פורסם ועכשיו זמין לכלל הקהילה. תודה על השיתוף!
               </p>
 

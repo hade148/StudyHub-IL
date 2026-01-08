@@ -29,6 +29,10 @@ StudyHub-IL is a comprehensive educational platform designed to facilitate learn
 
 npx prisma db push
 npx prisma generate
+npm run seed
+
+   Admin: admin@studyhub.local / password123        
+   Student: student@studyhub.local / password123   
 
 ### Backend (Server)
 1. Navigate to the server directory: `cd server`

@@ -10,6 +10,10 @@ const azureStorage = require('../utils/azureStorage');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Track post views to prevent double-counting
+const viewTracking = new Map();
+const VIEW_COOLDOWN = 60000; // 1 minute cooldown per user per post
+
 // Rate limiter for forum post updates - 30 updates per hour per user
 const updatePostLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -46,12 +50,21 @@ const upload = multer({
 // GET /api/forum - Get all forum posts
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { courseId, search, answered, category } = req.query;
+    const { courseId, search, answered, category, myQuestions } = req.query;
 
     const where = {};
     if (courseId) where.courseId = parseInt(courseId);
-    if (answered !== undefined) where.isAnswered = answered === 'true';
     if (category) where.category = category;
+    
+    // Filter by current user's questions
+    if (myQuestions === 'true') {
+      // If not authenticated, return empty array
+      if (!req.user) {
+        return res.json([]);
+      }
+      where.authorId = req.user.id;
+    }
+    
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -69,7 +82,21 @@ router.get('/', optionalAuth, async (req, res) => {
       }
     });
 
-    res.json(posts);
+    // Filter posts based on answered status
+    let filteredPosts = posts;
+    if (answered !== undefined) {
+      const shouldBeAnswered = answered === 'true';
+      filteredPosts = posts.filter(post => {
+        // A post is considered answered if:
+        // 1. It has the isAnswered flag set to true, OR
+        // 2. It has at least one comment
+        const hasComments = post._count.comments > 0;
+        const isAnswered = post.isAnswered || hasComments;
+        return shouldBeAnswered ? isAnswered : !isAnswered;
+      });
+    }
+
+    res.json(filteredPosts);
   } catch (error) {
     console.error('Get forum posts error:', error);
     res.status(500).json({ error: 'שגיאה בטעינת פוסטים' });
@@ -99,15 +126,35 @@ router.get('/my-posts', authenticate, async (req, res) => {
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const postId = parseInt(id);
 
-    // Increment views
-    await prisma.forumPost.update({
-      where: { id: parseInt(id) },
-      data: { views: { increment: 1 } }
-    });
+    // Create a unique key for view tracking (userId or IP + postId)
+    const userId = req.user?.id || req.ip || 'anonymous';
+    const viewKey = `${userId}-${postId}`;
+    const now = Date.now();
+
+    // Check if this user/IP already viewed this post recently
+    const lastView = viewTracking.get(viewKey);
+    const shouldIncrementView = !lastView || (now - lastView) > VIEW_COOLDOWN;
+
+    // Increment views only if cooldown period has passed
+    if (shouldIncrementView) {
+      await prisma.forumPost.update({
+        where: { id: postId },
+        data: { views: { increment: 1 } }
+      });
+      viewTracking.set(viewKey, now);
+      
+      // Clean up old entries (older than 2 minutes)
+      for (const [key, timestamp] of viewTracking.entries()) {
+        if (now - timestamp > VIEW_COOLDOWN * 2) {
+          viewTracking.delete(key);
+        }
+      }
+    }
 
     const post = await prisma.forumPost.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: postId },
       include: {
         author: { select: { id: true, fullName: true, email: true } },
         course: true,

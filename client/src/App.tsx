@@ -9,7 +9,6 @@ import { WelcomeSection } from './components/dashboard/WelcomeSection';
 import { QuickActions } from './components/dashboard/QuickActions';
 import { RecentSummaries } from './components/dashboard/RecentSummaries';
 import { LatestForumPosts } from './components/dashboard/LatestForumPosts';
-import { PopularTools } from './components/dashboard/PopularTools';
 import { SummariesPage } from './components/summaries/SummariesPage';
 import { SummaryDetailPage } from './components/summaries/SummaryDetailPage';
 import { UploadPage } from './components/summaries/UploadPage';
@@ -180,9 +179,6 @@ function Dashboard() {
           {/* Empty space or additional content */}
           <div className="hidden lg:block" />
         </div>
-
-        {/* Popular Tools */}
-        <PopularTools onViewAll={() => navigate('/tools')} />
 
         {/* Footer */}
         <motion.footer

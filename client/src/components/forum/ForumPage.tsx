@@ -1,8 +1,7 @@
 import { motion } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, MessageCircle, Home } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import {
   Pagination,
@@ -14,341 +13,11 @@ import {
   PaginationPrevious,
 } from '../ui/pagination';
 import { QuestionCard } from './QuestionCard';
-import { ForumFilters } from './ForumFilters';
-import { ForumSidebar } from './ForumSidebar';
 import api from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
-const questionsData = [
-  {
-    id: 1,
-    title: 'איך לפתור בעיית המיון בועות?',
-    description: 'אני מנסה לממש את אלגוריתם המיון בועות ב-Python אבל אני מקבל תוצאות שגויות. הקוד שלי מתחיל עם לולאה כפולה אבל משהו לא עובד כמו שצריך...',
-    category: 'אלגוריתמים',
-    tags: ['Python', 'מיון', 'אלגוריתמים'],
-    author: {
-      name: 'יוסי כהן',
-      avatar: 'יכ',
-      reputation: 245,
-    },
-    stats: {
-      views: 145,
-      answers: 12,
-      votes: 8,
-      isAnswered: true,
-    },
-    time: 'לפני 2 שעות',
-    lastActivity: {
-      user: 'שרה לוי',
-      time: 'לפני שעה',
-    },
-  },
-  {
-    id: 2,
-    title: 'שאלה לגבי נגזרת של פונקציה מורכבת',
-    description: 'אני לא מבין איך לגזור פונקציה מורכבת בצורה נכונה. למדתי את כלל השרשרת אבל עדיין מתבלבל בתרגילים מסובכים יותר...',
-    category: 'מתמטיקה',
-    tags: ['נגזרות', 'חשבון', 'כלל השרשרת'],
-    author: {
-      name: 'מיכל רוזן',
-      avatar: 'מר',
-      reputation: 189,
-    },
-    stats: {
-      views: 92,
-      answers: 8,
-      votes: 5,
-      isAnswered: true,
-    },
-    time: 'לפני 4 שעות',
-    lastActivity: {
-      user: 'דני אברהם',
-      time: 'לפני 3 שעות',
-    },
-  },
-  {
-    id: 3,
-    title: 'איך להבין את עקרון אי הוודאות?',
-    description: 'אני לומד פיזיקה קוונטית ומתקשה להבין את עקרון אי הוודאות של הייזנברג. מישהו יכול להסביר בצורה פשוטה יותר?',
-    category: 'פיזיקה',
-    tags: ['קוונטים', 'הייזנברג', 'פיזיקה'],
-    author: {
-      name: 'דן שמיר',
-      avatar: 'דש',
-      reputation: 412,
-    },
-    stats: {
-      views: 203,
-      answers: 0,
-      votes: 12,
-      isAnswered: false,
-    },
-    time: 'לפני 5 שעות',
-  },
-  {
-    id: 4,
-    title: 'המלצות על ספרים לקורס מבני נתונים?',
-    description: 'אני מחפש ספרים טובים ללימוד מבני נתונים באנגלית. מישהו יכול להמליץ על חומרים איכוטיים?',
-    category: 'משאבי לימוד',
-    tags: ['ספרים', 'מבני נתונים', 'המלצות'],
-    author: {
-      name: 'רונית כהן',
-      avatar: 'רכ',
-      reputation: 567,
-    },
-    stats: {
-      views: 178,
-      answers: 15,
-      votes: 21,
-      isAnswered: true,
-    },
-    time: 'לפני 6 שעות',
-    lastActivity: {
-      user: 'אלון ברק',
-      time: 'לפני 2 שעות',
-    },
-  },
-  {
-    id: 5,
-    title: 'עזרה בפתרון תרגיל אינטגרלים',
-    description: 'אני תקוע בתרגיל אינטגרל מסובך. ניסיתי החלפת משתנים אבל זה לא עוזר. האם יש דרך אחרת לפתור את זה?',
-    category: 'מתמטיקה',
-    tags: ['אינטגרלים', 'חשבון', 'תרגילים'],
-    author: {
-      name: 'עמית גולן',
-      avatar: 'עג',
-      reputation: 298,
-    },
-    stats: {
-      views: 134,
-      answers: 6,
-      votes: 4,
-      isAnswered: true,
-    },
-    time: 'לפני 8 שעות',
-    lastActivity: {
-      user: 'שרה לוי',
-      time: 'לפני 5 שעות',
-    },
-  },
-  {
-    id: 6,
-    title: 'הבדל בין SQL ל-NoSQL?',
-    description: 'מה ההבדל המהוותי בין בסיסי נתונים מסוג SQL לבין NoSQL? מתי עדיף להשתמש בכל אחד מהם?',
-    category: 'כללי',
-    tags: ['SQL', 'NoSQL', 'בסיסי נתונים'],
-    author: {
-      name: 'אלון ברק',
-      avatar: 'אב',
-      reputation: 823,
-    },
-    stats: {
-      views: 456,
-      answers: 18,
-      votes: 34,
-      isAnswered: true,
-    },
-    time: 'לפני 12 שעות',
-    lastActivity: {
-      user: 'יוסי כהן',
-      time: 'לפני 7 שעות',
-    },
-  },
-  {
-    id: 7,
-    title: 'איך לחשב דטרמיננטה של מטריצה 4x4?',
-    description: 'אני יודע לחשב דטרמיננטה של 2x2 ו-3x3 אבל 4x4 נראה מסובך מאוד. יש טריק מהיר?',
-    category: 'מתמטיקה',
-    tags: ['אלגברה לינארית', 'מטריצות', 'דטרמיננטה'],
-    author: {
-      name: 'נועה מזרחי',
-      avatar: 'נמ',
-      reputation: 445,
-    },
-    stats: {
-      views: 89,
-      answers: 0,
-      votes: 3,
-      isAnswered: false,
-    },
-    time: 'לפני שעה',
-  },
-  {
-    id: 8,
-    title: 'הסבר על המודל OSI ברשתות',
-    description: 'מתקשה להבין את 7 השכבות של המודל OSI. מישהו יכול להסביר עם דוגמאות מעשיות?',
-    category: 'כללי',
-    tags: ['רשתות', 'OSI', 'פרוטוקולים'],
-    author: {
-      name: 'יובל דהן',
-      avatar: 'יד',
-      reputation: 356,
-    },
-    stats: {
-      views: 267,
-      answers: 9,
-      votes: 15,
-      isAnswered: true,
-    },
-    time: 'לפני יום',
-    lastActivity: {
-      user: 'דני אברהם',
-      time: 'לפני 10 שעות',
-    },
-  },
-  {
-    id: 9,
-    title: 'מה זה פולימורפיזם ב-Java?',
-    description: 'שמעתי הרבה על המושג פולימורפיזם ב-OOP אבל לא לגמרי ברור לי איך זה עובד ב-Java. מישהו יכול להסביר עם דוגמת קוד?',
-    category: 'אלגוריתמים',
-    tags: ['Java', 'OOP', 'פולימורפיזם'],
-    author: {
-      name: 'תמר אשכנזי',
-      avatar: 'תא',
-      reputation: 678,
-    },
-    stats: {
-      views: 312,
-      answers: 11,
-      votes: 19,
-      isAnswered: true,
-    },
-    time: 'לפני יום',
-    lastActivity: {
-      user: 'רונית כהן',
-      time: 'לפני 8 שעות',
-    },
-  },
-  {
-    id: 10,
-    title: 'איך לפתור משוואה דיפרנציאלית?',
-    description: 'נתקלתי במשוואה דיפרנציאלית מסדר ראשון ולא יודע איך להתחיל לפתור אותה. יש מתודה כללית?',
-    category: 'מתמטיקה',
-    tags: ['משוואות דיפרנציאליות', 'חשבון', 'מתמטיקה'],
-    author: {
-      name: 'גיא אלמוג',
-      avatar: 'גא',
-      reputation: 234,
-    },
-    stats: {
-      views: 156,
-      answers: 0,
-      votes: 7,
-      isAnswered: false,
-    },
-    time: 'לפני 3 שעות',
-  },
-  {
-    id: 11,
-    title: 'תרגיל בכימיה אורגנית - מנגנוני תגובה',
-    description: 'צריך עזרה בהבנת מנגנון תגובת SN2. איך קובעים את הסטריאוכימיה של התוצר?',
-    category: 'כימיה',
-    tags: ['כימיה אורגנית', 'תגובות', 'מנגנונים'],
-    author: {
-      name: 'ליאור שחר',
-      avatar: 'לש',
-      reputation: 389,
-    },
-    stats: {
-      views: 98,
-      answers: 4,
-      votes: 6,
-      isAnswered: true,
-    },
-    time: 'לפני 9 שעות',
-    lastActivity: {
-      user: 'מיכל רוזן',
-      time: 'לפני 4 שעות',
-    },
-  },
-  {
-    id: 12,
-    title: 'איך עובד אלגוריתם Dijkstra?',
-    description: 'אני לומד גרפים ומתקשה להבין את אלגוריתם Dijkstra למציאת המסלול הקצר ביותר. מישהו יכול להסביר צעד אחר צעד?',
-    category: 'אלגוריתמים',
-    tags: ['גרפים', 'Dijkstra', 'מסלולים'],
-    author: {
-      name: 'אורי נחום',
-      avatar: 'אנ',
-      reputation: 512,
-    },
-    stats: {
-      views: 234,
-      answers: 13,
-      votes: 22,
-      isAnswered: true,
-    },
-    time: 'לפני 2 ימים',
-    lastActivity: {
-      user: 'שרה לוי',
-      time: 'לפני יום',
-    },
-  },
-  {
-    id: 13,
-    title: 'הסבר על רקורסיה',
-    description: 'רקורסיה מבלבלת אותי לגמרי. מישהו יכול להסביר עם דוגמה פשוטה איך זה עובד ומתי כדאי להשתמש בזה?',
-    category: 'אלגוריתמים',
-    tags: ['רקורסיה', 'תכנות', 'אלגוריתמים'],
-    author: {
-      name: 'רועי ברקאי',
-      avatar: 'רב',
-      reputation: 167,
-    },
-    stats: {
-      views: 189,
-      answers: 0,
-      votes: 9,
-      isAnswered: false,
-    },
-    time: 'לפני 30 דקות',
-  },
-  {
-    id: 14,
-    title: 'מה ההבדל בין Stack ל-Queue?',
-    description: 'אני מבין את העיקרון אבל לא ברור לי מתי להשתמש ב-Stack ומתי ב-Queue. מישהו יכול לתת דוגמאות מעשיות?',
-    category: 'אלגוריתמים',
-    tags: ['מבני נתונים', 'Stack', 'Queue'],
-    author: {
-      name: 'שירה כץ',
-      avatar: 'שכ',
-      reputation: 423,
-    },
-    stats: {
-      views: 278,
-      answers: 16,
-      votes: 28,
-      isAnswered: true,
-    },
-    time: 'לפני 3 ימים',
-    lastActivity: {
-      user: 'אלון ברק',
-      time: 'לפני יום',
-    },
-  },
-  {
-    id: 15,
-    title: 'עזרה בהוכחה מתמטית באינדוקציה',
-    description: 'צריך להוכיח נוסחה באינדוקציה מתמטית ותקוע בשלב האינדוקציה. מישהו יכול לעזור?',
-    category: 'מתמטיקה',
-    tags: ['אינדוקציה', 'הוכחות', 'מתמטיקה'],
-    author: {
-      name: 'בר סיון',
-      avatar: 'בס',
-      reputation: 289,
-    },
-    stats: {
-      views: 145,
-      answers: 7,
-      votes: 11,
-      isAnswered: true,
-    },
-    time: 'לפני יום',
-    lastActivity: {
-      user: 'נועה מזרחי',
-      time: 'לפני 12 שעות',
-    },
-  },
-];
+const questionsData: any[] = [];
+
 
 interface ForumPageProps {
   onNavigateHome: () => void;
@@ -361,13 +30,18 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   const [activeTab, setActiveTab] = useState('all');
   const [questions, setQuestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const itemsPerPage = 10;
 
-  // Fetch questions from API
+
+
+  // Fetch questions from API with filters
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setIsLoading(true);
+        
         const response = await api.get('/forum');
         setQuestions(response.data);
       } catch (error) {
@@ -380,11 +54,11 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
     };
     fetchQuestions();
   }, []);
-
-  const unansweredCount = questions.filter((q) => !q.isAnswered).length;
   
   const filteredQuestions = activeTab === 'unanswered' 
-    ? questions.filter((q) => !q.isAnswered)
+    ? questions.filter((q) => !q.isAnswered && q._count.comments === 0)
+    : activeTab === 'mine'
+    ? questions.filter((q) => q.authorId === user?.id || q.author?.id === user?.id)
     : questions;
 
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
@@ -394,109 +68,121 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8 space-y-6"
-      >
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-2">
-            {/* Title */}
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl">
-                <MessageCircle className="w-6 h-6" />
-              </div>
-              <h1 className="text-gray-900">פורום שאלות ותשובות</h1>
-            </div>
-
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-gray-600">
-              <button
-                onClick={onNavigateHome}
-                className="hover:text-blue-600 transition-colors flex items-center gap-1"
-              >
-                <Home className="w-4 h-4" />
-                דף הבית
-              </button>
-              <ChevronRight className="w-4 h-4" />
-              <span>פורום</span>
-            </div>
-          </div>
-
-          {/* Ask Question Button */}
-          <Button 
-            onClick={onNavigateNewQuestion}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white">
+      {/* Full-width Header Section */}
+      <div className="w-full bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <span className="text-xl ml-2">❓</span>
-            שאלה חדשה
-          </Button>
-        </div>
-
-        {/* Tabs Navigation */}
-        <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="bg-white rounded-lg shadow-sm p-1 w-full md:w-auto">
-            <TabsTrigger value="all" className="flex-1 md:flex-none">
-              הכל
-            </TabsTrigger>
-            <TabsTrigger value="unanswered" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-2">
-                ללא מענה
-                <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">
-                  {unansweredCount}
-                </Badge>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="popular" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
-                פופולרי
-                <span>🔥</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="mine" className="flex-1 md:flex-none">
-              השאלות שלי
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Filters */}
-                <ForumFilters />
-
-                {/* Questions List */}
-                <div className="space-y-4">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center py-12">
-                      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : currentQuestions.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">
-                      אין שאלות להצגה
-                    </div>
-                  ) : (
-                    currentQuestions.map((question, index) => (
-                      <QuestionCard 
-                        key={question.id} 
-                        question={question} 
-                        index={index}
-                        onClick={() => onNavigatePost?.(question.id)}
-                      />
-                    ))
-                  )}
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="space-y-3">
+                {/* Title */}
+                <div className="flex items-center gap-4">
+                  <motion.div 
+                    whileHover={{ scale: 1.05, rotate: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-gradient-to-br from-blue-500 via-purple-500 to-purple-600 text-white p-3.5 rounded-2xl shadow-lg"
+                  >
+                    <MessageCircle className="w-7 h-7" />
+                  </motion.div>
+                  <div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 bg-clip-text text-transparent">פורום שאלות ותשובות</h1>
+                    <p className="text-gray-600 text-sm mt-1">קהילת סטודנטים עוזרת</p>
+                  </div>
                 </div>
 
-                {/* Pagination */}
-                <div className="flex flex-col items-center gap-4 pt-4">
-                  <div className="text-gray-600">
-                    מציג {(currentPage - 1) * itemsPerPage + 1}-
-                    {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך{' '}
-                    {filteredQuestions.length} שאלות
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <button
+                    onClick={onNavigateHome}
+                    className="hover:text-blue-600 transition-colors flex items-center gap-1.5 font-medium"
+                  >
+                    <Home className="w-4 h-4" />
+                    דף הבית
+                  </button>
+                  <ChevronRight className="w-4 h-4" />
+                  <span className="text-gray-700 font-medium">פורום</span>
+                </div>
+              </div>
+
+              {/* Ask Question Button */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button 
+                  onClick={onNavigateNewQuestion}
+                  className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 hover:from-blue-600 hover:via-purple-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-base"
+                >
+                  <MessageCircle className="w-5 h-5 ml-2" />
+                  שאלה חדשה
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Centered Content Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="w-full">
+          {/* Tabs Navigation */}
+          <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
+            <TabsList className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1.5 w-full max-w-md mx-auto mb-8 shadow-md">
+              <TabsTrigger 
+                value="all" 
+                className="flex-1 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 font-semibold py-2.5"
+              >
+                הכל
+              </TabsTrigger>
+              <TabsTrigger 
+                value="unanswered" 
+                className="flex-1 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 font-semibold py-2.5"
+              >
+                ללא מענה
+              </TabsTrigger>
+              <TabsTrigger 
+                value="mine" 
+                className="flex-1 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 font-semibold py-2.5"
+              >
+                השאלות שלי
+              </TabsTrigger>
+            </TabsList>
+
+          <TabsContent value="all" className="space-y-6 mt-6">
+            <div className="space-y-6">
+              {/* Questions List */}
+              <div className="space-y-4">
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   </div>
+                ) : currentQuestions.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    אין שאלות להצגה
+                  </div>
+                ) : (
+                  currentQuestions.map((question, index) => (
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      index={index}
+                      onClick={() => onNavigatePost?.(question.id)}
+                    />
+                  ))
+                )}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+              <div className="flex flex-col items-center gap-4 pt-8 pb-12">
+                <div className="text-gray-600">
+                  מציג {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredQuestions.length)} מתוך {filteredQuestions.length} תוצאות
+                </div>
 
                   <Pagination>
                     <PaginationContent>
@@ -542,78 +228,67 @@ export function ForumPage({ onNavigateHome, onNavigateNewQuestion, onNavigatePos
                     </PaginationContent>
                   </Pagination>
                 </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
-                <ForumSidebar />
-              </div>
+              )}
             </div>
           </TabsContent>
 
           <TabsContent value="unanswered" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <ForumFilters />
-                <div className="space-y-4">
-                  {currentQuestions.map((question, index) => (
-                    <QuestionCard 
-                      key={question.id} 
-                      question={question} 
-                      index={index}
-                      onClick={() => onNavigatePost?.(question.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="popular" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <ForumFilters />
-                <div className="space-y-4">
-                  {currentQuestions.map((question, index) => (
-                    <QuestionCard 
-                      key={question.id} 
-                      question={question} 
-                      index={index}
-                      onClick={() => onNavigatePost?.(question.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
+            <div className="space-y-6">
+              <div className="space-y-4">
+                {currentQuestions.map((question, index) => (
+                  <QuestionCard 
+                    key={question.id} 
+                    question={question} 
+                    index={index}
+                    onClick={() => onNavigatePost?.(question.id)}
+                  />
+                ))}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="mine" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <ForumFilters />
-                <div className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4">
-                  <div className="text-6xl">📭</div>
-                  <h3>אין לך שאלות עדיין</h3>
-                  <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
-                  <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white">
-                    <span className="text-xl ml-2">❓</span>
-                    שאל שאלה ראשונה
-                  </Button>
+            <div className="space-y-6">
+              {!isAuthenticated ? (
+                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4 shadow-sm">
+                  <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">נדרש כניסה למערכת</h3>
+                  <p className="text-gray-600">התחבר כדי לראות את השאלות שלך</p>
                 </div>
-              </div>
-              <div className="lg:col-span-1">
-                <ForumSidebar />
-              </div>
+              ) : currentQuestions.length === 0 ? (
+                <div className="bg-white rounded-lg border border-gray-200 p-12 text-center space-y-4 shadow-sm">
+                  <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                    <MessageCircle className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">אין לך שאלות עדיין</h3>
+                  <p className="text-gray-600">התחל לשאול שאלות ותראה אותן כאן</p>
+                  {onNavigateNewQuestion && (
+                    <Button 
+                      onClick={onNavigateNewQuestion}
+                      className="bg-gray-900 hover:bg-gray-800 text-white mt-4">
+                      שאל שאלה ראשונה
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {currentQuestions.map((question, index) => (
+                    <QuestionCard 
+                      key={question.id} 
+                      question={question} 
+                      index={index}
+                      onClick={() => onNavigatePost?.(question.id)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -96,12 +96,12 @@ export function SummaryCard({ summary, index, onClick }: SummaryCardProps) {
         {/* Metadata */}
         <div className="flex items-center gap-3 text-gray-600 border-t border-gray-100 pt-3">
           <div className="flex items-center gap-1">
-            <span>👤</span>
+            <span></span>
             <span>{summary.uploader}</span>
           </div>
           <span>•</span>
           <div className="flex items-center gap-1">
-            <span>📅</span>
+            <span></span>
             <span>{summary.uploadDate}</span>
           </div>
         </div>
