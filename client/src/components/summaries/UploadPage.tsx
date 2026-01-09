@@ -393,26 +393,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                           onChange={handleFileSelect}
                           className="hidden"
                         />
-
-                        <div className="flex items-center gap-4 my-6">
-                          <div className="flex-1 h-px bg-gray-200" />
-                          <span className="text-gray-500">או</span>
-                          <div className="flex-1 h-px bg-gray-200" />
-                        </div>
-
-                        <Button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          <FileText className="w-4 h-4 ml-2" />
-                          בחר קובץ מהמחשב
-                        </Button>
-                        
-                        <p className="text-xs text-gray-500 mt-4 text-center">
-                          תומך בקבצי PDF ו-DOCX בלבד, עד 10MB
-                        </p>
+                      
                       </>
                     ) : (
                       // File Preview
@@ -455,7 +436,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         className="bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 hover:from-blue-600 hover:via-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         המשך
-                        <ChevronRight className="w-5 h-5 mr-2" />
+                        <ChevronLeft className="w-5 h-5 mr-2" />
                       </Button>
                     </div>
                   </motion.div>
@@ -555,7 +536,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
 
                     <div className="flex justify-between mt-8">
                       <Button type="button" onClick={goToPreviousStep} variant="outline">
-                        <ChevronLeft className="w-4 h-4 ml-2" />
+                        <ChevronRight className="w-4 h-4 ml-2" />
                         חזור
                       </Button>
                       <Button
@@ -564,7 +545,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
                       >
                         המשך
-                        <ChevronRight className="w-4 h-4 mr-2" />
+                        <ChevronLeft className="w-4 h-4 mr-2" />
                       </Button>
                     </div>
                   </motion.div>
@@ -645,7 +626,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
 
                     <div className="flex justify-between mt-8">
                       <Button type="button" onClick={goToPreviousStep} variant="outline">
-                        <ChevronLeft className="w-4 h-4 ml-2" />
+                        <ChevronRight className="w-4 h-4 ml-2" />
                         חזור
                       </Button>
                       <Button
@@ -655,7 +636,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                       >
                         המשך
-                        <ChevronRight className="w-4 h-4 mr-2" />
+                        <ChevronLeft className="w-4 h-4 mr-2" />
                       </Button>
                     </div>
                   </motion.div>
@@ -750,7 +731,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
 
                     <div className="flex justify-between mt-8">
                       <Button type="button" onClick={goToPreviousStep} variant="outline">
-                        <ChevronLeft className="w-4 h-4 ml-2" />
+                        <ChevronRight className="w-4 h-4 ml-2" />
                         חזור
                       </Button>
                       <Button
@@ -758,8 +739,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
                         disabled={!watchTerms || isSubmitting}
                         className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                       >
-                        {isSubmitting ? 'מעלה...' : 'פרסם סיכום'}
-                        <Check className="w-4 h-4 mr-2" />
+                        {isSubmitting ? 'מעלה...' : '✓ פרסם סיכום'}
                       </Button>
                     </div>
                   </motion.div>

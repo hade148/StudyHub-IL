@@ -71,7 +71,6 @@ export function EditForumPostDialog({ post, open, onClose, onSave }: EditForumPo
       formData.append('title', title.trim());
       formData.append('content', content.trim());
       formData.append('category', category.trim() || '');
-      formData.append('isUrgent', isUrgent.toString());
       formData.append('courseId', courseId);
 
       await api.put(`/forum/${post.id}`, formData);
@@ -140,17 +139,6 @@ export function EditForumPostDialog({ post, open, onClose, onSave }: EditForumPo
               onChange={(e) => setCategory(e.target.value)}
               placeholder="למשל: בעיה טכנית, שאלת הבנה, בקשת עזרה"
             />
-          </div>
-
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <Checkbox
-              id="urgent"
-              checked={isUrgent}
-              onCheckedChange={(checked) => setIsUrgent(checked as boolean)}
-            />
-            <Label htmlFor="urgent" className="cursor-pointer">
-              סמן כדחוף
-            </Label>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { BookOpen, MessageCircle, Wrench } from 'lucide-react';
+import { BookOpen, MessageCircle, Wrench, Users } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Avatar, AvatarFallback } from './components/ui/avatar';
 import { useAuth } from './context/AuthContext';
@@ -50,6 +51,102 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function Dashboard() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const [stats, setStats] = useState([]);
+  const [recentSummaries, setRecentSummaries] = useState([]);
+  const [latestForumPosts, setLatestForumPosts] = useState([]);
+
+  // Fetch stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/stats');
+        const data = await response.json();
+        
+        setStats([
+          {
+            icon: BookOpen,
+            value: data.summaries,
+            label: 'סיכומים',
+            color: 'text-blue-600',
+            bgColor: 'bg-blue-50',
+          },
+          {
+            icon: MessageCircle,
+            value: data.forumPosts,
+            label: 'פוסטים בפורום',
+            color: 'text-purple-600',
+            bgColor: 'bg-purple-50',
+          },
+          {
+            icon: Wrench,
+            value: data.tools,
+            label: 'כלים',
+            color: 'text-green-600',
+            bgColor: 'bg-green-50',
+          },
+          {
+            icon: Users,
+            value: data.users,
+            label: 'משתמשים פעילים',
+            color: 'text-orange-600',
+            bgColor: 'bg-orange-50',
+          },
+        ]);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    const fetchRecentSummaries = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/summaries?limit=3');
+        const data = await response.json();
+        
+        const formattedSummaries = data.slice(0, 3).map((summary: any) => ({
+          id: summary.id,
+          title: summary.title,
+          course: summary.course?.courseName || 'קורס',
+          rating: summary.avgRating ? Number(summary.avgRating.toFixed(1)) : 0,
+          views: summary.views || 0,
+          downloads: summary.downloads || 0,
+          fileType: summary.filePath?.split('.').pop()?.toUpperCase() || 'PDF',
+          description: summary.description || '',
+          uploadDate: new Date(summary.uploadDate).toLocaleDateString('he-IL'),
+          filePath: summary.filePath
+        }));
+        
+        setRecentSummaries(formattedSummaries);
+      } catch (error) {
+        console.error('Error fetching summaries:', error);
+      }
+    };
+
+    const fetchLatestForumPosts = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/forum?limit=3');
+        const data = await response.json();
+        
+        const formattedPosts = data.slice(0, 3).map((post: any) => ({
+          id: post.id,
+          title: post.title,
+          category: post.course?.courseName || 'כללי',
+          author: post.author?.fullName || 'אנונימי',
+          initials: post.author?.fullName?.split(' ').map((n: string) => n[0]).join('') || '??',
+          time: new Date(post.createdAt).toLocaleDateString('he-IL'),
+          replies: post._count?.comments || 0,
+          views: post.views || 0
+        }));
+        
+        setLatestForumPosts(formattedPosts);
+      } catch (error) {
+        console.error('Error fetching forum posts:', error);
+      }
+    };
+
+    fetchStats();
+    fetchRecentSummaries();
+    fetchLatestForumPosts();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -153,7 +250,7 @@ function Dashboard() {
         </div>
 
         {/* Stats Bar */}
-        <StatsBar />
+        <StatsBar stats={stats} />
 
         {/* Welcome Section */}
         <WelcomeSection />
@@ -167,18 +264,18 @@ function Dashboard() {
         />
 
         {/* Recent Summaries */}
-        <RecentSummaries onViewAll={() => navigate('/summaries')} />
+        <RecentSummaries 
+          summaries={recentSummaries} 
+          onViewAll={() => navigate('/summaries')}
+          onSummaryClick={(id) => navigate(`/summaries/${id}`)}
+        />
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Latest Forum Posts - Takes 2 columns */}
-          <div className="lg:col-span-2">
-            <LatestForumPosts onViewAll={() => navigate('/forum')} />
-          </div>
-
-          {/* Empty space or additional content */}
-          <div className="hidden lg:block" />
-        </div>
+        {/* Latest Forum Posts */}
+        <LatestForumPosts 
+          posts={latestForumPosts} 
+          onViewAll={() => navigate('/forum')}
+          onPostClick={(id) => navigate(`/forum/${id}`)}
+        />
 
         {/* Footer */}
         <motion.footer

@@ -119,7 +119,7 @@ export function ImageUpload({
               <Upload className="w-6 h-6 text-blue-500" />
             </div>
             <div className="space-y-1">
-              <div className="text-gray-700">📷 גרור תמונה או לחץ לבחירה</div>
+              <div className="text-gray-700">גרור תמונה או לחץ לבחירה</div>
               <div className="text-sm text-gray-500">
                 עד {maxImages} תמונות, מקסימום {maxSizeMB}MB לכל תמונה
               </div>

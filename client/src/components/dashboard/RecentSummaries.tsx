@@ -1,9 +1,12 @@
 import { motion } from 'motion/react';
+import { useState } from 'react';
 import { Eye, Download, Heart, Star } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import api from '../../utils/api';
 
 interface Summary {
+  id: number;
   title: string;
   course: string;
   rating: number;
@@ -12,14 +15,54 @@ interface Summary {
   fileType: string;
   description: string;
   uploadDate: string;
+  filePath?: string;
 }
 
 interface RecentSummariesProps {
   summaries?: Summary[];
   onViewAll?: () => void;
+  onSummaryClick?: (id: number) => void;
 }
 
-export function RecentSummaries({ summaries = [], onViewAll }: RecentSummariesProps) {
+export function RecentSummaries({ summaries = [], onViewAll, onSummaryClick }: RecentSummariesProps) {
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+
+  const handleFavorite = async (e: React.MouseEvent, summaryId: number) => {
+    e.stopPropagation();
+    try {
+      if (favorites.has(summaryId)) {
+        await api.delete(`/favorites/summary/${summaryId}`);
+        setFavorites(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(summaryId);
+          return newSet;
+        });
+      } else {
+        await api.post('/favorites/summary', { summaryId });
+        setFavorites(prev => new Set(prev).add(summaryId));
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
+  const handleDownload = async (e: React.MouseEvent, summary: Summary) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(`http://localhost:4000${summary.filePath || ''}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${summary.title}.${summary.fileType.toLowerCase()}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+    }
+  };
   if (summaries.length === 0) {
     return (
       <div className="space-y-4">
@@ -39,24 +82,18 @@ export function RecentSummaries({ summaries = [], onViewAll }: RecentSummariesPr
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2>סיכומים אחרונים</h2>
-        <Button 
-          variant="ghost" 
-          className="text-blue-600 hover:text-blue-700"
-          onClick={onViewAll}
-        >
-          צפה בכל הסיכומים ←
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {summaries.map((summary, index) => (
           <motion.div
-            key={summary.title}
+            key={summary.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 + index * 0.1, duration: 0.5 }}
             whileHover={{ y: -8, scale: 1.02 }}
-            className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden"
+            onClick={() => onSummaryClick?.(summary.id)}
+            className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer"
           >
             <div className="p-6 space-y-4">
               {/* Header */}
@@ -64,16 +101,20 @@ export function RecentSummaries({ summaries = [], onViewAll }: RecentSummariesPr
                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
                   {summary.course}
                 </Badge>
-                <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-                  {summary.rating}
-                </Badge>
+                {summary.rating > 0 && (
+                  <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                    {summary.rating}
+                  </Badge>
+                )}
               </div>
 
               {/* Title & Description */}
               <div className="space-y-2">
                 <h3 className="line-clamp-2">{summary.title}</h3>
-                <p className="text-gray-600 line-clamp-2">{summary.description}</p>
+                {summary.description && (
+                  <p className="text-gray-600 line-clamp-2">{summary.description}</p>
+                )}
               </div>
 
               {/* File Type */}
@@ -95,21 +136,23 @@ export function RecentSummaries({ summaries = [], onViewAll }: RecentSummariesPr
 
               {/* Footer */}
               <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
-                <span className="text-gray-500">{summary.uploadDate}</span>
+                <span className="text-gray-500 text-sm">{summary.uploadDate}</span>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
+                    onClick={(e) => handleDownload(e, summary)}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <Download className="w-4 h-4 ml-1" />
-                    הורד
+                    הורדה
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-gray-300 hover:bg-gray-50"
+                    onClick={(e) => handleFavorite(e, summary.id)}
+                    className={`border-gray-300 hover:bg-gray-50 ${favorites.has(summary.id) ? 'text-red-500' : ''}`}
                   >
-                    <Heart className="w-4 h-4" />
+                    <Heart className={`w-4 h-4 ${favorites.has(summary.id) ? 'fill-red-500' : ''}`} />
                   </Button>
                 </div>
               </div>

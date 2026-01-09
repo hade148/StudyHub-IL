@@ -203,7 +203,7 @@ export function NewQuestionPage() {
             </div>
             <div>
               <h1 className="text-4xl font-bold">שאלה חדשה</h1>
-              <p className="text-blue-50 mt-1 text-lg">קבל עזרה מהקהילה - תאר את השאלה שלך בפרטים</p>
+              <p className="text-blue-50 mt-1 text-lg">קבל עזרה מהקהילה -פרט את השאלה שלך</p>
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ export function NewQuestionPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm mb-2">
-                      תאר את השאלה בפרטים <span className="text-red-500">*</span>
+                     פרט את השאלה שלך<span className="text-red-500">*</span>
                     </label>
                     <RichTextEditor
                       value={watchedFields.description}
@@ -449,7 +449,6 @@ export function NewQuestionPage() {
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="w-4 h-4" />
                     ✓ פרסם שאלה
                   </>
                 )}

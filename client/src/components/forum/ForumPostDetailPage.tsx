@@ -240,7 +240,7 @@ export function ForumPostDetailPage({ postId, onNavigateHome, onNavigateForum }:
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3">
                 <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200 transition-colors">
-                  {post.course.courseCode}
+                  {post.course.courseName}
                 </Badge>
                 {post.isAnswered && (
                   <Badge className="bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-300 flex items-center gap-1 transition-colors">

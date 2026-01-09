@@ -19,6 +19,7 @@ const messagesRoutes = require('./routes/messages');
 const reportsRoutes = require('./routes/reports');
 const favoritesRoutes = require('./routes/favorites');
 const subscriptionsRoutes = require('./routes/subscriptions');
+const statsRoutes = require('./routes/stats');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -61,6 +62,7 @@ app.use('/api/messages', messagesRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
+app.use('/api/stats', statsRoutes);
 
 // 404 handler
 app.use((req, res) => {

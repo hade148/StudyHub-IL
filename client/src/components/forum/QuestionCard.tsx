@@ -11,6 +11,10 @@ interface QuestionCardProps {
     description?: string;
     category?: string;
     tags: string[];
+    course?: {
+      courseCode?: string;
+      courseName?: string;
+    };
     author: {
       id?: number;
       name?: string;
@@ -113,6 +117,13 @@ export function QuestionCard({ question, index, onClick }: QuestionCardProps) {
 
         {/* Main Content (Right/Center) */}
         <div className="flex-1 space-y-3 min-w-0 overflow-hidden">
+          {/* Course Badge */}
+          {question.course?.courseName && (
+            <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200 hover:border-blue-300 transition-all font-medium px-2.5 py-0.5 text-xs shadow-sm">
+              {question.course.courseName}
+            </Badge>
+          )}
+
           {/* Category Badge */}
           {question.category && (
             <Badge className={`${categoryColors[question.category] || categoryColors['כללי']} hover:${categoryColors[question.category]} transition-all font-semibold px-3 py-1 text-sm shadow-sm`}>

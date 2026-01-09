@@ -102,9 +102,6 @@ export function ProfileHeader({ user, onEditProfile }: ProfileHeaderProps) {
           >
             <div className="flex flex-col md:flex-row md:items-center gap-2">
               <h2 className="text-2xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">{user.name}</h2>
-              <Badge className="bg-blue-100 text-blue-700 border-blue-200 w-fit">
-                {roleLabels[user.role] || roleLabels.student}
-              </Badge>
             </div>
 
             {user.bio && <p className="text-sm text-gray-600 max-w-2xl">{user.bio}</p>}

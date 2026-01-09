@@ -14,6 +14,7 @@ import {
   Star,
   Eye,
   Download,
+  Heart,
   Calendar,
   AlertCircle,
   Home,
@@ -307,7 +308,7 @@ export function MyContentPage() {
                             {tool.avgRating?.toFixed(1) || 'אין'}
                           </span>
                           <span className="flex items-center gap-1">
-                            <Download className="w-4 h-4" />
+                            <Heart className="w-4 h-4" />
                             {tool._count.favorites}
                           </span>
                         </div>

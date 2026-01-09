@@ -72,63 +72,56 @@ export function SearchAndFilters({
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full flex-wrap">
           {/* Institution Filter */}
-          <Select value={institutionFilter} onValueChange={onInstitutionFilterChange}>
-            <SelectTrigger className="w-full sm:w-[200px] border-gray-300">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-gray-500" />
-                <SelectValue placeholder="כל המוסדות" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל המוסדות</SelectItem>
-              {institutionOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={institutionFilter}
+            onChange={(e) => onInstitutionFilterChange(e.target.value)}
+            className="w-full sm:w-[200px] h-9 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">כל המוסדות</option>
+            {institutionOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
 
           {/* Course Filter */}
-          <Select value={courseFilter} onValueChange={onCourseFilterChange}>
-            <SelectTrigger className="w-full sm:w-[180px] border-gray-300">
-              <SelectValue placeholder="כל הקורסים" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הקורסים</SelectItem>
-              {courseOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={courseFilter}
+            onChange={(e) => onCourseFilterChange(e.target.value)}
+            className="w-full sm:w-[180px] h-9 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">כל הקורסים</option>
+            {courseOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
 
           {/* File Type Filter */}
-          <Select value={fileTypeFilter} onValueChange={onFileTypeFilterChange}>
-            <SelectTrigger className="w-full sm:w-[150px] border-gray-300">
-              <SelectValue placeholder="כל הסוגים" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הסוגים</SelectItem>
-              <SelectItem value="pdf">PDF</SelectItem>
-              <SelectItem value="docx">DOCX</SelectItem>
-              <SelectItem value="ppt">PPT</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            value={fileTypeFilter}
+            onChange={(e) => onFileTypeFilterChange(e.target.value)}
+            className="w-full sm:w-[150px] h-9 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">כל הסוגים</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">DOCX</option>
+            <option value="ppt">PPT</option>
+          </select>
 
           {/* Sort By */}
-          <Select value={sortBy} onValueChange={onSortChange}>
-            <SelectTrigger className="w-full sm:w-[150px] border-gray-300">
-              <SelectValue placeholder="מיון לפי" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">החדשים ביותר</SelectItem>
-              <SelectItem value="rating">דירוג גבוה</SelectItem>
-              <SelectItem value="downloads">הורדות רבות</SelectItem>
-              <SelectItem value="views">צפיות רבות</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value)}
+            className="w-full sm:w-[150px] h-9 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="newest">החדשים ביותר</option>
+            <option value="rating">דירוג גבוה</option>
+            <option value="downloads">הורדות רבות</option>
+            <option value="views">צפיות רבות</option>
+          </select>
         </div>
 
         {/* View Toggle and Results Count */}

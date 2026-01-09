@@ -92,6 +92,8 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
   const [summaries, setSummaries] = useState<TransformedSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [institutions, setInstitutions] = useState<string[]>([]);
+  const [courses, setCourses] = useState<Array<{ id: number; courseName: string; courseCode: string; institution: string }>>([]);
   const itemsPerPage = 9;
 
   // Fetch summaries from API
@@ -142,33 +144,56 @@ export function SummariesPage({ onNavigateHome, onNavigateUpload, onNavigateSumm
     fetchSummaries();
   }, []);
 
-  // Generate course options from the data
+  // Fetch institutions from API
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      try {
+        const response = await api.get('/courses/institutions');
+        setInstitutions(response.data);
+      } catch (err) {
+        console.error('Error fetching institutions:', err);
+      }
+    };
+
+    fetchInstitutions();
+  }, []);
+
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await api.get('/courses');
+        setCourses(response.data);
+      } catch (err) {
+        console.error('Error fetching courses:', err);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Generate course options from all courses in the system
   const courseOptions = useMemo(() => {
     const uniqueCourses = new Map<string, string>();
-    summaries.forEach((summary) => {
-      if (!uniqueCourses.has(summary.course)) {
-        uniqueCourses.set(summary.course, `${summary.course} - ${summary.courseFullName}`);
+    courses.forEach((course) => {
+      const key = course.courseName.toLowerCase();
+      if (!uniqueCourses.has(key)) {
+        uniqueCourses.set(key, course.courseName);
       }
     });
     return Array.from(uniqueCourses.entries()).map(([value, label]) => ({
-      value: value.toLowerCase(),
+      value,
       label,
     }));
-  }, [summaries]);
+  }, [courses]);
 
-  // Generate institution options from the data
+  // Generate institution options from all institutions in the system
   const institutionOptions = useMemo(() => {
-    const uniqueInstitutions = new Set<string>();
-    summaries.forEach((summary) => {
-      if (summary.institution) {
-        uniqueInstitutions.add(summary.institution);
-      }
-    });
-    return Array.from(uniqueInstitutions).sort().map((institution) => ({
+    return institutions.sort().map((institution) => ({
       value: institution,
       label: institution,
     }));
-  }, [summaries]);
+  }, [institutions]);
 
   // Filter and sort summaries
   const filteredAndSortedSummaries = useMemo(() => {
