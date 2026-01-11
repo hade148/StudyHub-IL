@@ -1,13 +1,11 @@
 import { motion } from 'motion/react';
-import { FileText, Download, Trophy, MessageCircle } from 'lucide-react';
+import { FileText, HelpCircle, MessageCircle } from 'lucide-react';
 
 interface ProfileStatsBarProps {
   stats: {
     uploads: number;
-    totalDownloads: number;
-    reputation: number;
     forumPosts: number;
-    monthlyDownloads?: number;
+    forumAnswers: number;
   };
 }
 
@@ -23,36 +21,27 @@ export function ProfileStatsBar({ stats }: ProfileStatsBarProps) {
       emoji: '📚',
     },
     {
-      label: 'הורדות',
-      value: stats.totalDownloads.toLocaleString('he-IL'),
-      icon: Download,
+      label: 'פוסטים',
+      value: stats.forumPosts,
+      icon: HelpCircle,
       gradient: 'from-purple-500 to-purple-600',
       bgGradient: 'from-purple-50 to-purple-100',
-      subtext: stats.monthlyDownloads ? `+${stats.monthlyDownloads} החודש` : undefined,
-      emoji: '⬇️',
+      subtext: 'שאלות שפורסמו',
+      emoji: '❓',
     },
     {
-      label: 'נקודות מוניטין',
-      value: stats.reputation.toLocaleString('he-IL'),
-      icon: Trophy,
+      label: 'תגובות',
+      value: stats.forumAnswers,
+      icon: MessageCircle,
       gradient: 'from-green-500 to-green-600',
       bgGradient: 'from-green-50 to-green-100',
-      subtext: 'רמה גבוהה',
-      emoji: '⭐',
-    },
-    {
-      label: 'תרומות',
-      value: stats.forumPosts,
-      icon: MessageCircle,
-      gradient: 'from-orange-500 to-orange-600',
-      bgGradient: 'from-orange-50 to-orange-100',
-      subtext: 'תשובות ותגובות',
+      subtext: 'תשובות שניתנו',
       emoji: '💬',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {statsData.map((stat, index) => (
         <motion.div
           key={stat.label}

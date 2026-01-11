@@ -90,6 +90,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
       ...staticUserData.stats,
       uploads: user?._count?.summaries || 0,
       forumPosts: user?._count?.forumPosts || 0,
+      forumAnswers: user?._count?.forumComments || 0,
     },
     recentActivity: staticUserData.recentActivity,
     mySummaries: staticUserData.mySummaries,
@@ -177,19 +178,8 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content - 2/3 width */}
           <div className="lg:col-span-2">
-            <Tabs defaultValue="overview" onValueChange={setActiveTab} className="w-full">
+            <Tabs defaultValue="favorites" onValueChange={setActiveTab} className="w-full">
               <TabsList className="bg-white rounded-lg shadow-sm p-1 w-full flex-wrap h-auto gap-1">
-                <TabsTrigger value="overview" className="flex-1 md:flex-none text-sm md:text-base">
-                   סקירה כללית
-                </TabsTrigger>
-                <TabsTrigger value="summaries" className="flex-1 md:flex-none text-sm md:text-base">
-                  <span className="flex items-center gap-1">
-                     סיכומים שלי
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">
-                      {userData.mySummaries.length}
-                    </Badge>
-                  </span>
-                </TabsTrigger>
                 <TabsTrigger value="favorites" className="flex-1 md:flex-none text-sm md:text-base">
                   <span className="flex items-center gap-1">
                      מועדפים
@@ -206,120 +196,12 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                     </Badge>
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="achievements" className="flex-1 md:flex-none text-sm md:text-base">
-                   הישגים
-                </TabsTrigger>
                 <TabsTrigger value="statistics" className="flex-1 md:flex-none text-sm md:text-base">
                    סטטיסטיקות
                 </TabsTrigger>
               </TabsList>
 
-              {/* Tab 1 - Overview */}
-              <TabsContent value="overview" className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 gap-6">
-                  {/* Activity Timeline */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <ActivityTimeline activities={userData.recentActivity} />
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Tab 2 - My Summaries */}
-              <TabsContent value="summaries" className="mt-6">
-                <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
-                  {/* Filter Bar */}
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
-                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input
-                        placeholder="חפש בסיכומים שלי..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pr-10 text-right"
-                      />
-                    </div>
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="w-full md:w-48">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="recent">אחרונים</SelectItem>
-                        <SelectItem value="rating">דירוג</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-                      <UploadIcon className="w-4 h-4 ml-2" />
-                      העלה סיכום חדש
-                    </Button>
-                  </div>
-
-                  {/* Summaries Grid */}
-                  <div className="grid gap-4">
-                    {userData.mySummaries.map((summary, index) => (
-                      <motion.div
-                        key={summary.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-300"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <h4 className="text-gray-900">{summary.title}</h4>
-                            <p className="text-gray-600 text-sm">{summary.subject}</p>
-                          </div>
-                          <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                            {summary.uploadDate}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Download className="w-4 h-4" />
-                              {summary.downloads} הורדות
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Eye className="w-4 h-4" />
-                              {summary.views} צפיות
-                            </div>
-                            <div className="flex items-center gap-1">
-                              ⭐ {summary.rating}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              <TrendingUp className="w-4 h-4 ml-2" />
-                              סטטיסטיקות
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Edit className="w-4 h-4 ml-2" />
-                              ערוך
-                            </Button>
-                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Empty State */}
-                  {userData.mySummaries.length === 0 && (
-                    <div className="text-center py-12">
-                      <div className="text-6xl mb-4">📭</div>
-                      <h4 className="text-gray-900 mb-2">עדיין לא העלת סיכומים</h4>
-                      <p className="text-gray-600 mb-4">התחל לשתף את הידע שלך עם הקהילה</p>
-                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-                        <UploadIcon className="w-4 h-4 ml-2" />
-                        העלה סיכום ראשון
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              {/* Tab 3 - Favorites */}
+              {/* Tab 1 - Favorites */}
               <TabsContent value="favorites" className="mt-6">
                 <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
                   {/* Sub-tabs */}
@@ -489,12 +371,7 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                 </div>
               </TabsContent>
 
-              {/* Tab 5 - Achievements */}
-              <TabsContent value="achievements" className="mt-6">
-                <AchievementsTab />
-              </TabsContent>
-
-              {/* Tab 6 - Statistics */}
+              {/* Tab 3 - Statistics */}
               <TabsContent value="statistics" className="mt-6">
                 <StatisticsTab />
               </TabsContent>
@@ -505,15 +382,6 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
           <div className="lg:col-span-1 space-y-6">
             {/* About Section */}
             <AboutSection user={userData} />
-
-            {/* Recent Activity Widget */}
-            <RecentActivityWidget
-              stats={{
-                weeklyViews: userData.stats.weeklyViews,
-                newComments: 12,
-                averageRating: userData.stats.averageRating,
-              }}
-            />
           </div>
         </div>
       </motion.div>

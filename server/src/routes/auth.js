@@ -141,7 +141,7 @@ router.get('/me', authenticate, async (req, res) => {
         fieldOfStudy: true,
         website: true,
         interests: true,
-        _count: { select: { summaries: true, forumPosts: true, ratings: true } }
+        _count: { select: { summaries: true, forumPosts: true, forumComments: true, ratings: true } }
       }
     });
     res.json(user);
@@ -203,7 +203,7 @@ router.put('/profile', authenticate, profileUpdateValidation, async (req, res) =
         fieldOfStudy: true,
         website: true,
         interests: true,
-        _count: { select: { summaries: true, forumPosts: true, ratings: true } }
+        _count: { select: { summaries: true, forumPosts: true, forumComments: true, ratings: true } }
       }
     });
 
@@ -311,7 +311,7 @@ router.post('/profile/avatar', avatarUploadLimiter, authenticate, avatarUpload.s
         fieldOfStudy: true,
         website: true,
         interests: true,
-        _count: { select: { summaries: true, forumPosts: true, ratings: true } }
+        _count: { select: { summaries: true, forumPosts: true, forumComments: true, ratings: true } }
       }
     });
 

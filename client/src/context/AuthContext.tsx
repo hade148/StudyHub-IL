@@ -17,6 +17,7 @@ interface User {
   _count?: {
     summaries: number;
     forumPosts: number;
+    forumComments: number;
     ratings: number;
   };
 }

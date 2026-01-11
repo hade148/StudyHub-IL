@@ -281,7 +281,7 @@ export function UploadPage({ onNavigateHome, onNavigateSummaries, onNavigateSumm
             </motion.div>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">העלאת סיכום חדש</h2>
-          <p className="text-gray-600 text-lg">שתף את הסיכום שלך עם הקהילה וצבור נקודות מוניטין</p>
+          <p className="text-gray-600 text-lg">שתף את הסיכום שלך עם הקהילה</p>
         </motion.div>
 
         {/* Progress Steps */}
