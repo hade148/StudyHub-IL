@@ -4,7 +4,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, optionalAuth } = require('../middleware/auth');
-const { forumPostValidation, forumRatingValidation, commentValidation } = require('../middleware/validation');
+const { forumRatingValidation, commentValidation } = require('../middleware/validation');
 const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
