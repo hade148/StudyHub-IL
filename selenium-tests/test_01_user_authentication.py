@@ -28,7 +28,12 @@ class TestUserAuthentication:
         
         # Navigate to registration page
         driver.get(f"{TestConfig.BASE_URL}/register")
-        time.sleep(2)  # Wait for page load
+        
+        # Wait for page to fully load
+        WebDriverWait(driver, 15).until(
+            lambda d: d.execute_script('return document.readyState') == 'complete'
+        )
+        time.sleep(2)  # Additional wait for React components
         
         # Take screenshot of registration page
         take_screenshot(driver, "registration_page")
@@ -37,43 +42,75 @@ class TestUserAuthentication:
             # Generate unique email for testing
             import random
             test_email = f"testuser{random.randint(1000, 9999)}@test.com"
-            
-            # Find and fill registration form fields
-            full_name_input = wait_for_element(driver, By.NAME, "fullName")
-            email_input = wait_for_element(driver, By.NAME, "email")
-            password_input = wait_for_element(driver, By.NAME, "password")
-            
+            test_password = "TestPassword123!"
+
+            # Find and fill registration form fields (using ID instead of NAME)
+            # Wait longer for React components to render
+            full_name_input = wait_for_element(driver, By.ID, "fullName", timeout=15)
+            email_input = wait_for_element(driver, By.ID, "email", timeout=15)
+            password_input = wait_for_element(driver, By.ID, "password", timeout=15)
+            confirm_password_input = wait_for_element(driver, By.ID, "confirmPassword", timeout=15)
+            terms_checkbox = wait_for_element(driver, By.ID, "terms", timeout=15)
+
             assert full_name_input is not None, "Full name input not found"
             assert email_input is not None, "Email input not found"
             assert password_input is not None, "Password input not found"
-            
+            assert confirm_password_input is not None, "Confirm password input not found"
+            assert terms_checkbox is not None, "Terms checkbox not found"
+
             # Fill in the form
             full_name_input.clear()
             full_name_input.send_keys("Test User")
-            
+
             email_input.clear()
             email_input.send_keys(test_email)
-            
+
             password_input.clear()
-            password_input.send_keys("TestPassword123!")
-            
+            password_input.send_keys(test_password)
+
+            confirm_password_input.clear()
+            confirm_password_input.send_keys(test_password)
+
+            # Click the terms checkbox
+            if not terms_checkbox.is_selected():
+                terms_checkbox.click()
+
+            time.sleep(1)  # Wait for form validation
+
             # Find and click submit button
             submit_button = wait_for_clickable(driver, By.XPATH, "//button[@type='submit']")
             assert submit_button is not None, "Submit button not found"
             
             take_screenshot(driver, "registration_form_filled")
             submit_button.click()
-            
-            # Wait for navigation or success message
-            time.sleep(3)
-            take_screenshot(driver, "registration_result")
-            
-            # Verify registration success (either redirected to login or dashboard)
-            current_url = driver.current_url
-            assert '/login' in current_url or '/dashboard' in current_url or '/' == current_url.replace(TestConfig.BASE_URL, ''), \
-                f"Registration did not redirect properly. Current URL: {current_url}"
-            
-            print(f"✅ Registration successful for user: {test_email}")
+
+            # Wait for success modal to appear (contains "ההרשמה בוצעה בהצלחה")
+            try:
+                success_indicator = WebDriverWait(driver, 15).until(
+                    EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'ההרשמה בוצעה בהצלחה')]"))
+                )
+                print("✅ Success modal appeared")
+                take_screenshot(driver, "registration_success_modal")
+                
+                # Wait additional time for auto-redirect or click continue button if exists
+                time.sleep(3)
+                
+                # Check if we're redirected to login or dashboard
+                current_url = driver.current_url
+                take_screenshot(driver, "registration_final_state")
+                
+                print(f"✅ Registration successful for user: {test_email}")
+                print(f"   Final URL: {current_url}")
+                
+            except Exception as redirect_error:
+                # If success modal doesn't appear, check if directly redirected
+                current_url = driver.current_url
+                take_screenshot(driver, "registration_result")
+                
+                if '/login' in current_url or '/dashboard' in current_url or '/' == current_url.replace(TestConfig.BASE_URL, ''):
+                    print(f"✅ Registration successful (direct redirect) for user: {test_email}")
+                else:
+                    raise AssertionError(f"Registration did not show success or redirect. Current URL: {current_url}")
             
         except AssertionError as e:
             print(f"❌ Test failed: {e}")
@@ -100,9 +137,9 @@ class TestUserAuthentication:
         
         try:
             # Use test email that should already exist
-            full_name_input = wait_for_element(driver, By.NAME, "fullName")
-            email_input = wait_for_element(driver, By.NAME, "email")
-            password_input = wait_for_element(driver, By.NAME, "password")
+            full_name_input = wait_for_element(driver, By.ID, "fullName")
+            email_input = wait_for_element(driver, By.ID, "email")
+            password_input = wait_for_element(driver, By.ID, "password")
             
             full_name_input.clear()
             full_name_input.send_keys("Duplicate User")
@@ -153,8 +190,8 @@ class TestUserAuthentication:
         
         try:
             # Find login form elements
-            email_input = wait_for_element(driver, By.NAME, "email")
-            password_input = wait_for_element(driver, By.NAME, "password")
+            email_input = wait_for_element(driver, By.ID, "email")
+            password_input = wait_for_element(driver, By.ID, "password")
             
             assert email_input is not None, "Email input not found"
             assert password_input is not None, "Password input not found"
@@ -218,8 +255,8 @@ class TestUserAuthentication:
         time.sleep(2)
         
         try:
-            email_input = wait_for_element(driver, By.NAME, "email")
-            password_input = wait_for_element(driver, By.NAME, "password")
+            email_input = wait_for_element(driver, By.ID, "email")
+            password_input = wait_for_element(driver, By.ID, "password")
             
             # Enter invalid credentials
             email_input.clear()

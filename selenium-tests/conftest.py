@@ -7,10 +7,9 @@ import os
 import pytest
 from datetime import datetime
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -19,12 +18,12 @@ load_dotenv()
 
 class TestConfig:
     """Test configuration class"""
-    BASE_URL = os.getenv('BASE_URL', 'http://localhost:5173')
+    BASE_URL = os.getenv('BASE_URL', 'http://localhost:3000')  # Changed from 5173 to 3000
     API_URL = os.getenv('API_URL', 'http://localhost:4000')
     
     # Test credentials
-    TEST_EMAIL = os.getenv('TEST_EMAIL', 'student@studyhub.local')
-    TEST_PASSWORD = os.getenv('TEST_PASSWORD', 'password123')
+    TEST_EMAIL = os.getenv('TEST_EMAIL', 'h0559137459@gmail.com')
+    TEST_PASSWORD = os.getenv('TEST_PASSWORD', 'Vhbsh148@')
     TEST_ADMIN_EMAIL = os.getenv('TEST_ADMIN_EMAIL', 'admin@studyhub.local')
     TEST_ADMIN_PASSWORD = os.getenv('TEST_ADMIN_PASSWORD', 'admin123')
     
@@ -61,9 +60,9 @@ def driver():
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
     # Initialize the WebDriver
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    
+    # Selenium 4.6+ includes automatic driver management (no need for webdriver-manager)
+    driver = webdriver.Chrome(options=chrome_options)
+
     # Set timeouts
     driver.implicitly_wait(TestConfig.IMPLICIT_WAIT)
     driver.set_page_load_timeout(TestConfig.PAGE_LOAD_TIMEOUT)

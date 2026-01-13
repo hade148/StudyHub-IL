@@ -39,3 +39,18 @@ server/uploads/*
 coverage/
 .nyc_output/
 server/.env
+
+# Selenium test outputs
+screenshots/
+report.html
+assets/
+test_output.txt
+test_execution.log
+.pytest_cache/
+selenium-tests/__pycache__/
+__pycache__/
+
+# Python virtual environment
+.venv/
+venv/
+*.pyc
