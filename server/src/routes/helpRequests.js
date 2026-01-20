@@ -1,11 +1,10 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { body } = require('express-validator');
 const { validate } = require('../middleware/validation');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Validation for help requests
 const helpRequestValidation = [

@@ -1,11 +1,10 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { toolValidation, toolRatingValidation } = require('../middleware/validation');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Helper function to calculate average rating
 const calculateAverageRating = (ratings) => {
@@ -20,7 +19,7 @@ const createToolLimiter = rateLimit({
   message: 'יותר מדי ניסיונות להוספת כלי. נסה שוב בעוד שעה.',
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+  skip: (req) => !!req.user?.id
 });
 
 // Rate limiter for tool updates - 20 updates per hour per user
@@ -30,7 +29,7 @@ const updateToolLimiter = rateLimit({
   message: 'יותר מדי ניסיונות לעדכון כלי. נסה שוב בעוד שעה.',
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+  skip: (req) => !!req.user?.id
 });
 
 // Rate limiter for tool deletion - 20 deletions per hour per user
@@ -40,7 +39,7 @@ const deleteToolLimiter = rateLimit({
   message: 'יותר מדי ניסיונות למחיקת כלי. נסה שוב בעוד שעה.',
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+  skip: (req) => !!req.user?.id
 });
 
 // Rate limiter for tool rating - 100 ratings per hour per user
@@ -50,7 +49,7 @@ const rateToolLimiter = rateLimit({
   message: 'יותר מדי ניסיונות לדירוג. נסה שוב בעוד שעה.',
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.user?.id?.toString() || req.ip
+  skip: (req) => !!req.user?.id
 });
 
 // GET /api/tools - Get all tools

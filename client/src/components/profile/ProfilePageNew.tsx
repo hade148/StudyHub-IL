@@ -12,7 +12,6 @@ import { ActivityTimeline } from './ActivityTimeline';
 import { AboutSection } from './AboutSection';
 import { RecentActivityWidget } from './RecentActivityWidget';
 import { AchievementsTab } from './AchievementsTab';
-import { StatisticsTab } from './StatisticsTab';
 import { EditProfileModal } from './EditProfileModal';
 import { AchievementShowcase } from './AchievementShowcase';
 import { useAuth } from '../../context/AuthContext';
@@ -196,9 +195,6 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                     </Badge>
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="statistics" className="flex-1 md:flex-none text-sm md:text-base">
-                   סטטיסטיקות
-                </TabsTrigger>
               </TabsList>
 
               {/* Tab 1 - Favorites */}
@@ -371,10 +367,6 @@ export function ProfilePageNew({ onNavigateHome }: ProfilePageNewProps) {
                 </div>
               </TabsContent>
 
-              {/* Tab 3 - Statistics */}
-              <TabsContent value="statistics" className="mt-6">
-                <StatisticsTab />
-              </TabsContent>
             </Tabs>
           </div>
 

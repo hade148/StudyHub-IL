@@ -2,13 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { forumRatingValidation, commentValidation } = require('../middleware/validation');
 const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Track post views to prevent double-counting
 const viewTracking = new Map();

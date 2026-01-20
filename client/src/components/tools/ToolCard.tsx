@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
-import { Heart, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Heart, Star, Calculator, RefreshCw, Calendar, Pen, Package, ExternalLink } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
@@ -24,25 +24,25 @@ interface ToolCardProps {
   onCardClick?: () => void;
 }
 
-const categoryGradients: Record<string, string> = {
-  'מחשבונים': 'from-blue-500 to-cyan-500',
-  'ממירים': 'from-purple-600 to-pink-600',
-  'מתכננים': 'from-purple-500 to-pink-500',
-  'יצירה': 'from-blue-600 to-purple-600',
-  'אחר': 'from-indigo-500 to-purple-500',
+const categoryIcons: Record<string, React.ElementType> = {
+  'מחשבונים': Calculator,
+  'ממירים': RefreshCw,
+  'מתכננים': Calendar,
+  'יצירה': Pen,
+  'אחר': Package,
 };
 
-const categoryEmojis: Record<string, string> = {
-  'מחשבונים': '📊',
-  'ממירים': '🔄',
-  'מתכננים': '📅',
-  'יצירה': '✏️',
-  'אחר': '📦',
+const categoryColors: Record<string, { bg: string; border: string; icon: string }> = {
+  'מחשבונים': { bg: 'bg-blue-50', border: 'border-blue-200', icon: 'text-blue-600' },
+  'ממירים': { bg: 'bg-purple-50', border: 'border-purple-200', icon: 'text-purple-600' },
+  'מתכננים': { bg: 'bg-green-50', border: 'border-green-200', icon: 'text-green-600' },
+  'יצירה': { bg: 'bg-orange-50', border: 'border-orange-200', icon: 'text-orange-600' },
+  'אחר': { bg: 'bg-gray-50', border: 'border-gray-200', icon: 'text-gray-600' },
 };
 
 export function ToolCard({ tool, index, onToggleFavorite, onCardClick }: ToolCardProps) {
-  const gradient = categoryGradients[tool.category] || categoryGradients['אחר'];
-  const emoji = categoryEmojis[tool.category] || categoryEmojis['אחר'];
+  const IconComponent = categoryIcons[tool.category] || categoryIcons['אחר'];
+  const colors = categoryColors[tool.category] || categoryColors['אחר'];
 
   const handleUseTool = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -64,72 +64,70 @@ export function ToolCard({ tool, index, onToggleFavorite, onCardClick }: ToolCar
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      whileHover={{ scale: 1.05, boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)' }}
+      whileHover={{ y: -4, boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)' }}
       onClick={handleCardClick}
-      className={`bg-gradient-to-br ${gradient} rounded-xl shadow-lg p-8 text-white transition-all duration-300 relative overflow-hidden cursor-pointer`}
+      className={`${colors.bg} border-2 ${colors.border} rounded-xl shadow-sm hover:shadow-md p-6 transition-all duration-300 relative cursor-pointer group`}
     >
       {/* Favorite Button */}
       {onToggleFavorite && (
         <button
           onClick={handleFavoriteClick}
-          className="absolute top-4 left-4 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-all"
+          className="absolute top-4 left-4 z-10 p-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all"
+          aria-label={tool.isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
         >
           <Heart
-            className={`w-5 h-5 ${
-              tool.isFavorite ? 'fill-white text-white' : 'text-white'
+            className={`w-4 h-4 ${
+              tool.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
             }`}
           />
         </button>
       )}
 
       {/* Category Badge */}
-      <Badge className="absolute top-4 right-4 bg-white/20 text-white border-white/30 backdrop-blur-sm hover:bg-white/20">
+      <Badge className={`absolute top-4 right-4 ${colors.bg} ${colors.icon} border ${colors.border} font-medium`}>
         {tool.category}
       </Badge>
 
       {/* Rating Badge */}
-      {tool.avgRating !== null && tool.avgRating !== undefined && (
-        <Badge className="absolute top-14 right-4 bg-white/20 text-white border-white/30 backdrop-blur-sm hover:bg-white/20 flex items-center gap-1">
-          <Star className="w-3 h-3 fill-white text-white" />
-          <span>{tool.avgRating > 0 ? tool.avgRating.toFixed(1) : '0.0'}</span>
+      {tool.avgRating !== null && tool.avgRating !== undefined && tool.avgRating > 0 && (
+        <Badge className="absolute top-14 right-4 bg-yellow-50 text-yellow-700 border border-yellow-200 flex items-center gap-1">
+          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+          <span className="font-semibold">{tool.avgRating.toFixed(1)}</span>
           {tool.ratingCount !== undefined && tool.ratingCount > 0 && (
-            <span className="text-xs">({tool.ratingCount})</span>
+            <span className="text-xs opacity-75">({tool.ratingCount})</span>
           )}
         </Badge>
       )}
 
-      {/* Decorative circles */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-
       {/* Content */}
-      <div className="relative flex flex-col items-center text-center space-y-6 mt-8">
+      <div className="relative flex flex-col items-center text-center space-y-4 mt-12">
         {/* Icon */}
         <motion.div
-          whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-          transition={{ duration: 0.5 }}
-          className="text-6xl md:text-7xl"
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.2 }}
+          className={`${colors.icon} p-4 rounded-2xl bg-white border-2 ${colors.border} shadow-sm`}
         >
-          {emoji}
+          <IconComponent className="w-10 h-10" />
         </motion.div>
 
         {/* Tool Info */}
-        <div className="space-y-2">
-          <h3 className="text-white text-xl">{tool.title}</h3>
+        <div className="space-y-2 min-h-[80px] flex flex-col justify-center">
+          <h3 className="text-gray-900 text-lg font-semibold">{tool.title}</h3>
           {tool.description && (
-            <p className="text-white/90">{tool.description}</p>
+            <p className="text-gray-600 text-sm line-clamp-2">{tool.description}</p>
           )}
         </div>
 
         {/* Action Button */}
         <Button
           onClick={handleUseTool}
-          className="w-full bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm transition-all duration-300"
+          className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 shadow-sm group-hover:border-blue-300 group-hover:text-blue-600 transition-all duration-300 flex items-center justify-center gap-2"
         >
-          שימוש בכלי ←
+          שימוש בכלי
+          <ExternalLink className="w-4 h-4" />
         </Button>
       </div>
     </motion.div>

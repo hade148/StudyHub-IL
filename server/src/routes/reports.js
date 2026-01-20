@@ -1,11 +1,10 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, isAdmin } = require('../middleware/auth');
 const { body } = require('express-validator');
 const { validate } = require('../middleware/validation');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 const reportValidation = [
   body('postId').isInt({ min: 1 }).withMessage('פוסט לא תקין'),

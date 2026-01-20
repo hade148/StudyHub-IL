@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { generateToken } = require('../utils/jwt');
 const { authenticate } = require('../middleware/auth');
 const { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation, profileUpdateValidation } = require('../middleware/validation');
@@ -13,7 +13,6 @@ const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
 const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Rate limiter for avatar upload - 5 uploads per 15 minutes per user/IP
 const avatarUploadLimiter = rateLimit({

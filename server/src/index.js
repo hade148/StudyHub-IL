@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./lib/prisma');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -22,7 +22,6 @@ const subscriptionsRoutes = require('./routes/subscriptions');
 const statsRoutes = require('./routes/stats');
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 4000;
 
 // Middleware

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { 
   Eye, 
@@ -118,8 +118,8 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
     setEmailWarning(false);
 
     try {
-      // Use real register function from AuthContext
-      const response = await registerUser(data.fullName, data.email, data.password);
+      // Use real register function from AuthContext with institution
+      const response = await registerUser(data.fullName, data.email, data.password, data.institution!);
 
       console.log('Registration data:', data);
       
@@ -473,13 +473,17 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
 
             {/* Institution */}
             <div>
-              <Label htmlFor="institution" className="mb-2">
-                מוסד לימודים (אופציונלי)
+              <Label htmlFor="institution" className="mb-2 flex items-center gap-1">
+                מוסד לימודים <span className="text-red-500">*</span>
               </Label>
               <select
                 id="institution"
-                {...register('institution')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-60"
+                {...register('institution', {
+                  required: 'מוסד לימודים הוא שדה חובה'
+                })}
+                className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-60 ${
+                  errors.institution ? 'border-red-500' : 'border-gray-300'
+                }`}
                 disabled={isLoading || loadingInstitutions}
               >
                 <option value="">
@@ -491,6 +495,9 @@ export function RegisterPage({ onNavigateLogin, onNavigateDashboard }: RegisterP
                   </option>
                 ))}
               </select>
+              {errors.institution && (
+                <p className="text-sm text-red-600 mt-1">{errors.institution.message}</p>
+              )}
             </div>
 
             {/* Terms & Privacy */}

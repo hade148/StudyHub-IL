@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
-import { X, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, Plus, Calculator, RefreshCw, Calendar, Pen, Package } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
@@ -21,11 +21,11 @@ interface AddToolDialogProps {
 }
 
 const categories = [
-  { value: 'מחשבונים', label: 'מחשבונים', emoji: '🧮' },
-  { value: 'ממירים', label: 'ממירים', emoji: '🔄' },
-  { value: 'מתכננים', label: 'מתכננים', emoji: '📅' },
-  { value: 'יצירה', label: 'יצירה', emoji: '✏️' },
-  { value: 'אחר', label: 'אחר', emoji: '📦' },
+  { value: 'מחשבונים', label: 'מחשבונים', Icon: Calculator },
+  { value: 'ממירים', label: 'ממירים', Icon: RefreshCw },
+  { value: 'מתכננים', label: 'מתכננים', Icon: Calendar },
+  { value: 'יצירה', label: 'יצירה', Icon: Pen },
+  { value: 'אחר', label: 'אחר', Icon: Package },
 ];
 
 export function AddToolDialog({ isOpen, onClose, onSuccess }: AddToolDialogProps) {
@@ -138,7 +138,7 @@ export function AddToolDialog({ isOpen, onClose, onSuccess }: AddToolDialogProps
                 {categories.map((cat) => (
                   <SelectItem key={cat.value} value={cat.value}>
                     <span className="flex items-center gap-2">
-                      <span>{cat.emoji}</span>
+                      <cat.Icon className="w-4 h-4" />
                       <span>{cat.label}</span>
                     </span>
                   </SelectItem>

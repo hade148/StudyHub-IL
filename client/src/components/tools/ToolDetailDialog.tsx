@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { X, Star, ExternalLink, Heart } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, Star, ExternalLink, Heart, Calculator, RefreshCw, Calendar, Pen, Package } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback } from '../ui/avatar';
@@ -29,12 +29,20 @@ interface ToolDetailDialogProps {
   onRatingUpdate?: () => void;
 }
 
-const categoryEmojis: Record<string, string> = {
-  'מחשבונים': '📊',
-  'ממירים': '🔄',
-  'מתכננים': '📅',
-  'יצירה': '✏️',
-  'אחר': '📦',
+const categoryIcons: Record<string, React.ElementType> = {
+  'מחשבונים': Calculator,
+  'ממירים': RefreshCw,
+  'מתכננים': Calendar,
+  'יצירה': Pen,
+  'אחר': Package,
+};
+
+const categoryColors: Record<string, string> = {
+  'מחשבונים': 'text-blue-600 bg-blue-100',
+  'ממירים': 'text-purple-600 bg-purple-100',
+  'מתכננים': 'text-green-600 bg-green-100',
+  'יצירה': 'text-orange-600 bg-orange-100',
+  'אחר': 'text-gray-600 bg-gray-100',
 };
 
 export function ToolDetailDialog({
@@ -50,8 +58,15 @@ export function ToolDetailDialog({
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [avgRating, setAvgRating] = useState<number | null>(tool.avgRating ?? null);
   const [totalRatings, setTotalRatings] = useState(tool.ratingCount ?? 0);
+  const [isFavorite, setIsFavorite] = useState(tool.isFavorite ?? false);
 
-  const emoji = categoryEmojis[tool.category] || categoryEmojis['אחר'];
+  const IconComponent = categoryIcons[tool.category] || categoryIcons['אחר'];
+  const iconColors = categoryColors[tool.category] || categoryColors['אחר'];
+
+  // Update local favorite state when tool prop changes
+  useEffect(() => {
+    setIsFavorite(tool.isFavorite ?? false);
+  }, [tool.isFavorite]);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -106,6 +121,8 @@ export function ToolDetailDialog({
 
   const handleFavoriteClick = () => {
     if (onToggleFavorite) {
+      // Update local state immediately for instant UI feedback
+      setIsFavorite(!isFavorite);
       onToggleFavorite(tool.id);
     }
   };
@@ -133,7 +150,9 @@ export function ToolDetailDialog({
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
-            <div className="text-4xl">{emoji}</div>
+            <div className={`p-3 rounded-xl ${iconColors}`}>
+              <IconComponent className="w-8 h-8" />
+            </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{tool.title}</h2>
               <Badge className="mt-1">{tool.category}</Badge>
@@ -263,10 +282,10 @@ export function ToolDetailDialog({
             >
               <Heart
                 className={`w-4 h-4 ${
-                  tool.isFavorite ? 'fill-red-500 text-red-500' : ''
+                  isFavorite ? 'fill-red-500 text-red-500' : ''
                 }`}
               />
-              {tool.isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
+              {isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
             </Button>
           )}
         </div>

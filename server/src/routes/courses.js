@@ -1,11 +1,10 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, isAdmin } = require('../middleware/auth');
 const { courseValidation } = require('../middleware/validation');
 const { ISRAELI_INSTITUTIONS } = require('../constants/institutions');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/courses/institutions - Get list of unique institutions
 // Note: With the simplified course structure, this returns a predefined list

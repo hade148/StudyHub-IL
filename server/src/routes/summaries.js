@@ -3,13 +3,12 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 const { summaryValidation, ratingValidation, commentValidation } = require('../middleware/validation');
 const azureStorage = require('../utils/azureStorage');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Helper function to calculate average rating
 const calculateAverageRating = (ratings) => {

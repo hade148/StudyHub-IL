@@ -1,6 +1,6 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { ChevronRight, Home, Wrench, Plus } from 'lucide-react';
+import { ChevronRight, Home, Wrench, Plus, Heart } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { ToolCard } from './ToolCard';
@@ -101,10 +101,9 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
   const filteredTools = filterToolsByCategory(activeCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Subtle decorative gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30 pointer-events-none" />
       
       <motion.div
         initial={{ opacity: 0 }}
@@ -117,12 +116,15 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
           {/* Title */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-l from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">כלים אקדמיים</h1>
-              <p className="text-sm text-gray-600 mt-1">כלים שימושיים לסטודנטים</p>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <Wrench className="w-8 h-8 text-blue-600" />
+                כלים אקדמיים
+              </h1>
+              <p className="text-sm text-gray-600 mt-2">כלים שימושיים לסטודנטים ללמידה יעילה</p>
             </div>
             <Button
               onClick={() => setIsAddDialogOpen(true)}
-              className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-white font-medium"
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all"
               aria-label="הוסף כלי חדש"
             >
               <Plus className="w-4 h-4 ml-2" />
@@ -164,44 +166,14 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
 
         {/* Category Tabs */}
         <Tabs defaultValue="all" className="w-full" onValueChange={setActiveCategory}>
-          <TabsList className="bg-white rounded-lg shadow-sm p-1 w-full flex-wrap h-auto">
-            <TabsTrigger value="all" className="flex-1 md:flex-none">
+          <TabsList className="bg-white rounded-xl shadow-sm border border-gray-200 p-1.5 w-full flex-wrap h-auto gap-1">
+            <TabsTrigger value="all" className="flex-1 md:flex-none data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               הכל
             </TabsTrigger>
-            <TabsTrigger value="favorites" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
+            <TabsTrigger value="favorites" className="flex-1 md:flex-none data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              <span className="flex items-center gap-1.5">
                 מועדפים
-                <span>❤️</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="מחשבונים" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
-                מחשבונים
-                <span>🧮</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="ממירים" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
-                ממירים
-                <span>🔄</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="מתכננים" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
-                מתכננים
-                <span>📅</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="יצירה" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
-                יצירה
-                <span>✏️</span>
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="אחר" className="flex-1 md:flex-none">
-              <span className="flex items-center gap-1">
-                אחר
-                <span>📦</span>
+                <Heart className="w-3.5 h-3.5" />
               </span>
             </TabsTrigger>
           </TabsList>
@@ -232,8 +204,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-xl shadow-lg p-12 text-center space-y-4"
               >
-                <div className="text-6xl">🔍</div>
-                <h3>לא נמצאו כלים{activeCategory !== 'all' ? ' בקטגוריה זו' : ''}</h3>
+                <h3 className="text-xl font-semibold text-gray-700">לא נמצאו כלים{activeCategory !== 'all' ? ' בקטגוריה זו' : ''}</h3>
                 <p className="text-gray-600">
                   {activeCategory === 'all'
                     ? 'התחל על ידי הוספת כלי חדש'
@@ -241,7 +212,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
                 </p>
                 <Button
                   onClick={() => setIsAddDialogOpen(true)}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                   aria-label="הוסף כלי חדש"
                 >
                   <Plus className="w-4 h-4 ml-2" />
@@ -257,24 +228,24 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl shadow-lg p-8 text-white"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div>
-              <div className="text-4xl mb-2">{tools.length}</div>
-              <p className="opacity-90">כלים זמינים</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-4 rounded-lg bg-blue-50 border border-blue-100">
+              <div className="text-4xl font-bold text-blue-600 mb-2">{tools.length}</div>
+              <p className="text-sm text-gray-600">כלים זמינים</p>
             </div>
-            <div>
-              <div className="text-4xl mb-2">
+            <div className="text-center p-4 rounded-lg bg-purple-50 border border-purple-100">
+              <div className="text-4xl font-bold text-purple-600 mb-2">
                 {tools.filter((t) => t.isFavorite).length}
               </div>
-              <p className="opacity-90">כלים מועדפים</p>
+              <p className="text-sm text-gray-600">כלים מועדפים</p>
             </div>
-            <div>
-              <div className="text-4xl mb-2">
+            <div className="text-center p-4 rounded-lg bg-green-50 border border-green-100">
+              <div className="text-4xl font-bold text-green-600 mb-2">
                 {Array.from(new Set(tools.map((t) => t.category))).length}
               </div>
-              <p className="opacity-90">קטגוריות</p>
+              <p className="text-sm text-gray-600">קטגוריות</p>
             </div>
           </div>
         </motion.div>
@@ -286,7 +257,7 @@ export function ToolsPage({ onNavigateHome }: ToolsPageProps) {
           transition={{ delay: 0.5 }}
           className="text-center py-8 text-gray-600 border-t border-gray-200"
         >
-          <p>💡 יש לך רעיון לכלי חדש? הוסף אותו עכשיו!</p>
+          <p>יש לך רעיון לכלי חדש? הוסף אותו עכשיו!</p>
         </motion.div>
       </motion.div>
 
