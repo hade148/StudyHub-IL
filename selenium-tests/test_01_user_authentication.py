@@ -6,7 +6,7 @@ Tests the complete authentication flow including registration, login, and logout
 import pytest
 import time
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from conftest import TestConfig, take_screenshot, wait_for_element, wait_for_clickable
 
@@ -50,12 +50,14 @@ class TestUserAuthentication:
             email_input = wait_for_element(driver, By.ID, "email", timeout=15)
             password_input = wait_for_element(driver, By.ID, "password", timeout=15)
             confirm_password_input = wait_for_element(driver, By.ID, "confirmPassword", timeout=15)
+            institution_select = wait_for_element(driver, By.ID, "institution", timeout=15)
             terms_checkbox = wait_for_element(driver, By.ID, "terms", timeout=15)
 
             assert full_name_input is not None, "Full name input not found"
             assert email_input is not None, "Email input not found"
             assert password_input is not None, "Password input not found"
             assert confirm_password_input is not None, "Confirm password input not found"
+            assert institution_select is not None, "Institution select not found"
             assert terms_checkbox is not None, "Terms checkbox not found"
 
             # Fill in the form
@@ -70,6 +72,15 @@ class TestUserAuthentication:
 
             confirm_password_input.clear()
             confirm_password_input.send_keys(test_password)
+
+            # Select institution - wait for options to load and select the first real institution
+            time.sleep(1)  # Wait for institutions to load
+            institution_dropdown = Select(institution_select)
+            # Select the second option (first is "בחר מוסד לימודים" placeholder)
+            if len(institution_dropdown.options) > 1:
+                institution_dropdown.select_by_index(1)
+            else:
+                raise AssertionError("No institutions available in dropdown")
 
             # Click the terms checkbox
             if not terms_checkbox.is_selected():
@@ -140,6 +151,8 @@ class TestUserAuthentication:
             full_name_input = wait_for_element(driver, By.ID, "fullName")
             email_input = wait_for_element(driver, By.ID, "email")
             password_input = wait_for_element(driver, By.ID, "password")
+            confirm_password_input = wait_for_element(driver, By.ID, "confirmPassword")
+            institution_select = wait_for_element(driver, By.ID, "institution")
             
             full_name_input.clear()
             full_name_input.send_keys("Duplicate User")
@@ -149,6 +162,15 @@ class TestUserAuthentication:
             
             password_input.clear()
             password_input.send_keys("TestPassword123!")
+            
+            confirm_password_input.clear()
+            confirm_password_input.send_keys("TestPassword123!")
+            
+            # Select institution
+            time.sleep(1)
+            institution_dropdown = Select(institution_select)
+            if len(institution_dropdown.options) > 1:
+                institution_dropdown.select_by_index(1)
             
             submit_button = wait_for_clickable(driver, By.XPATH, "//button[@type='submit']")
             submit_button.click()
